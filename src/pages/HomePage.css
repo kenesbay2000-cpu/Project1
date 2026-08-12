@@ -15,6 +15,9 @@
 .hero__facts { display: flex; gap: 12px; margin-top: 27px; }
 .hero__facts > span { min-width: 160px; padding: 12px 17px; border: 1px solid rgba(255,255,255,.24); border-radius: 999px; background: rgba(255,255,255,.1); font-size: 12px; backdrop-filter: blur(14px); }
 .hero__facts small { display: block; margin-bottom: 3px; color: rgba(255,255,255,.54); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.hero__details { display: inline-flex; align-items: center; gap: 10px; margin-top: 22px; color: #fff; font-size: 12px; font-weight: 750; text-decoration: none; }
+.hero__details span { transition: transform .2s; }
+.hero__details:hover span { transform: translate(2px, -2px); }
 .destination-sheet { padding: 20px; border: 1px solid rgba(255,255,255,.28); border-radius: 26px; background: rgba(18,35,40,.3); box-shadow: 0 22px 52px rgba(0,0,0,.18); backdrop-filter: blur(20px); }
 .destination-sheet__top, .destination-sheet__footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
 .destination-sheet__top { color: rgba(255,255,255,.64); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
@@ -32,6 +35,7 @@
 .section-label { color: #c75f3d; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .ideas h2 { margin-top: 12px; color: #112e3b; font-family: Georgia, serif; font-size: clamp(38px, 4vw, 58px); font-weight: 400; }
 .ideas__heading p { max-width: 450px; color: #66757b; line-height: 1.7; }
+.ideas__aside a { display: inline-block; margin-top: 12px; color: #bd603e; font-size: 13px; font-weight: 800; text-decoration: none; }
 @keyframes photo-in { from { opacity: .45; transform: scale(1.025); } to { opacity: 1; transform: scale(1); } }
 @keyframes copy-in { from { opacity: 0; transform: translateY(12px); } }
 

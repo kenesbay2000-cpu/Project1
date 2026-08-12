@@ -1,5 +1,6 @@
 import { DestinationGrid } from '../components/DestinationGrid';
 import { HeroShowcase } from '../components/HeroShowcase';
+import { Link } from 'wouter';
 import './HomePage.css';
 
 export function HomePage() {
@@ -13,7 +14,10 @@ export function HomePage() {
             <span className="section-label">Вдохновение для вас</span>
             <h2>Куда отправимся?</h2>
           </div>
-          <p>Подборки с примерным бюджетом на всю поездку — перелёт, жильё и впечатления.</p>
+          <div className="ideas__aside">
+            <p>Подборки с примерным бюджетом на всю поездку — перелёт, жильё и впечатления.</p>
+            <Link href="/destinations">Смотреть все направления →</Link>
+          </div>
         </div>
         <DestinationGrid />
       </section>

@@ -1,4 +1,5 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useState } from 'react';
+import { useLocation } from 'wouter';
 
 const dailyRates: Record<string, number> = {
   'Стамбул, Турция': 42000,
@@ -12,23 +13,16 @@ const dailyRates: Record<string, number> = {
   'Алматы, Казахстан': 28000,
 };
 
-const formatMoney = (value: number) => new Intl.NumberFormat('ru-RU').format(value);
-
 export function TripPlanner() {
+  const [, navigate] = useLocation();
   const [destination, setDestination] = useState('Стамбул, Турция');
   const [days, setDays] = useState(7);
   const [nights, setNights] = useState(6);
   const [travelers, setTravelers] = useState(2);
-  const [showEstimate, setShowEstimate] = useState(false);
-
-  const estimate = useMemo(() => {
-    const daily = dailyRates[destination] ?? 45000;
-    return daily * Math.max(days, nights) * travelers + 180000 * travelers;
-  }, [destination, days, nights, travelers]);
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    setShowEstimate(true);
+    navigate('/planner');
   };
 
   return (
@@ -65,7 +59,6 @@ export function TripPlanner() {
         <div><label>Стиль поездки</label><select><option>Комфорт</option><option>Экономно</option><option>Премиум</option></select></div>
       </div>
       <button className="planner__submit" type="submit">Создать план →</button>
-      {showEstimate && <div className="estimate">Примерный бюджет поездки<strong>≈ {formatMoney(estimate)} ₸</strong></div>}
     </form>
   );
 }

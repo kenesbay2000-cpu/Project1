@@ -1,5 +1,5 @@
 .destinations { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
-.destination { position: relative; grid-column: span 4; min-height: 390px; overflow: hidden; border-radius: 24px; color: #fff; background: var(--photo) center/cover; isolation: isolate; box-shadow: 0 14px 38px rgba(20,45,53,.14); transition: transform .35s ease, box-shadow .35s ease; }
+.destination { position: relative; grid-column: span 4; min-height: 390px; overflow: hidden; border-radius: 24px; color: #fff; background: var(--photo) center/cover; isolation: isolate; box-shadow: 0 14px 38px rgba(20,45,53,.14); text-decoration: none; transition: transform .35s ease, box-shadow .35s ease; }
 .destination:nth-child(1) { grid-column: span 5; }
 .destination:nth-child(2) { grid-column: span 7; }
 .destination::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(4,22,29,.08) 35%, rgba(4,22,29,.86)); }

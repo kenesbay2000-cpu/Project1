@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'wouter';
 import { destinations } from '../lib/destinations';
-import { SiteHeader } from './SiteHeader';
 import { TripPlanner } from './TripPlanner';
 
 export function HeroShowcase() {
@@ -19,7 +19,6 @@ export function HeroShowcase() {
   return (
     <section className="hero" style={{ '--hero-photo': `url(${active.image})` } as React.CSSProperties}>
       <div className="hero__backdrop" key={active.image} />
-      <SiteHeader />
       <div className="hero__layout">
         <div className="hero__content" key={active.city}>
           <div className="hero__eyebrow"><span /> Популярно из Казахстана</div>
@@ -30,6 +29,7 @@ export function HeroShowcase() {
             <span><small>Визовый режим</small>{active.visa}</span>
             <span><small>Лучшее время</small>{active.season}</span>
           </div>
+          <Link className="hero__details" href={`/destinations/${active.slug}`}>О направлении <span>↗</span></Link>
         </div>
 
         <aside className="destination-sheet" aria-live="polite">
