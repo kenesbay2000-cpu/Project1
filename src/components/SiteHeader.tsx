@@ -11,9 +11,11 @@ const navigation = [
 export function SiteHeader() {
   const [location] = useLocation();
   const isHome = location === '/';
+  const isDestinationArticle = /^\/destinations\/[^/]+$/.test(location);
+  const isOverlay = isHome || isDestinationArticle;
 
   return (
-    <header className={`site-header ${isHome ? 'site-header--overlay' : 'site-header--light'}`}>
+    <header className={`site-header ${isOverlay ? 'site-header--overlay' : 'site-header--light'}`}>
       <Link className="brand" href="/" aria-label="Roamly — на главную">
         <span className="brand__mark">R</span>
         <span>Roamly<small>smart travel</small></span>

@@ -1,11 +1,20 @@
 import { Link, useRoute } from 'wouter';
+import { DestinationArticleIntro } from '../components/DestinationArticleIntro';
+import { DestinationCautions } from '../components/DestinationCautions';
+import { DestinationEssentials } from '../components/DestinationEssentials';
+import { DestinationHero } from '../components/DestinationHero';
+import { DestinationHighlights } from '../components/DestinationHighlights';
 import { destinations } from '../lib/destinations';
+import { destinationGuides } from '../lib/destinationGuides';
+import './DestinationPage.css';
+import './destinationArticle.css';
 
 export function DestinationPage() {
   const [, params] = useRoute('/destinations/:slug');
   const destination = destinations.find((item) => item.slug === params?.slug);
+  const guide = destination ? destinationGuides[destination.slug] : undefined;
 
-  if (!destination) {
+  if (!destination || !guide) {
     return (
       <main className="placeholder-page">
         <section className="placeholder-card">
@@ -18,16 +27,16 @@ export function DestinationPage() {
 
   return (
     <main className="destination-page">
-      <section className="destination-hero" style={{ '--detail-photo': `url(${destination.image})` } as React.CSSProperties}>
-        <div>
-          <span>{destination.country} · {destination.badge}</span>
-          <h1>{destination.city}</h1>
-          <p>{destination.description}</p>
-          <div className="destination-hero__actions">
-            <Link className="destination-hero__primary" href="/planner">Начать планирование →</Link>
-            <Link className="destination-hero__secondary" href="/">← Назад</Link>
-          </div>
-        </div>
+      <DestinationHero destination={destination} lead={guide.lead} />
+      <article className="destination-article">
+        <DestinationArticleIntro guide={guide} />
+        <DestinationHighlights items={guide.highlights} />
+        <DestinationEssentials destination={destination} guide={guide} />
+        <DestinationCautions guide={guide} />
+      </article>
+      <section className="article-cta">
+        <div><p className="article-kicker">Следующий шаг</p><h2>Соберите поездку под себя</h2></div>
+        <Link href="/planner">Создать маршрут <span>→</span></Link>
       </section>
     </main>
   );
