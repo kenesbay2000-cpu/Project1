@@ -32,7 +32,7 @@ export const destinations: Destination[] = [
     description: 'Неоновые кварталы, тихие сады, выдающаяся кухня и безупречный городской ритм.',
     visa: 'Нужна виза', season: 'март — май', duration: '8 дней · 2 человека',
     price: 'от 1 420 000 ₸', rating: '4,9', reviews: '1 960 отзывов',
-    image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=2200&q=90',
+    image: 'https://images.unsplash.com/photo-1758721378135-be02842f17c7?auto=format&fit=crop&w=2200&q=90',
   },
   {
     city: 'Сингапур', country: 'Сингапур', badge: 'Тропический мегаполис',
