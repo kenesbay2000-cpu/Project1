@@ -3,7 +3,7 @@ import { CatalogDestinationCard } from '../components/CatalogDestinationCard';
 import { CatalogFilterPanel } from '../components/CatalogFilterPanel';
 import { defaultFilters, filterDestinations, PRICE_MAX, PRICE_MIN, sortDestinations, type CatalogFilters, type SortOption } from '../lib/catalogFilters';
 import { destinations } from '../lib/destinations';
-import './DestinationsPage.css';
+import './catalogPage.css';
 import './catalogFilters.css';
 
 export function DestinationsPage() {
