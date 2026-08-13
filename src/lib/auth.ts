@@ -1,16 +1,20 @@
 import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import { normalizeUsername, validateUsername } from './username';
 
 export type RegistrationResult =
   | { status: 'signed-in'; email: string }
   | { status: 'confirmation-required'; email: string };
 
 export async function registerUser(name: string, email: string, password: string): Promise<RegistrationResult> {
+  const usernameError = validateUsername(name);
+  if (usernameError) throw new Error(`USERNAME:${usernameError}`);
+  const normalizedName = normalizeUsername(name);
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { display_name: name, full_name: name },
+      data: { display_name: normalizedName, full_name: normalizedName },
       emailRedirectTo: window.location.origin,
     },
   });
@@ -25,7 +29,47 @@ export async function registerUser(name: string, email: string, password: string
     : { status: 'confirmation-required', email };
 }
 
+export async function signInUser(email: string, password: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data.user;
+}
+
+export async function updateDisplayName(name: string) {
+  const usernameError = validateUsername(name);
+  if (usernameError) throw new Error(`USERNAME:${usernameError}`);
+  const normalizedName = normalizeUsername(name);
+  const { data, error } = await supabase.auth.updateUser({
+    data: { display_name: normalizedName, full_name: normalizedName },
+  });
+  if (error) throw error;
+  return data.user;
+}
+
+export function getProfileError(error: unknown) {
+  if (error instanceof Error && error.message.startsWith('USERNAME:')) return error.message.slice('USERNAME:'.length);
+  const authError = error as Partial<AuthError>;
+  if (authError.code === 'session_not_found' || authError.code === 'refresh_token_not_found') {
+    return 'Сессия завершилась. Войдите снова, чтобы изменить профиль.';
+  }
+  if (authError.status === 0 || authError.message?.toLowerCase().includes('fetch')) {
+    return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте снова.';
+  }
+  return 'Не удалось сохранить имя. Попробуйте ещё раз.';
+}
+
+export function getLoginError(error: unknown) {
+  const authError = error as Partial<AuthError>;
+  if (authError.code === 'invalid_credentials') return 'Неверный email или пароль. Проверьте данные и попробуйте снова.';
+  if (authError.code === 'user_not_found') return 'Пользователь с таким email не найден. Проверьте адрес или зарегистрируйтесь.';
+  if (authError.code === 'email_not_confirmed') return 'Email ещё не подтверждён. Откройте письмо от Supabase и перейдите по ссылке.';
+  if (authError.code === 'email_address_invalid') return 'Email выглядит некорректно. Проверьте адрес и попробуйте снова.';
+  if (authError.status === 0 || authError.message?.toLowerCase().includes('fetch')) return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте снова.';
+  return 'Не удалось войти. Проверьте данные и попробуйте ещё раз.';
+}
+
 export function getRegistrationError(error: unknown) {
+  if (error instanceof Error && error.message.startsWith('USERNAME:')) return error.message.slice('USERNAME:'.length);
   if (error instanceof Error && error.message === 'EMAIL_ALREADY_REGISTERED') {
     return 'Этот email уже зарегистрирован. Попробуйте войти или используйте другой адрес.';
   }

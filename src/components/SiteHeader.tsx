@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'wouter';
+import { useAuth } from './AuthProvider';
 
 const navigation = [
   { href: '/', label: 'Главная' },
@@ -6,11 +7,11 @@ const navigation = [
   { href: '/map', label: 'Карта' },
   { href: '/planner', label: 'AI Planner' },
   { href: '/blog', label: 'Блог' },
-  { href: '/signup', label: 'Аккаунт' },
 ];
 
 export function SiteHeader() {
   const [location] = useLocation();
+  const { user, isLoading } = useAuth();
   const isHome = location === '/';
   const isDestinationArticle = /^\/destinations\/[^/]+$/.test(location);
   const isOverlay = isHome || isDestinationArticle;
@@ -26,8 +27,15 @@ export function SiteHeader() {
           const isActive = item.href === '/' ? isHome : location.startsWith(item.href);
           return <Link className={isActive ? 'is-active' : ''} href={item.href} key={item.href}>{item.label}</Link>;
         })}
+        <div className="header-auth" aria-live="polite">
+          {isLoading ? <span className="header-auth__loading" aria-label="Проверяем авторизацию" /> : user ? (
+            <Link className={location === '/account' ? 'is-active' : ''} href="/account">Аккаунт</Link>
+          ) : (
+            <><Link href="/login">Войти</Link><Link className="header-auth__signup" href="/signup">Регистрация</Link></>
+          )}
+        </div>
       </nav>
-      <Link className="header-action" href="/signup">Создать аккаунт <span>→</span></Link>
+      <Link className="header-action" href="/planner">Начать планировать <span>→</span></Link>
     </header>
   );
 }

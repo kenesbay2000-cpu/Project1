@@ -3,12 +3,14 @@ import { Link } from 'wouter';
 import { getRegistrationError, registerUser, type RegistrationResult } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { SupabaseSetupMessage } from './SupabaseSetupMessage';
+import { MAX_USERNAME_LENGTH, validateUsername } from '../lib/username';
 
 type FieldErrors = Partial<Record<'name' | 'email' | 'password', string>>;
 
 function validate(name: string, email: string, password: string): FieldErrors {
   const errors: FieldErrors = {};
-  if (name.trim().length < 2) errors.name = 'Введите имя — минимум 2 символа.';
+  const usernameError = validateUsername(name);
+  if (usernameError) errors.name = usernameError;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = 'Введите корректный email, например name@example.com.';
   if (password.length < 8) errors.password = 'Пароль должен содержать минимум 8 символов.';
   return errors;
@@ -63,7 +65,7 @@ export function RegistrationForm() {
       <p className="registration-card__intro">Сохраняйте идеи и собирайте поездки в одном спокойном пространстве.</p>
       <form onSubmit={handleSubmit} noValidate>
         <label className={errors.name ? 'has-error' : ''}><span>Ваше имя</span>
-          <input autoComplete="name" value={name} onChange={(event) => { setName(event.target.value); setErrors({ ...errors, name: undefined }); }} placeholder="Как к вам обращаться?" aria-invalid={Boolean(errors.name)} />
+          <input autoComplete="name" maxLength={MAX_USERNAME_LENGTH} value={name} onChange={(event) => { setName(event.target.value); setErrors({ ...errors, name: undefined }); }} placeholder="Как к вам обращаться?" aria-invalid={Boolean(errors.name)} />
           {errors.name && <small>{errors.name}</small>}
         </label>
         <label className={errors.email ? 'has-error' : ''}><span>Email</span>
@@ -77,6 +79,7 @@ export function RegistrationForm() {
         {formError && <p className="registration-error" role="alert">{formError}</p>}
         <button className="registration-submit" type="submit" disabled={busy}>{busy ? 'Создаём аккаунт…' : 'Создать аккаунт'} <span>→</span></button>
       </form>
+      <p className="auth-switch">Уже есть аккаунт? <Link href="/login">Войти</Link></p>
       <p className="registration-terms">Создавая аккаунт, вы соглашаетесь с правилами сервиса и политикой конфиденциальности.</p>
     </section>
   );
