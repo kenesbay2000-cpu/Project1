@@ -4,6 +4,7 @@ import { getRegistrationError, registerUser, type RegistrationResult } from '../
 import { isSupabaseConfigured } from '../lib/supabase';
 import { SupabaseSetupMessage } from './SupabaseSetupMessage';
 import { MAX_USERNAME_LENGTH, validateUsername } from '../lib/username';
+import { GoogleAuthButton } from './GoogleAuthButton';
 
 type FieldErrors = Partial<Record<'name' | 'email' | 'password', string>>;
 
@@ -79,6 +80,7 @@ export function RegistrationForm() {
         {formError && <p className="registration-error" role="alert">{formError}</p>}
         <button className="registration-submit" type="submit" disabled={busy}>{busy ? 'Создаём аккаунт…' : 'Создать аккаунт'} <span>→</span></button>
       </form>
+      <GoogleAuthButton />
       <p className="auth-switch">Уже есть аккаунт? <Link href="/login">Войти</Link></p>
       <p className="registration-terms">Создавая аккаунт, вы соглашаетесь с правилами сервиса и политикой конфиденциальности.</p>
     </section>

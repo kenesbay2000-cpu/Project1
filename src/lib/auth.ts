@@ -1,6 +1,6 @@
-import type { AuthError } from '@supabase/supabase-js';
+import type { AuthError, User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import { normalizeUsername, validateUsername } from './username';
+import { getSafeDisplayName, normalizeUsername, validateUsername } from './username';
 
 export type RegistrationResult =
   | { status: 'signed-in'; email: string }
@@ -31,6 +31,26 @@ export async function registerUser(name: string, email: string, password: string
 
 export async function signInUser(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return data.user;
+}
+
+export async function signInWithGoogle() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin },
+  });
+  if (error) throw error;
+}
+
+export async function ensureGoogleDisplayName(user: User) {
+  const usesGoogle = user.app_metadata.provider === 'google'
+    || user.identities?.some((identity) => identity.provider === 'google');
+  if (!usesGoogle || user.user_metadata.display_name) return user;
+
+  const googleName = user.user_metadata.full_name ?? user.user_metadata.name;
+  const displayName = getSafeDisplayName(googleName, 'Путешественник');
+  const { data, error } = await supabase.auth.updateUser({ data: { display_name: displayName } });
   if (error) throw error;
   return data.user;
 }

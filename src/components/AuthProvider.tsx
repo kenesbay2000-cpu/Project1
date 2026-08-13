@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { getSafeDisplayName } from '../lib/username';
+import { ensureGoogleDisplayName } from '../lib/auth';
 
 type AuthContextValue = {
   user: User | null;
@@ -33,6 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     return () => { isActive = false; listener.subscription.unsubscribe(); };
   }, []);
+
+  useEffect(() => {
+    if (!user || user.user_metadata.display_name) return;
+    void ensureGoogleDisplayName(user).then(setUser).catch(() => undefined);
+  }, [user]);
 
   const value = useMemo<AuthContextValue>(() => ({
     user,

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { getLoginError, signInUser } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { SupabaseSetupMessage } from './SupabaseSetupMessage';
+import { GoogleAuthButton } from './GoogleAuthButton';
 
 export function LoginForm() {
   const [, navigate] = useLocation();
@@ -51,6 +52,7 @@ export function LoginForm() {
         {formError && <p className="registration-error" role="alert">{formError}</p>}
         <button className="registration-submit" type="submit" disabled={busy}>{busy ? 'Проверяем…' : 'Войти'} <span>→</span></button>
       </form>
+      <GoogleAuthButton />
       <p className="auth-switch">Нет аккаунта? <Link href="/signup">Зарегистрироваться</Link></p>
     </section>
   );
