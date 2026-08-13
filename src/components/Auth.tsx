@@ -1,70 +1,83 @@
-import { useState } from 'react';
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { useState, type FormEvent } from 'react';
+import { Link } from 'wouter';
+import { getRegistrationError, registerUser, type RegistrationResult } from '../lib/auth';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { SupabaseSetupMessage } from './SupabaseSetupMessage';
 
-// Вход и регистрация по email + паролю. Это пример — Codex поможет улучшить (Google-вход и т.д.).
-export function Auth() {
+type FieldErrors = Partial<Record<'name' | 'email' | 'password', string>>;
+
+function validate(name: string, email: string, password: string): FieldErrors {
+  const errors: FieldErrors = {};
+  if (name.trim().length < 2) errors.name = 'Введите имя — минимум 2 символа.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = 'Введите корректный email, например name@example.com.';
+  if (password.length < 8) errors.password = 'Пароль должен содержать минимум 8 символов.';
+  return errors;
+}
+
+export function RegistrationForm() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [message, setMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState('');
+  const [result, setResult] = useState<RegistrationResult | null>(null);
   const [busy, setBusy] = useState(false);
 
   if (!isSupabaseConfigured) return <SupabaseSetupMessage />;
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const fieldErrors = validate(name, email, password);
+    setErrors(fieldErrors);
+    setFormError('');
+    if (Object.keys(fieldErrors).length > 0) return;
+
     setBusy(true);
-    setMessage('');
     try {
-      const fn =
-        mode === 'signup'
-          ? supabase.auth.signUp({
-              email,
-              password,
-              options: { emailRedirectTo: window.location.origin },
-            })
-          : supabase.auth.signInWithPassword({ email, password });
-      const { error } = await fn;
-      if (error) setMessage(error.message);
-      else if (mode === 'signup') setMessage('Готово! Проверь почту, если нужна подтверждалка.');
-    } catch {
-      setMessage('Что-то пошло не так. Попробуй ещё раз.');
+      setResult(await registerUser(name.trim(), email.trim().toLowerCase(), password));
+    } catch (error) {
+      setFormError(getRegistrationError(error));
     } finally {
       setBusy(false);
     }
   }
 
+  if (result) {
+    const needsConfirmation = result.status === 'confirmation-required';
+    return (
+      <section className="registration-success" role="status">
+        <span className="registration-success__mark">✓</span>
+        <p className="auth-eyebrow">Аккаунт создан</p>
+        <h1>{needsConfirmation ? 'Остался один шаг' : `Добро пожаловать, ${name.trim()}!`}</h1>
+        <p>{needsConfirmation ? `Мы отправили письмо на ${result.email}. Перейдите по ссылке, чтобы подтвердить email и завершить регистрацию.` : 'Вы уже вошли в аккаунт и можете начинать планировать путешествие.'}</p>
+        <Link href={needsConfirmation ? '/' : '/planner'}>{needsConfirmation ? 'Вернуться на главную' : 'Перейти к планированию'} <span>→</span></Link>
+      </section>
+    );
+  }
+
   return (
-    <section className="card">
-      <h2>{mode === 'signin' ? 'Вход' : 'Регистрация'}</h2>
-      <form onSubmit={handleSubmit} className="form">
-        <input
-          type="email"
-          placeholder="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="пароль (6+ символов)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          minLength={6}
-          required
-        />
-        <button type="submit" disabled={busy}>
-          {busy ? '…' : mode === 'signin' ? 'Войти' : 'Создать аккаунт'}
-        </button>
+    <section className="registration-card">
+      <p className="auth-eyebrow">Новый аккаунт</p>
+      <h1>Путешествия начинаются здесь</h1>
+      <p className="registration-card__intro">Сохраняйте идеи и собирайте поездки в одном спокойном пространстве.</p>
+      <form onSubmit={handleSubmit} noValidate>
+        <label className={errors.name ? 'has-error' : ''}><span>Ваше имя</span>
+          <input autoComplete="name" value={name} onChange={(event) => { setName(event.target.value); setErrors({ ...errors, name: undefined }); }} placeholder="Как к вам обращаться?" aria-invalid={Boolean(errors.name)} />
+          {errors.name && <small>{errors.name}</small>}
+        </label>
+        <label className={errors.email ? 'has-error' : ''}><span>Email</span>
+          <input type="email" autoComplete="email" value={email} onChange={(event) => { setEmail(event.target.value); setErrors({ ...errors, email: undefined }); }} placeholder="name@example.com" aria-invalid={Boolean(errors.email)} />
+          {errors.email && <small>{errors.email}</small>}
+        </label>
+        <label className={errors.password ? 'has-error' : ''}><span>Пароль</span>
+          <div className="password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(event) => { setPassword(event.target.value); setErrors({ ...errors, password: undefined }); }} placeholder="Минимум 8 символов" aria-invalid={Boolean(errors.password)} /><button type="button" onClick={() => setShowPassword((value) => !value)}>{showPassword ? 'Скрыть' : 'Показать'}</button></div>
+          {errors.password ? <small>{errors.password}</small> : <small className="field-hint">Используйте 8 или больше символов.</small>}
+        </label>
+        {formError && <p className="registration-error" role="alert">{formError}</p>}
+        <button className="registration-submit" type="submit" disabled={busy}>{busy ? 'Создаём аккаунт…' : 'Создать аккаунт'} <span>→</span></button>
       </form>
-      {message && <p className="message">{message}</p>}
-      <button
-        className="ghost"
-        onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
-      >
-        {mode === 'signin' ? 'Нет аккаунта? Зарегистрируйся' : 'Уже есть аккаунт? Войти'}
-      </button>
+      <p className="registration-terms">Создавая аккаунт, вы соглашаетесь с правилами сервиса и политикой конфиденциальности.</p>
     </section>
   );
 }

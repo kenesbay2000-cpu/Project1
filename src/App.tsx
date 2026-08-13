@@ -6,6 +6,7 @@ import { DestinationPage } from './pages/DestinationPage';
 import { DestinationsPage } from './pages/DestinationsPage';
 import { MapPage } from './pages/MapPage';
 import { PlannerPage } from './pages/PlannerPage';
+import { SignupPage } from './pages/SignupPage';
 import { SiteHeader } from './components/SiteHeader';
 import { PageTransition } from './components/PageTransition';
 
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/map" component={MapPage} />
           <Route path="/planner" component={PlannerPage} />
           <Route path="/blog" component={BlogPage} />
+          <Route path="/signup" component={SignupPage} />
           <Route component={NotFoundPage} />
         </Switch>
       </PageTransition>

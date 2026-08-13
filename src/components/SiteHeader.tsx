@@ -6,6 +6,7 @@ const navigation = [
   { href: '/map', label: 'Карта' },
   { href: '/planner', label: 'AI Planner' },
   { href: '/blog', label: 'Блог' },
+  { href: '/signup', label: 'Аккаунт' },
 ];
 
 export function SiteHeader() {
@@ -26,7 +27,7 @@ export function SiteHeader() {
           return <Link className={isActive ? 'is-active' : ''} href={item.href} key={item.href}>{item.label}</Link>;
         })}
       </nav>
-      <Link className="header-action" href="/planner">Начать планирование <span>→</span></Link>
+      <Link className="header-action" href="/signup">Создать аккаунт <span>→</span></Link>
     </header>
   );
 }
