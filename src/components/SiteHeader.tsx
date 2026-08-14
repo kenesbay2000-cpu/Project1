@@ -29,7 +29,10 @@ export function SiteHeader() {
         })}
         <div className="header-auth" aria-live="polite">
           {isLoading ? <span className="header-auth__loading" aria-label="Проверяем авторизацию" /> : user ? (
-            <Link className={location === '/account' ? 'is-active' : ''} href="/account">Аккаунт</Link>
+            <>
+              <Link className={location === '/profile' || location === '/account' ? 'is-active' : ''} href="/profile">Профиль</Link>
+              <Link className={location.startsWith('/my-plans') ? 'is-active' : ''} href="/my-plans">Мои планы</Link>
+            </>
           ) : (
             <><Link href="/login">Войти</Link><Link className="header-auth__signup" href="/signup">Регистрация</Link></>
           )}

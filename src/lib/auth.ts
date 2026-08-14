@@ -6,7 +6,7 @@ export type RegistrationResult =
   | { status: 'signed-in'; email: string }
   | { status: 'confirmation-required'; email: string };
 
-export async function registerUser(name: string, email: string, password: string): Promise<RegistrationResult> {
+export async function registerUser(name: string, email: string, password: string, redirectPath = '/'): Promise<RegistrationResult> {
   const usernameError = validateUsername(name);
   if (usernameError) throw new Error(`USERNAME:${usernameError}`);
   const normalizedName = normalizeUsername(name);
@@ -15,7 +15,7 @@ export async function registerUser(name: string, email: string, password: string
     password,
     options: {
       data: { display_name: normalizedName, full_name: normalizedName },
-      emailRedirectTo: window.location.origin,
+      emailRedirectTo: new URL(redirectPath, window.location.origin).toString(),
     },
   });
 
@@ -35,10 +35,10 @@ export async function signInUser(email: string, password: string) {
   return data.user;
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(redirectPath = '/') {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin },
+    options: { redirectTo: new URL(redirectPath, window.location.origin).toString() },
   });
   if (error) throw error;
 }

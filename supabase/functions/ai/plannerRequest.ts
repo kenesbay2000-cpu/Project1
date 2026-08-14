@@ -23,6 +23,14 @@ export function parsePlannerRequest(value: unknown): ParseResult {
   if (!prompt) return invalid('Опишите желаемую поездку.');
   if (prompt.length > 4_000) return invalid('Описание поездки не должно превышать 4000 символов.');
 
+  let originCity: string | undefined;
+  if (value.originCity !== undefined) {
+    if (typeof value.originCity !== 'string' || !value.originCity.trim() || value.originCity.trim().length > 120) {
+      return invalid('Город вылета должен содержать от 1 до 120 символов.');
+    }
+    originCity = value.originCity.trim();
+  }
+
   let dates: PlannerRequest['dates'];
   if (value.dates !== undefined) {
     if (!isRecord(value.dates) || !isIsoDate(value.dates.start) || !isIsoDate(value.dates.end)) {
@@ -66,12 +74,13 @@ export function parsePlannerRequest(value: unknown): ParseResult {
     priceRange = { min, max, currency };
   }
 
-  return { value: { prompt, dates, travelers, travelerAges, priceRange } };
+  return { value: { prompt, originCity, dates, travelers, travelerAges, priceRange } };
 }
 
 export function buildPlannerPrompt(request: PlannerRequest, isRetry = false) {
   const details = [
     `Запрос пользователя: ${request.prompt}`,
+    `Город вылета: ${request.originCity ?? 'не указан'}`,
     request.dates ? `Даты: ${request.dates.start} — ${request.dates.end}` : 'Даты: не указаны',
     `Путешественников: ${request.travelers ?? 'не указано'}`,
     `Возраст путешественников: ${request.travelerAges?.join(', ') || 'не указан'}`,

@@ -1,8 +1,8 @@
 import { FormEvent, useState } from 'react';
-import { generateTripPlan, type PlannerRequest, type TripPlan } from '../lib/aiPlanner';
+import { generateTripPlan, type GeneratedTrip, type PlannerRequest } from '../lib/aiPlanner';
 
 type PlannerFormProps = {
-  onPlanCreated: (plan: TripPlan) => void;
+  onPlanCreated: (trip: GeneratedTrip) => void;
 };
 
 function parseAges(value: string) {
@@ -16,6 +16,7 @@ function parseAges(value: string) {
 
 export function PlannerForm({ onPlanCreated }: PlannerFormProps) {
   const [prompt, setPrompt] = useState('');
+  const [originCity, setOriginCity] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [travelers, setTravelers] = useState('');
@@ -28,6 +29,7 @@ export function PlannerForm({ onPlanCreated }: PlannerFormProps) {
 
   const buildRequest = (): PlannerRequest => {
     const request: PlannerRequest = { prompt: prompt.trim() };
+    if (originCity.trim()) request.originCity = originCity.trim();
     if (startDate || endDate) {
       if (!startDate || !endDate) throw new Error('Укажите обе даты поездки или оставьте обе пустыми.');
       if (endDate < startDate) throw new Error('Дата окончания раньше даты начала. Исправьте даты и повторите запрос.');
@@ -58,7 +60,9 @@ export function PlannerForm({ onPlanCreated }: PlannerFormProps) {
     setError('');
     setIsLoading(true);
     try {
-      onPlanCreated(await generateTripPlan(buildRequest()));
+      const request = buildRequest();
+      const plan = await generateTripPlan(request);
+      onPlanCreated({ id: crypto.randomUUID(), request, plan });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Не удалось создать маршрут. Попробуйте ещё раз.');
     } finally {
@@ -71,6 +75,7 @@ export function PlannerForm({ onPlanCreated }: PlannerFormProps) {
       <label className="planner-form__wide">Опишите поездку
         <textarea required maxLength={4000} rows={5} value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Например: хочу неделю в Японии, люблю природу, небольшие кафе и спокойный темп" />
       </label>
+      <label>Город вылета<input value={originCity} maxLength={120} onChange={(event) => setOriginCity(event.target.value)} placeholder="Например, Алматы" /></label>
       <label>Дата начала<input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></label>
       <label>Дата окончания<input type="date" min={startDate || undefined} value={endDate} onChange={(event) => setEndDate(event.target.value)} /></label>
       <label>Путешественники<input type="number" min="1" max="20" value={travelers} onChange={(event) => setTravelers(event.target.value)} placeholder="Например, 2" /></label>

@@ -2,10 +2,17 @@ import { isSupabaseConfigured, supabase } from './supabase';
 
 export type PlannerRequest = {
   prompt: string;
+  originCity?: string;
   dates?: { start: string; end: string };
   travelers?: number;
   travelerAges?: number[];
   priceRange?: { min: number; max: number; currency: string };
+};
+
+export type GeneratedTrip = {
+  id: string;
+  request: PlannerRequest;
+  plan: TripPlan;
 };
 
 export type TripPlan = {

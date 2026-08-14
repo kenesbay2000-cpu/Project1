@@ -1,5 +1,6 @@
 export type PlannerRequest = {
   prompt: string;
+  originCity?: string;
   dates?: { start: string; end: string };
   travelers?: number;
   travelerAges?: number[];

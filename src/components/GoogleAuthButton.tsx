@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getLoginError, signInWithGoogle } from '../lib/auth';
+import { hasPendingTrip } from '../lib/savedPlans';
 
 function GoogleIcon() {
   return (
@@ -20,7 +21,7 @@ export function GoogleAuthButton() {
     setBusy(true);
     setError('');
     try {
-      await signInWithGoogle();
+      await signInWithGoogle(hasPendingTrip() ? '/planner' : '/');
     } catch (oauthError) {
       setError(getLoginError(oauthError));
       setBusy(false);

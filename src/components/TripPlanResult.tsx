@@ -1,20 +1,23 @@
-import type { TripPlan } from '../lib/aiPlanner';
+import type { GeneratedTrip } from '../lib/aiPlanner';
 import { BudgetBreakdown } from './BudgetBreakdown';
 import { TripDayCard } from './TripDayCard';
+import { SavePlanButton } from './SavePlanButton';
 import './TripPlanResult.css';
 
 type TripPlanResultProps = {
-  plan: TripPlan;
-  onEdit: () => void;
+  trip: GeneratedTrip;
+  onEdit?: () => void;
+  heroEyebrow?: string;
 };
 
-export function TripPlanResult({ plan, onEdit }: TripPlanResultProps) {
+export function TripPlanResult({ trip, onEdit, heroEyebrow = 'Персональный маршрут готов' }: TripPlanResultProps) {
+  const { plan } = trip;
   return (
     <div className="trip-result" aria-live="polite">
       <header className="trip-result__hero">
-        <button type="button" onClick={onEdit}>← Изменить запрос</button>
+        {onEdit && <button type="button" onClick={onEdit}>← Изменить запрос</button>}
         <div className="trip-result__hero-copy">
-          <span className="trip-result__eyebrow">Персональный маршрут готов</span>
+          <span className="trip-result__eyebrow">{heroEyebrow}</span>
           <h1>{plan.title}</h1>
           <p>⌖ {plan.destination.city}, {plan.destination.country}</p>
         </div>
@@ -24,6 +27,7 @@ export function TripPlanResult({ plan, onEdit }: TripPlanResultProps) {
           <span><strong>{plan.budget.currency}</strong> валюта расчёта</span>
         </div>
       </header>
+      {onEdit && <SavePlanButton trip={trip} />}
 
       <section className="trip-result__section">
         <div className="trip-result__section-heading"><span>01</span><div><p>Ваше путешествие</p><h2>Маршрут по дням</h2></div></div>
@@ -51,7 +55,7 @@ export function TripPlanResult({ plan, onEdit }: TripPlanResultProps) {
       <aside className="trip-rationale">
         <span>Почему именно такой маршрут</span><p>{plan.rationale}</p>
       </aside>
-      <button className="trip-result__restart" type="button" onClick={onEdit}>Изменить запрос и создать новый маршрут →</button>
+      {onEdit && <button className="trip-result__restart" type="button" onClick={onEdit}>Изменить запрос и создать новый маршрут →</button>}
     </div>
   );
 }

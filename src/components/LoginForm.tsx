@@ -4,6 +4,7 @@ import { getLoginError, signInUser } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { SupabaseSetupMessage } from './SupabaseSetupMessage';
 import { GoogleAuthButton } from './GoogleAuthButton';
+import { hasPendingTrip } from '../lib/savedPlans';
 
 export function LoginForm() {
   const [, navigate] = useLocation();
@@ -28,7 +29,7 @@ export function LoginForm() {
     setBusy(true);
     try {
       await signInUser(normalizedEmail, password);
-      navigate('/');
+      navigate(hasPendingTrip() ? '/planner' : '/');
     } catch (error) {
       setFormError(getLoginError(error));
     } finally {

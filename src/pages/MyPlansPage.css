@@ -1,0 +1,42 @@
+.my-plans-page { min-height: calc(100vh - 92px); padding: clamp(68px, 9vw, 120px) max(24px, calc((100% - 1080px) / 2)) 100px; color: #17333e; background: radial-gradient(circle at 88% 5%, rgba(232,111,74,.12), transparent 27%), #f7f5ef; }
+.my-plans-page > header { max-width: 720px; margin-bottom: clamp(42px, 7vw, 72px); }
+.my-plans-page > header > span, .my-plans-empty > span { color: #d96947; font-size: 10px; font-weight: 800; letter-spacing: .17em; text-transform: uppercase; }
+.my-plans-page h1 { margin: 12px 0 18px; font-family: Georgia, serif; font-size: clamp(58px, 8vw, 98px); font-weight: 400; letter-spacing: -.055em; }
+.my-plans-page > header p { max-width: 560px; color: #718086; font-size: 16px; line-height: 1.7; }
+.my-plans-empty { min-height: 380px; padding: clamp(36px, 7vw, 72px); display: grid; place-items: center; align-content: center; border: 1px solid #deddd7; border-radius: 30px; background: rgba(255,255,255,.58); box-shadow: 0 18px 45px rgba(20,45,53,.06); text-align: center; }
+.my-plans-empty > div { width: 66px; height: 66px; margin-bottom: 24px; display: grid; place-items: center; color: #fff; background: #173941; border-radius: 50% 50% 50% 16px; font-size: 25px; box-shadow: 0 12px 28px rgba(23,57,65,.18); }
+.my-plans-empty h2 { margin: 13px 0 12px; font-family: Georgia, serif; font-size: clamp(30px, 5vw, 46px); font-weight: 400; }
+.my-plans-empty p { max-width: 570px; color: #718086; font-size: 14px; line-height: 1.7; }
+.my-plans-empty a { margin-top: 27px; padding: 14px 21px; color: #fff; background: #e86f4a; border-radius: 999px; font-size: 11px; font-weight: 800; text-decoration: none; box-shadow: 0 10px 25px rgba(196,76,42,.18); transition: transform .2s; }
+.my-plans-empty a:hover { transform: translateY(-2px); }
+.saved-plans-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.saved-plan-card { position: relative; min-height: 390px; display: flex; flex-direction: column; overflow: visible; background: rgba(255,255,255,.82); border: 1px solid #deddd7; border-radius: 26px; box-shadow: 0 15px 36px rgba(20,45,53,.06); cursor: pointer; outline: none; transition: transform .25s, box-shadow .25s, border-color .25s; }
+.saved-plan-card:hover, .saved-plan-card:focus-visible { transform: translateY(-5px); border-color: #c8cbc6; box-shadow: 0 23px 48px rgba(20,45,53,.11); }
+.saved-plan-card__accent { min-height: 125px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; color: #fff; background: radial-gradient(circle at 90% 10%, rgba(238,129,91,.45), transparent 35%), linear-gradient(145deg, #173f49, #102f39); border-radius: 25px 25px 0 0; }
+.saved-plan-card__accent > span { width: 39px; height: 39px; display: grid; place-items: center; color: #f3aa8f; border: 1px solid rgba(255,255,255,.24); border-radius: 50% 50% 50% 12px; }
+.saved-plan-card__accent small { max-width: 80%; color: rgba(255,255,255,.72); font-size: 10px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+.saved-plan-card__menu-button { position: absolute; z-index: 3; top: 18px; right: 18px; width: 38px; height: 34px; color: #fff; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); border-radius: 999px; font-weight: 900; letter-spacing: 2px; cursor: pointer; }
+.saved-plan-card__body { padding: 25px 24px 15px; }
+.saved-plan-card__body > span { color: #c86142; font-size: 9px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.saved-plan-card__body h2 { margin: 11px 0 13px; color: #17333e; font-family: Georgia, serif; font-size: 27px; font-weight: 400; line-height: 1.14; }
+.saved-plan-card__body p { color: #718086; font-size: 12px; }
+.saved-plan-card__open { margin: auto 24px 23px; padding-top: 15px; display: block; color: #17333e; border-top: 1px solid #e2e1db; font-size: 10px; font-weight: 800; }
+.saved-plan-menu { position: absolute; z-index: 5; top: 58px; right: 18px; width: 250px; padding: 10px; color: #17333e; background: #fff; border: 1px solid #dddcd6; border-radius: 16px; box-shadow: 0 18px 42px rgba(14,39,47,.2); cursor: default; }
+.saved-plan-menu > button { width: 100%; padding: 11px 12px; border: 0; border-radius: 10px; color: #29464e; background: transparent; font-size: 12px; text-align: left; cursor: pointer; }
+.saved-plan-menu > button:hover { background: #f4f2ed; }.saved-plan-menu > .saved-plan-menu__delete { color: #a64a36; }
+.saved-plan-menu form label { color: #78878b; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.saved-plan-menu input { width: 100%; margin-top: 7px; padding: 11px 12px; color: #17333e; border: 1px solid #d9d8d2; border-radius: 10px; outline: none; }
+.saved-plan-menu input:focus { border-color: #d66a48; box-shadow: 0 0 0 3px rgba(214,106,72,.1); }
+.saved-plan-menu form > div, .saved-plan-menu__confirm > div { margin-top: 10px; display: flex; justify-content: flex-end; gap: 7px; }
+.saved-plan-menu form button, .saved-plan-menu__confirm button { padding: 8px 10px; border: 0; border-radius: 9px; color: #52666c; background: #efeee9; font-size: 10px; font-weight: 800; cursor: pointer; }
+.saved-plan-menu form button:last-child, .saved-plan-menu__confirm button:last-child { color: #fff; background: #d96645; }
+.saved-plan-menu__confirm { padding: 8px; }.saved-plan-menu__confirm strong { font-family: Georgia, serif; font-size: 18px; font-weight: 400; }.saved-plan-menu__confirm p { margin-top: 5px; color: #78878b; font-size: 11px; }
+.saved-plan-menu__error { margin: 9px 8px 4px; color: #a34834; font-size: 10px; line-height: 1.4; }
+.my-plans-loading, .my-plans-error { min-height: 250px; display: grid; place-items: center; align-content: center; gap: 13px; color: #6f7f84; background: rgba(255,255,255,.58); border: 1px solid #deddd7; border-radius: 25px; }
+.my-plans-loading > span { width: 34px; height: 34px; border: 3px solid #dddcd6; border-top-color: #e86f4a; border-radius: 50%; animation: plans-spin .8s linear infinite; }
+.my-plans-error button { padding: 10px 15px; color: #fff; background: #e86f4a; border: 0; border-radius: 999px; font-size: 11px; font-weight: 800; cursor: pointer; }
+@keyframes plans-spin { to { transform: rotate(360deg); } }
+@media (max-width: 950px) { .saved-plans-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .my-plans-page { min-height: calc(100vh - 118px); padding: 58px 18px 80px; }.my-plans-empty { min-height: 350px; border-radius: 24px; } }
+@media (max-width: 620px) { .saved-plans-grid { grid-template-columns: 1fr; }.saved-plan-card { min-height: 360px; } }
+@media (prefers-reduced-motion: reduce) { .my-plans-empty a, .saved-plan-card { transition: none; }.my-plans-loading > span { animation: none; } }

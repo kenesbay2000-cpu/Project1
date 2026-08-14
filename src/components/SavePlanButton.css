@@ -1,0 +1,15 @@
+.save-plan { position: relative; margin-top: 22px; padding: clamp(24px, 4vw, 36px); display: flex; align-items: center; justify-content: space-between; gap: 28px; background: #fff; border: 1px solid #dfdfd9; border-radius: 24px; box-shadow: 0 15px 36px rgba(20,45,53,.06); }
+.save-plan > div:first-child > span { color: #d56644; font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.save-plan h2 { margin: 7px 0 5px; color: #17333e; font-family: Georgia, serif; font-size: clamp(22px, 3vw, 31px); font-weight: 400; }
+.save-plan > div:first-child > p { color: #78878b; font-size: 12px; }
+.save-plan > button { flex: 0 0 auto; min-width: 170px; padding: 14px 21px; color: #fff; background: #e86f4a; border: 0; border-radius: 999px; font-weight: 800; cursor: pointer; box-shadow: 0 10px 24px rgba(196,76,42,.18); }
+.save-plan > button:disabled { cursor: wait; opacity: .65; }
+.save-plan__auth { position: absolute; z-index: 2; top: calc(100% + 10px); right: 0; width: min(390px, 100%); padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; color: #fff; background: #173941; border-radius: 18px; box-shadow: 0 18px 42px rgba(15,43,51,.24); }
+.save-plan__auth p { grid-column: 1 / -1; margin-bottom: 5px; font-size: 12px; line-height: 1.55; }
+.save-plan__auth a { padding: 10px 13px; color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; font-size: 11px; font-weight: 800; text-align: center; text-decoration: none; }
+.save-plan__auth a:last-child { color: #17333e; background: #fff; }
+.save-plan__error { width: 100%; color: #994331; font-size: 12px; }
+.save-plan--success { justify-content: flex-start; color: #23594f; background: #eaf4ef; border-color: #cce2d8; }
+.save-plan--success > span { width: 42px; height: 42px; display: grid; place-items: center; color: #fff; background: #2f7163; border-radius: 50%; font-weight: 900; }
+.save-plan--success strong { color: #173f38; }.save-plan--success p { margin-top: 3px; font-size: 12px; }
+@media (max-width: 650px) { .save-plan { align-items: stretch; flex-direction: column; }.save-plan > button { width: 100%; }.save-plan__auth { position: static; width: 100%; } }

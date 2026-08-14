@@ -8,7 +8,9 @@ import { MapPage } from './pages/MapPage';
 import { PlannerPage } from './pages/PlannerPage';
 import { SignupPage } from './pages/SignupPage';
 import { LoginPage } from './pages/LoginPage';
-import { AccountPage } from './pages/AccountPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { MyPlansPage } from './pages/MyPlansPage';
+import { SavedPlanPage } from './pages/SavedPlanPage';
 import { SiteHeader } from './components/SiteHeader';
 import { PageTransition } from './components/PageTransition';
 
@@ -27,7 +29,10 @@ export default function App() {
           <Route path="/blog" component={BlogPage} />
           <Route path="/signup" component={SignupPage} />
           <Route path="/login" component={LoginPage} />
-          <Route path="/account" component={AccountPage} />
+          <Route path="/profile" component={ProfilePage} />
+          <Route path="/my-plans/:id" component={SavedPlanPage} />
+          <Route path="/my-plans" component={MyPlansPage} />
+          <Route path="/account" component={ProfilePage} />
           <Route component={NotFoundPage} />
         </Switch>
       </PageTransition>

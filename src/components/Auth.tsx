@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { getRegistrationError, registerUser, type RegistrationResult } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { SupabaseSetupMessage } from './SupabaseSetupMessage';
 import { MAX_USERNAME_LENGTH, validateUsername } from '../lib/username';
 import { GoogleAuthButton } from './GoogleAuthButton';
+import { hasPendingTrip } from '../lib/savedPlans';
 
 type FieldErrors = Partial<Record<'name' | 'email' | 'password', string>>;
 
@@ -18,6 +19,7 @@ function validate(name: string, email: string, password: string): FieldErrors {
 }
 
 export function RegistrationForm() {
+  const [, navigate] = useLocation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,7 +40,10 @@ export function RegistrationForm() {
 
     setBusy(true);
     try {
-      setResult(await registerUser(name.trim(), email.trim().toLowerCase(), password));
+      const hasPendingPlan = hasPendingTrip();
+      const registration = await registerUser(name.trim(), email.trim().toLowerCase(), password, hasPendingPlan ? '/planner' : '/');
+      if (registration.status === 'signed-in' && hasPendingPlan) { navigate('/planner'); return; }
+      setResult(registration);
     } catch (error) {
       setFormError(getRegistrationError(error));
     } finally {
