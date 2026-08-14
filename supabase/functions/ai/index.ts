@@ -1,25 +1,10 @@
-// AI-функция на бесплатном ключе Google Gemini.
-// Вызов с фронта: supabase.functions.invoke('ai', { body: { prompt, system } })
-//
-// Запуск (один раз):
-//   1) Добавь GEMINI_API_KEY в локальный .env
-//   2) Загрузи секрет:  npm run ai:secret
-//   3) Задеплой:        npm run ai:deploy
-
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-const MODEL = 'gemini-3.5-flash';
+import { parsePlannerAIResult } from './aiResult.ts';
+import { requestGemini } from './gemini.ts';
+import { buildPlannerPrompt, parsePlannerRequest } from './plannerRequest.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-type GeminiResponse = {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{ text?: unknown }>;
-    };
-  }>;
 };
 
 function json(body: object, status = 200) {
@@ -29,52 +14,48 @@ function json(body: object, status = 200) {
   });
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
-  if (req.method !== 'POST') return json({ error: 'Используй POST-запрос' }, 405);
+function failure(code: string, message: string, status: number) {
+  return json({ error: { code, message } }, status);
+}
 
+Deno.serve(async (request) => {
+  if (request.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  if (request.method !== 'POST') return failure('METHOD_NOT_ALLOWED', 'Используйте POST-запрос.', 405);
+
+  let requestBody: unknown;
   try {
-    if (!GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY is not configured');
-      return json({ error: 'AI пока не настроен. Попроси наставника проверить секрет.' }, 503);
-    }
-
-    const body = (await req.json()) as { prompt?: unknown; system?: unknown };
-    const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
-    const system = typeof body.system === 'string' ? body.system.trim() : '';
-
-    if (!prompt) return json({ error: 'Напиши запрос для AI.' }, 400);
-    if (prompt.length > 10_000 || system.length > 5_000) {
-      return json({ error: 'Запрос слишком длинный. Сделай его короче.' }, 400);
-    }
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: system ? { parts: [{ text: system }] } : undefined,
-          contents: [{ parts: [{ text: prompt }] }],
-        }),
-      },
-    );
-
-    const data = (await response.json()) as GeminiResponse;
-    if (!response.ok) {
-      console.error('Gemini request failed', response.status, data);
-      return json({ error: 'AI сейчас не ответил. Попробуй ещё раз чуть позже.' }, 502);
-    }
-
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (typeof text !== 'string' || !text.trim()) {
-      console.error('Gemini returned an empty response', data);
-      return json({ error: 'AI вернул пустой ответ. Попробуй переформулировать запрос.' }, 502);
-    }
-
-    return json({ text });
-  } catch (error) {
-    console.error('AI function failed', error);
-    return json({ error: 'Не получилось обратиться к AI. Попробуй ещё раз.' }, 500);
+    requestBody = await request.json();
+  } catch {
+    return failure('INVALID_REQUEST', 'Тело запроса должно быть корректным JSON.', 400);
   }
+
+  const parsedRequest = parsePlannerRequest(requestBody);
+  if ('error' in parsedRequest) {
+    return failure(parsedRequest.error.code, parsedRequest.error.message, 400);
+  }
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const gemini = await requestGemini(buildPlannerPrompt(parsedRequest.value, attempt > 0));
+    if (!gemini.ok) return failure(gemini.code, gemini.message, gemini.status);
+
+    const parsedResult = parsePlannerAIResult(gemini.text);
+    if ('error' in parsedResult) {
+      console.error(`Invalid Gemini planner response on attempt ${attempt + 1}:`, parsedResult.error);
+      continue;
+    }
+    if (parsedResult.value.status === 'budget_too_low') {
+      return failure(
+        'BUDGET_TOO_LOW',
+        'Указанного бюджета недостаточно для реалистичной поездки по выбранному направлению и датам. Увеличьте бюджет, сократите длительность или число путешественников.',
+        422,
+      );
+    }
+    return json({ plan: parsedResult.value.plan });
+  }
+
+  return failure(
+    'INVALID_AI_RESPONSE',
+    'Ответ ИИ дважды пришёл неполным или повреждённым. Попробуйте уточнить запрос и запустить генерацию ещё раз.',
+    502,
+  );
 });

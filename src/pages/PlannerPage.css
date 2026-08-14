@@ -1,0 +1,24 @@
+.planner-page { min-height: calc(100vh - 92px); padding: clamp(54px, 8vw, 100px) clamp(20px, 6vw, 90px); background: #f6f3ed; }
+.planner-page__intro { width: min(760px, 100%); margin: 0 auto 36px; text-align: center; }
+.planner-page__eyebrow { color: #c75f3d; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+.planner-page__intro h1 { margin: 12px 0 16px; font-family: Georgia, serif; font-size: clamp(46px, 7vw, 76px); font-weight: 400; letter-spacing: -.04em; }
+.planner-page__intro p { color: #66757b; font-size: 17px; line-height: 1.65; }
+.planner-form { width: min(900px, 100%); margin: 0 auto; padding: clamp(24px, 4vw, 42px); border: 1px solid #deddd7; border-radius: 28px; background: rgba(255,255,255,.78); box-shadow: 0 22px 55px rgba(20,45,53,.08); }
+.planner-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+.planner-form label { display: grid; gap: 8px; color: #52666d; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.planner-form__wide, .planner-form__error, .planner-form__loading { grid-column: 1 / -1; }
+.planner-form input, .planner-form select, .planner-form textarea { width: 100%; padding: 13px 15px; color: #17333e; background: #fff; border: 1px solid #d8dcd9; border-radius: 12px; outline: none; font-size: 15px; font-weight: 500; letter-spacing: normal; text-transform: none; transition: border-color .2s, box-shadow .2s; }
+.planner-form textarea { resize: vertical; line-height: 1.55; }
+.planner-form :is(input, select, textarea):focus { border-color: #78908f; box-shadow: 0 0 0 3px rgba(71,104,105,.1); }
+.planner-form__error { padding: 13px 15px; color: #8b3825; background: #fff0eb; border-radius: 12px; font-size: 14px; line-height: 1.5; }
+.planner-form__submit { justify-self: start; min-width: 190px; padding: 14px 24px; color: #fff; background: #e86f4a; border: 0; border-radius: 999px; font-weight: 800; cursor: pointer; transition: transform .2s, background .2s; }
+.planner-form__submit:hover:not(:disabled) { transform: translateY(-2px); background: #d65c34; }
+.planner-form__submit:disabled { cursor: wait; opacity: .7; }
+.planner-form__loading { align-self: center; color: #66757b; font-size: 14px; }
+.planner-page--result { padding-top: clamp(32px, 5vw, 64px); }
+@media (max-width: 700px) {
+  .planner-page { min-height: calc(100vh - 118px); }
+  .planner-form { grid-template-columns: 1fr; }
+  .planner-form__wide, .planner-form__error, .planner-form__loading { grid-column: auto; }
+  .planner-form__submit { width: 100%; }
+}
