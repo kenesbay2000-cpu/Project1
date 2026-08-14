@@ -1,5 +1,5 @@
 .city-autocomplete { position: relative; display: grid; gap: 8px; }
-.city-autocomplete > span { margin-left: 5px; color: #5d6d72; font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.city-autocomplete > label { margin-left: 5px; color: #5d6d72; font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .city-autocomplete__control { position: relative; }
 .city-autocomplete__control input { width: 100%; height: 54px; padding: 0 48px 0 20px; border: 1px solid #d8d7d1; border-radius: 999px; outline: 0; color: #17333e; background: rgba(255,255,255,.88); font: inherit; font-size: 14px; transition: border-color .2s, box-shadow .2s; }
 .city-autocomplete__control input:focus { border-color: #d96947; box-shadow: 0 0 0 4px rgba(217,105,71,.11); }

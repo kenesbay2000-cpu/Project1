@@ -65,8 +65,8 @@ export function CityAutocomplete({
   const validationMessage = query.trim() && !value ? 'Выберите город из списка подсказок.' : '';
 
   return (
-    <label className="city-autocomplete" htmlFor={inputId}>
-      <span>{label}</span>
+    <div className="city-autocomplete">
+      <label htmlFor={inputId}>{label}</label>
       <div className="city-autocomplete__control">
         <input ref={inputRef} id={inputId} name={name} value={query} placeholder={placeholder}
           autoComplete="off" disabled={disabled} required={required} role="combobox"
@@ -90,6 +90,6 @@ export function CityAutocomplete({
         )}
       </div>
       {(error || validationMessage) && <small className="city-autocomplete__message">{error || validationMessage}</small>}
-    </label>
+    </div>
   );
 }

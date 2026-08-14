@@ -1,5 +1,6 @@
 import { DestinationGrid } from '../components/DestinationGrid';
 import { HeroShowcase } from '../components/HeroShowcase';
+import { DestinationVote } from '../components/DestinationVote';
 import { Link } from 'wouter';
 import './HomePage.css';
 
@@ -21,6 +22,7 @@ export function HomePage() {
         </div>
         <DestinationGrid />
       </section>
+      <DestinationVote />
     </main>
   );
 }
