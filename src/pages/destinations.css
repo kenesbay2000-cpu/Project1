@@ -1,10 +1,10 @@
 .destinations { display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
-.destination { position: relative; grid-column: span 4; min-height: 390px; overflow: hidden; border-radius: 24px; color: #fff; background: var(--photo) center/cover; isolation: isolate; box-shadow: 0 14px 38px rgba(48,55,70,.15); text-decoration: none; transition: transform .35s ease, box-shadow .35s ease; }
+.destination { position: relative; grid-column: span 4; min-height: 390px; overflow: hidden; border-radius: 24px; color: #fff; background: var(--photo) center/cover; isolation: isolate; box-shadow: 0 14px 38px rgba(23,36,51,.14); text-decoration: none; transition: transform .35s ease, box-shadow .35s ease; }
 .destination:nth-child(1) { grid-column: span 5; }
 .destination:nth-child(2) { grid-column: span 7; }
-.destination::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(37,42,54,.08) 35%, rgba(37,42,54,.88)); }
-.destination:hover { transform: translateY(-6px); box-shadow: 0 22px 46px rgba(48,55,70,.22); }
-.destination__badge { position: absolute; top: 18px; left: 18px; padding: 8px 11px; border-radius: 999px; color: var(--home-text); background: rgba(242,240,235,.92); font-size: 11px; font-weight: 800; backdrop-filter: blur(8px); }
+.destination::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(23,36,51,.08) 35%, rgba(23,36,51,.9)); }
+.destination:hover { transform: translateY(-6px); box-shadow: 0 22px 46px rgba(23,36,51,.2); }
+.destination__badge { position: absolute; top: 18px; left: 18px; padding: 8px 11px; border-radius: 999px; color: var(--home-text); background: var(--home-surface); font-size: 11px; font-weight: 800; backdrop-filter: blur(8px); }
 .destination__body { position: absolute; right: 0; bottom: 0; left: 0; padding: 26px; }
 .destination__meta { margin-bottom: 7px; color: rgba(255,255,255,.72); font-size: 12px; letter-spacing: .07em; text-transform: uppercase; }
 .destination__row { display: flex; align-items: end; justify-content: space-between; gap: 18px; }
