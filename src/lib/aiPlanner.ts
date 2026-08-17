@@ -35,6 +35,18 @@ export type TripPlan = {
     total: number;
     categories: Array<{ category: string; amount: number; note: string }>;
   };
+  transport: Array<{ mode: string; route: string; recommendation: string }>;
+  accommodations: Array<{
+    name: string;
+    area: string;
+    type: string;
+    pricePerNight: number;
+    description: string;
+  }>;
+  food: Array<{ name: string; cuisine: string; priceLevel: string; description: string }>;
+  activities: Array<{ name: string; category: string; summary: string }>;
+  usefulLinks: Array<{ title: string; recommendation: string }>;
+  checklist: Array<{ task: string; timing: string; details: string }>;
   rationale: string;
 };
 

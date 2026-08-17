@@ -23,6 +23,10 @@ export const PLANNER_AI_RESULT_SCHEMA = {
 
 type ParseResult = { value: PlannerAIResult } | { error: string };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export function parsePlannerAIResult(text: string): ParseResult {
   let value: unknown;
   try {
@@ -31,7 +35,7 @@ export function parsePlannerAIResult(text: string): ParseResult {
     return { error: 'Response is not valid JSON' };
   }
 
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+  if (!isRecord(value)) {
     return { error: 'Response is not an object' };
   }
   if (value.status === 'budget_too_low' && value.plan === null && typeof value.message === 'string') {

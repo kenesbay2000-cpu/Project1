@@ -1,4 +1,5 @@
 import type { TripPlan } from './types.ts';
+import { hasValidTripPlanExtras, TRIP_PLAN_EXTRA_PROPERTIES } from './tripPlanExtras.ts';
 
 const text = { type: 'string' };
 const money = { type: 'number' };
@@ -61,9 +62,13 @@ export const TRIP_PLAN_SCHEMA = {
       },
       required: ['currency', 'total', 'categories'],
     },
+    ...TRIP_PLAN_EXTRA_PROPERTIES,
     rationale: text,
   },
-  required: ['title', 'destination', 'days', 'placeIdeas', 'budget', 'rationale'],
+  required: [
+    'title', 'destination', 'days', 'placeIdeas', 'budget', 'transport', 'accommodations',
+    'food', 'activities', 'usefulLinks', 'checklist', 'rationale',
+  ],
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -104,5 +109,6 @@ export function isTripPlan(value: unknown): value is TripPlan {
     && Array.isArray(value.days) && value.days.length > 0 && value.days.length <= 30 && value.days.every(isDay)
     && Array.isArray(value.placeIdeas) && value.placeIdeas.length > 0 && value.placeIdeas.every(isPlace)
     && isRecord(budget) && isText(budget.currency) && isMoney(budget.total)
-    && Array.isArray(budget.categories) && budget.categories.length > 0 && budget.categories.every(isBudgetCategory);
+    && Array.isArray(budget.categories) && budget.categories.length > 0 && budget.categories.every(isBudgetCategory)
+    && hasValidTripPlanExtras(value);
 }

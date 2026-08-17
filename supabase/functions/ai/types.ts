@@ -33,12 +33,43 @@ export type BudgetCategory = {
   note: string;
 };
 
+export type TransportOption = {
+  mode: string;
+  route: string;
+  recommendation: string;
+};
+
+export type AccommodationOption = {
+  name: string;
+  area: string;
+  type: string;
+  pricePerNight: number;
+  description: string;
+};
+
+export type FoodRecommendation = {
+  name: string;
+  cuisine: string;
+  priceLevel: string;
+  description: string;
+};
+
+export type ActivityOverview = { name: string; category: string; summary: string };
+export type UsefulRecommendation = { title: string; recommendation: string };
+export type ChecklistItem = { task: string; timing: string; details: string };
+
 export type TripPlan = {
   title: string;
   destination: { city: string; country: string };
   days: TripDay[];
   placeIdeas: PlaceIdea[];
   budget: { currency: string; total: number; categories: BudgetCategory[] };
+  transport: TransportOption[];
+  accommodations: AccommodationOption[];
+  food: FoodRecommendation[];
+  activities: ActivityOverview[];
+  usefulLinks: UsefulRecommendation[];
+  checklist: ChecklistItem[];
   rationale: string;
 };
 

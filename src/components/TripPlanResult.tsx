@@ -2,6 +2,7 @@ import type { GeneratedTrip } from '../lib/aiPlanner';
 import { BudgetBreakdown } from './BudgetBreakdown';
 import { TripDayCard } from './TripDayCard';
 import { SavePlanButton } from './SavePlanButton';
+import { TripPlanExtras } from './TripPlanExtras';
 import './TripPlanResult.css';
 
 type TripPlanResultProps = {
@@ -12,6 +13,10 @@ type TripPlanResultProps = {
 
 export function TripPlanResult({ trip, onEdit, heroEyebrow = 'Персональный маршрут готов' }: TripPlanResultProps) {
   const { plan } = trip;
+  const hasPracticalGuide = [
+    plan.transport, plan.accommodations, plan.food,
+    plan.activities, plan.usefulLinks, plan.checklist,
+  ].some((items) => items?.length);
   return (
     <div className="trip-result" aria-live="polite">
       <header className="trip-result__hero">
@@ -47,8 +52,13 @@ export function TripPlanResult({ trip, onEdit, heroEyebrow = 'Персональ
         </div>
       </section>
 
+      {hasPracticalGuide && <section className="trip-result__section">
+        <div className="trip-result__section-heading"><span>03</span><div><p>Всё важное рядом</p><h2>Практический гид поездки</h2></div></div>
+        <TripPlanExtras plan={plan} />
+      </section>}
+
       <section className="trip-result__section">
-        <div className="trip-result__section-heading"><span>03</span><div><p>План расходов</p><h2>Бюджет поездки</h2></div></div>
+        <div className="trip-result__section-heading"><span>{hasPracticalGuide ? '04' : '03'}</span><div><p>План расходов</p><h2>Бюджет поездки</h2></div></div>
         <BudgetBreakdown budget={plan.budget} />
       </section>
 
