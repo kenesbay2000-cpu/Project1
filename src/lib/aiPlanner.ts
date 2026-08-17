@@ -25,9 +25,14 @@ export type TripPlan = {
       time: string;
       title: string;
       place: string;
+      area: string;
       description: string;
       estimatedCost: number;
+      durationMinutes: number;
+      travelMinutesFromPrevious: number;
     }>;
+    date: string;
+    pace: 'active' | 'balanced' | 'rest';
   }>;
   placeIdeas: Array<{ name: string; type: string; description: string }>;
   budget: {
@@ -47,6 +52,11 @@ export type TripPlan = {
   activities: Array<{ name: string; category: string; summary: string }>;
   usefulLinks: Array<{ title: string; recommendation: string }>;
   checklist: Array<{ task: string; timing: string; details: string }>;
+  realism: {
+    status: 'realistic' | 'adjusted';
+    warning: string;
+    adjustments: string[];
+  };
   rationale: string;
 };
 
@@ -72,6 +82,7 @@ export async function generateTripPlan(request: PlannerRequest) {
 
   const { data, error } = await supabase.functions.invoke<PlannerResponse>('ai', {
     body: request,
+    timeout: 155_000,
   });
 
   if (error) throw new Error(await readFunctionError(error));

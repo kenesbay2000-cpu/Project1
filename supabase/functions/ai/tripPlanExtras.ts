@@ -48,18 +48,23 @@ function isList(value: unknown, validator: (item: unknown) => boolean, min: numb
   return Array.isArray(value) && value.length >= min && value.length <= max && value.every(validator);
 }
 
+export function getTripPlanExtrasIssue(value: Record<string, unknown>) {
+  if (!isList(value.transport, (item) => isRecord(item) && isText(item.mode)
+    && isText(item.route) && isText(item.recommendation), 2, 6)) return 'Некорректно заполнен транспорт.';
+  if (!isList(value.accommodations, (item) => isRecord(item) && isText(item.name)
+    && isText(item.area) && isText(item.type) && isMoney(item.pricePerNight)
+    && isText(item.description), 2, 6)) return 'Некорректно заполнены варианты жилья.';
+  if (!isList(value.food, (item) => isRecord(item) && isText(item.name)
+    && isText(item.cuisine) && isText(item.priceLevel) && isText(item.description), 2, 8)) return 'Некорректно заполнены рекомендации по еде.';
+  if (!isList(value.activities, (item) => isRecord(item) && isText(item.name)
+    && isText(item.category) && isText(item.summary), 3, 12)) return 'Некорректно заполнен обзор активностей.';
+  if (!isList(value.usefulLinks, (item) => isRecord(item) && isText(item.title)
+    && isText(item.recommendation), 3, 8)) return 'Некорректно заполнены полезные рекомендации.';
+  if (!isList(value.checklist, (item) => isRecord(item) && isText(item.task)
+    && isText(item.timing) && isText(item.details), 3, 10)) return 'Некорректно заполнен чек-лист.';
+  return null;
+}
+
 export function hasValidTripPlanExtras(value: Record<string, unknown>) {
-  return isList(value.transport, (item) => isRecord(item) && isText(item.mode)
-      && isText(item.route) && isText(item.recommendation), 2, 6)
-    && isList(value.accommodations, (item) => isRecord(item) && isText(item.name)
-      && isText(item.area) && isText(item.type) && isMoney(item.pricePerNight)
-      && isText(item.description), 2, 6)
-    && isList(value.food, (item) => isRecord(item) && isText(item.name)
-      && isText(item.cuisine) && isText(item.priceLevel) && isText(item.description), 2, 8)
-    && isList(value.activities, (item) => isRecord(item) && isText(item.name)
-      && isText(item.category) && isText(item.summary), 3, 12)
-    && isList(value.usefulLinks, (item) => isRecord(item) && isText(item.title)
-      && isText(item.recommendation), 3, 8)
-    && isList(value.checklist, (item) => isRecord(item) && isText(item.task)
-      && isText(item.timing) && isText(item.details), 3, 10);
+  return getTripPlanExtrasIssue(value) === null;
 }

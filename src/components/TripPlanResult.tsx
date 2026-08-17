@@ -3,6 +3,7 @@ import { BudgetBreakdown } from './BudgetBreakdown';
 import { TripDayCard } from './TripDayCard';
 import { SavePlanButton } from './SavePlanButton';
 import { TripPlanExtras } from './TripPlanExtras';
+import { TripRealismNotice } from './TripRealismNotice';
 import './TripPlanResult.css';
 
 type TripPlanResultProps = {
@@ -33,6 +34,7 @@ export function TripPlanResult({ trip, onEdit, heroEyebrow = 'Персональ
         </div>
       </header>
       {onEdit && <SavePlanButton trip={trip} />}
+      <TripRealismNotice assessment={plan.realism} />
 
       <section className="trip-result__section">
         <div className="trip-result__section-heading"><span>01</span><div><p>Ваше путешествие</p><h2>Маршрут по дням</h2></div></div>

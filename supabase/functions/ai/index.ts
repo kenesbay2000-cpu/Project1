@@ -1,6 +1,7 @@
 import { parsePlannerAIResult } from './aiResult.ts';
 import { requestGemini } from './gemini.ts';
 import { buildPlannerPrompt, parsePlannerRequest } from './plannerRequest.ts';
+import { applyBudgetWarning, assessBudget } from './budgetPolicy.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -34,23 +35,53 @@ Deno.serve(async (request) => {
     return failure(parsedRequest.error.code, parsedRequest.error.message, 400);
   }
 
+  const budgetAssessment = assessBudget(parsedRequest.value);
+  if (budgetAssessment.level === 'absurdly_low') {
+    return failure(
+      'BUDGET_TOO_LOW',
+      'Даже верхняя граница бюджета выглядит слишком низкой для указанной длительности и числа путешественников. Увеличьте бюджет или сократите поездку.',
+      422,
+    );
+  }
+
+  let lastParseError = '';
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const gemini = await requestGemini(buildPlannerPrompt(parsedRequest.value, attempt > 0));
+    const attemptTimeout = attempt === 0 ? 80_000 : 55_000;
+    const gemini = await requestGemini(
+      buildPlannerPrompt(parsedRequest.value, attempt > 0, lastParseError),
+      attemptTimeout,
+    );
     if (!gemini.ok) return failure(gemini.code, gemini.message, gemini.status);
 
-    const parsedResult = parsePlannerAIResult(gemini.text);
+    const parsedResult = parsePlannerAIResult(gemini.text, parsedRequest.value);
     if ('error' in parsedResult) {
+      lastParseError = parsedResult.error;
       console.error(`Invalid Gemini planner response on attempt ${attempt + 1}:`, parsedResult.error);
       continue;
     }
     if (parsedResult.value.status === 'budget_too_low') {
-      return failure(
-        'BUDGET_TOO_LOW',
-        'Указанного бюджета недостаточно для реалистичной поездки по выбранному направлению и датам. Увеличьте бюджет, сократите длительность или число путешественников.',
-        422,
-      );
+      lastParseError = `Модель ошибочно отклонила бюджет до ${budgetAssessment.maximumLabel}. Этот запрос не прошёл порог абсурдно низкого бюджета: верни полный plan со status success.`;
+      continue;
     }
-    return json({ plan: parsedResult.value.plan });
+    return json({ plan: applyBudgetWarning(parsedResult.value.plan, budgetAssessment) });
+  }
+
+  const realismPrefix = 'Plan realism check failed: ';
+  if (lastParseError.startsWith(realismPrefix)) {
+    const reason = lastParseError.slice(realismPrefix.length);
+    return failure(
+      'UNREALISTIC_AI_PLAN',
+      `ИИ не смог собрать физически выполнимое расписание даже после повторной проверки. ${reason} Измените сроки или сократите число мест.`,
+      502,
+    );
+  }
+  const schemaPrefix = 'Plan schema check failed: ';
+  if (lastParseError.startsWith(schemaPrefix)) {
+    return failure(
+      'INCOMPLETE_AI_PLAN',
+      `ИИ дважды вернул неполный план. ${lastParseError.slice(schemaPrefix.length)} Попробуйте ещё раз или немного упростите запрос.`,
+      502,
+    );
   }
 
   return failure(

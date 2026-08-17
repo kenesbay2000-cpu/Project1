@@ -1,5 +1,7 @@
-import { isTripPlan, TRIP_PLAN_SCHEMA } from './tripPlan.ts';
-import type { PlannerAIResult } from './types.ts';
+import { getTripPlanValidationIssue, isTripPlan, TRIP_PLAN_SCHEMA } from './tripPlan.ts';
+import { getPlanRealismIssue } from './tripPlanRealism.ts';
+import { limitAdjustedActivities, normalizePlanSchedule } from './tripPlanNormalization.ts';
+import type { PlannerAIResult, PlannerRequest } from './types.ts';
 
 export const PLANNER_AI_RESULT_SCHEMA = {
   type: 'object',
@@ -27,7 +29,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export function parsePlannerAIResult(text: string): ParseResult {
+export function parsePlannerAIResult(text: string, request: PlannerRequest): ParseResult {
   let value: unknown;
   try {
     value = JSON.parse(text);
@@ -41,8 +43,15 @@ export function parsePlannerAIResult(text: string): ParseResult {
   if (value.status === 'budget_too_low' && value.plan === null && typeof value.message === 'string') {
     return { value: { status: 'budget_too_low', message: value.message, plan: null } };
   }
-  if (value.status === 'success' && typeof value.message === 'string' && isTripPlan(value.plan)) {
-    return { value: { status: 'success', message: value.message, plan: value.plan } };
+  const normalizedPlan = limitAdjustedActivities(value.plan);
+  if (value.status === 'success' && typeof value.message === 'string' && isTripPlan(normalizedPlan)) {
+    const scheduledPlan = normalizePlanSchedule(normalizedPlan);
+    const realismIssue = getPlanRealismIssue(scheduledPlan, request);
+    if (realismIssue) return { error: `Plan realism check failed: ${realismIssue}` };
+    return { value: { status: 'success', message: value.message, plan: scheduledPlan } };
+  }
+  if (value.status === 'success' && typeof value.message === 'string') {
+    return { error: `Plan schema check failed: ${getTripPlanValidationIssue(normalizedPlan) ?? 'неизвестная ошибка схемы.'}` };
   }
   return { error: 'Response does not match the planner result schema' };
 }

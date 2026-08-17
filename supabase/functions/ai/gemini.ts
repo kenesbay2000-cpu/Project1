@@ -12,14 +12,14 @@ export type GeminiResult =
   | { ok: true; text: string }
   | { ok: false; code: 'AI_NOT_CONFIGURED' | 'AI_UNAVAILABLE' | 'AI_TIMEOUT'; message: string; status: number };
 
-export async function requestGemini(prompt: string): Promise<GeminiResult> {
+export async function requestGemini(prompt: string, timeoutMs = 80_000): Promise<GeminiResult> {
   if (!GEMINI_API_KEY) {
     console.error('GEMINI_API_KEY is not configured');
     return { ok: false, code: 'AI_NOT_CONFIGURED', message: 'Генератор маршрутов пока не настроен.', status: 503 };
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 45_000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(GEMINI_URL, {
       method: 'POST',
@@ -27,7 +27,7 @@ export async function requestGemini(prompt: string): Promise<GeminiResult> {
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
       body: JSON.stringify({
         systemInstruction: {
-          parts: [{ text: 'Ты опытный планировщик путешествий. Планируй поездки в любые реальные направления мира независимо от каталога сайта. Строго следуй выбранному пользователем направлению, возвращай реалистичный и безопасный маршрут на русском языке. Не выдумывай точные цены или часы работы.' }],
+          parts: [{ text: 'Ты опытный планировщик путешествий. Физическая реализуемость важнее красивого и насыщенного расписания. Планируй поездки в любые реальные направления мира независимо от каталога сайта. Группируй места географически, учитывай переезды, отдых и реальные границы суток. Если запрос нельзя выполнить в заданные сроки, явно отметь маршрут как adjusted, спокойно объясни ограничение и предложи реалистичный вариант. Не выдумывай точные цены или часы работы.' }],
         },
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {

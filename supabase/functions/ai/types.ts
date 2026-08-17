@@ -11,12 +11,17 @@ export type TripActivity = {
   time: string;
   title: string;
   place: string;
+  area: string;
   description: string;
   estimatedCost: number;
+  durationMinutes: number;
+  travelMinutesFromPrevious: number;
 };
 
 export type TripDay = {
   day: number;
+  date: string;
+  pace: 'active' | 'balanced' | 'rest';
   title: string;
   activities: TripActivity[];
 };
@@ -57,6 +62,11 @@ export type FoodRecommendation = {
 export type ActivityOverview = { name: string; category: string; summary: string };
 export type UsefulRecommendation = { title: string; recommendation: string };
 export type ChecklistItem = { task: string; timing: string; details: string };
+export type RealismAssessment = {
+  status: 'realistic' | 'adjusted';
+  warning: string;
+  adjustments: string[];
+};
 
 export type TripPlan = {
   title: string;
@@ -70,6 +80,7 @@ export type TripPlan = {
   activities: ActivityOverview[];
   usefulLinks: UsefulRecommendation[];
   checklist: ChecklistItem[];
+  realism: RealismAssessment;
   rationale: string;
 };
 
