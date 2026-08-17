@@ -21,9 +21,9 @@ export function HeroShowcase() {
       <div className="hero__backdrop" key={active.image} />
       <div className="hero__layout">
         <div className="hero__content" key={active.city}>
-          <div className="hero__eyebrow"><span /> Популярно из Казахстана</div>
+          <div className="hero__eyebrow"><span /> Подборка · популярно из Казахстана</div>
           <p className="hero__country">{active.country}</p>
-          <h1>{active.city}</h1>
+          <h2>{active.city}</h2>
           <p className="hero__description">{active.description}</p>
           <div className="hero__facts">
             <span><small>Визовый режим</small>{active.visa}</span>

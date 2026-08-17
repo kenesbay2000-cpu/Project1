@@ -65,8 +65,8 @@ export function DestinationVote() {
   return (
     <section className={`destination-vote${catalogLeader ? ' has-leader-photo' : ''}`} style={backgroundStyle} aria-labelledby="destination-vote-title">
       <div className="destination-vote__copy">
-        <span className="section-label">Выбор путешественников</span>
-        <h2 id="destination-vote-title">{leader || 'Куда вы мечтаете поехать?'}</h2>
+        <span className="section-label">Выбор сообщества</span>
+        <h2 id="destination-vote-title">{leader || 'Поделитесь направлением мечты'}</h2>
         <p>{leader
           ? catalogLeader?.description ?? 'Сейчас это самое желанное направление среди наших путешественников.'
           : 'Выберите настоящий город из подсказок. Один аккаунт — один актуальный голос.'}</p>

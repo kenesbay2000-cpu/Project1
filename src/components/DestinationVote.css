@@ -1,8 +1,8 @@
-.destination-vote { position: relative; isolation: isolate; max-width: 1320px; min-height: 560px; margin: 0 auto 110px; padding: clamp(50px, 7vw, 90px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 500px); align-items: center; gap: clamp(48px, 8vw, 120px); overflow: hidden; border-radius: 38px; color: #fff; background: linear-gradient(125deg, #102f39, #274b52); box-shadow: 0 28px 70px rgba(17,46,59,.2); }
+.destination-vote { position: relative; isolation: isolate; max-width: 1320px; min-height: 500px; margin: 0 auto 110px; padding: clamp(42px, 5.5vw, 70px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 470px); align-items: center; gap: clamp(40px, 6vw, 90px); overflow: hidden; border: 1px solid rgba(255,255,255,.13); border-radius: 34px; color: #fff; background: linear-gradient(125deg, #102f39, #274b52); box-shadow: 0 24px 58px rgba(8,31,39,.18); }
 .destination-vote.has-leader-photo { background: var(--vote-photo) center/cover no-repeat; }
 .destination-vote::before { position: absolute; z-index: -1; inset: 0; content: ''; background: linear-gradient(90deg, rgba(8,29,37,.94) 0%, rgba(8,29,37,.76) 48%, rgba(8,29,37,.42) 100%); }
 .destination-vote__copy .section-label { color: #f39a78; }
-.destination-vote__copy h2 { max-width: 650px; margin: 14px 0 18px; font-family: Georgia, serif; font-size: clamp(48px, 6vw, 76px); font-weight: 400; line-height: .95; letter-spacing: -.04em; }
+.destination-vote__copy h2 { max-width: 650px; margin: 12px 0 16px; font-family: Georgia, serif; font-size: clamp(38px, 4.6vw, 58px); font-weight: 400; line-height: 1; letter-spacing: -.035em; }
 .destination-vote__copy > p { max-width: 570px; color: rgba(255,255,255,.72); font-size: 14px; line-height: 1.7; }
 .destination-vote__stats { display: flex; gap: 10px; margin-top: 28px; }
 .destination-vote__stats span { padding: 11px 16px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; color: rgba(255,255,255,.68); background: rgba(255,255,255,.08); font-size: 10px; backdrop-filter: blur(12px); }

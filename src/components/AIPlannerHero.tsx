@@ -15,6 +15,7 @@ export function AIPlannerHero() {
         <p className="ai-hero__eyebrow"><span /> Ваш личный AI-путеводитель</p>
         <h1 id="ai-hero-title">Опишите поездку.<br /><em>ИИ соберёт её целиком.</em></h1>
         <p className="ai-hero__lead">Короткий диалог превращается в реалистичный маршрут с жильём, транспортом, ресторанами, бюджетом и подготовкой — персонально для вас.</p>
+        <p className="ai-hero__world"><span>◎</span><strong>Любое направление в мире</strong><i />Не только города из нашего каталога</p>
         <Link className="ai-hero__cta" href="/planner">Создать мою поездку <span>→</span></Link>
         <div className="ai-hero__proof" aria-label="Возможности планировщика">
           <span><b>01</b> Уточняет детали</span>
