@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { AccountProfileForm } from '../components/AccountProfileForm';
 import { useAuth } from '../components/AuthProvider';
 import { ProtectedPage } from '../components/ProtectedPage';
+import { PasswordSettings } from '../components/PasswordSettings';
 import './ProfilePage.css';
 
 export function ProfilePage() {
@@ -22,6 +23,7 @@ export function ProfilePage() {
         <div className="account-layout">
           <AccountProfileForm />
           <aside className="account-session"><p>Сессия</p><h2>Безопасность аккаунта</h2><span>Вы вошли как<br /><b>{user?.email}</b></span><button type="button" onClick={handleSignOut}>Выйти из аккаунта <span>→</span></button>{logoutError && <small role="alert">{logoutError}</small>}</aside>
+          <PasswordSettings />
         </div>
       </main>
     </ProtectedPage>

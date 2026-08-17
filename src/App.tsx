@@ -11,6 +11,8 @@ import { LoginPage } from './pages/LoginPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { MyPlansPage } from './pages/MyPlansPage';
 import { SavedPlanPage } from './pages/SavedPlanPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { SiteHeader } from './components/SiteHeader';
 import { PageTransition } from './components/PageTransition';
 
@@ -29,6 +31,8 @@ export default function App() {
           <Route path="/blog" component={BlogPage} />
           <Route path="/signup" component={SignupPage} />
           <Route path="/login" component={LoginPage} />
+          <Route path="/forgot-password" component={ForgotPasswordPage} />
+          <Route path="/reset-password" component={ResetPasswordPage} />
           <Route path="/profile" component={ProfilePage} />
           <Route path="/my-plans/:id" component={SavedPlanPage} />
           <Route path="/my-plans" component={MyPlansPage} />

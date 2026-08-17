@@ -47,9 +47,10 @@ export function LoginForm() {
           <input type="email" autoComplete="email" value={email} onChange={(event) => { setEmail(event.target.value); setEmailError(''); }} placeholder="name@example.com" aria-invalid={Boolean(emailError)} />
           {emailError && <small>{emailError}</small>}
         </label>
-        <label><span>Пароль</span>
-          <div className="password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={(event) => { setPassword(event.target.value); setFormError(''); }} placeholder="Ваш пароль" /><button type="button" onClick={() => setShowPassword((value) => !value)}>{showPassword ? 'Скрыть' : 'Показать'}</button></div>
-        </label>
+        <div className="auth-password-control">
+          <div className="auth-field-heading"><label htmlFor="login-password">Пароль</label><Link href="/forgot-password">Забыли пароль?</Link></div>
+          <div className="password-field"><input id="login-password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={(event) => { setPassword(event.target.value); setFormError(''); }} placeholder="Ваш пароль" /><button type="button" onClick={() => setShowPassword((value) => !value)}>{showPassword ? 'Скрыть' : 'Показать'}</button></div>
+        </div>
         {formError && <p className="registration-error" role="alert">{formError}</p>}
         <button className="registration-submit" type="submit" disabled={busy}>{busy ? 'Проверяем…' : 'Войти'} <span>→</span></button>
       </form>

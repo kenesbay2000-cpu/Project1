@@ -1,0 +1,10 @@
+.recovery-story { background-image: linear-gradient(180deg, rgba(11,38,46,.25), rgba(11,38,46,.88)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1800&q=88'); }
+.recovery-card__back { display: inline-flex; margin-top: 22px; color: #68777c; font-size: 11px; font-weight: 700; text-decoration: none; }.recovery-card__back:hover { color: #c75f3d; }
+.recovery-confirmation { margin-top: 30px; padding: 20px; border: 1px solid #cfe0d9; border-radius: 18px; color: #315f56; background: rgba(232,243,238,.8); font-size: 12px; line-height: 1.65; }
+.recovery-confirmation strong { display: block; margin-bottom: 4px; color: #245148; font-size: 13px; }
+.recovery-card .password-control > span { color: #5d6d72; }
+.recovery-card .password-control input { background: rgba(255,255,255,.7); }
+.recovery-card .password-strength, .recovery-card .password-strength__hint { margin-inline: 5px; }
+.recovery-actions { display: grid; gap: 12px; margin-top: 28px; }.recovery-actions .registration-submit { text-decoration: none; }
+.recovery-actions .recovery-card__back { margin-top: 0; justify-content: center; }
+.recovery-loading { min-height: 260px; display: grid; place-items: center; color: #718086; font-size: 12px; }

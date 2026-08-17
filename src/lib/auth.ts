@@ -66,6 +66,45 @@ export async function updateDisplayName(name: string) {
   return data.user;
 }
 
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
+    current_password: currentPassword,
+  });
+  if (error) throw error;
+  return data.user;
+}
+
+export async function addPasswordToAccount(newPassword: string) {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
+    data: { password_enabled: true },
+  });
+  if (error) throw error;
+  return data.user;
+}
+
+export function getPasswordError(error: unknown, isSettingPassword: boolean) {
+  const authError = error as Partial<AuthError>;
+  const message = authError.message?.toLowerCase() ?? '';
+  if (authError.code === 'invalid_credentials' || message.includes('current password') || message.includes('invalid login')) {
+    return 'Текущий пароль указан неверно.';
+  }
+  if (authError.code === 'weak_password' || message.includes('weak password')) {
+    return 'Новый пароль не соответствует требованиям безопасности. Сделайте его длиннее и сложнее.';
+  }
+  if (authError.code === 'same_password' || message.includes('same password')) return 'Новый пароль должен отличаться от текущего.';
+  if (authError.code === 'reauthentication_needed') {
+    return isSettingPassword
+      ? 'Для установки пароля заново войдите через Google и повторите попытку.'
+      : 'Supabase запросил повторную авторизацию. Проверьте текущий пароль и попробуйте снова.';
+  }
+  if (authError.code === 'over_request_rate_limit') return 'Слишком много попыток. Подождите несколько минут и попробуйте снова.';
+  if (authError.code === 'session_not_found' || authError.code === 'refresh_token_not_found') return 'Сессия завершилась. Войдите в аккаунт снова.';
+  if (authError.status === 0 || message.includes('fetch')) return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте снова.';
+  return isSettingPassword ? 'Не удалось установить пароль. Попробуйте ещё раз.' : 'Не удалось изменить пароль. Попробуйте ещё раз.';
+}
+
 export function getProfileError(error: unknown) {
   if (error instanceof Error && error.message.startsWith('USERNAME:')) return error.message.slice('USERNAME:'.length);
   const authError = error as Partial<AuthError>;
