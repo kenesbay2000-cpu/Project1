@@ -49,13 +49,32 @@ export function hasPendingTrip() {
   return Boolean(getPendingTrip());
 }
 
-export async function saveTripPlan(trip: GeneratedTrip, userId: string) {
+type SavedRow = { id: string; user_id: string; client_id: string };
+
+function validateTripForSave(trip: GeneratedTrip) {
+  const { request, plan } = trip;
+  if (!isGeneratedTrip(trip) || !plan.destination?.city.trim() || !plan.destination.country.trim()
+    || plan.days.length < 1 || plan.days.length > 90 || !Number.isFinite(plan.budget.total)
+    || plan.budget.total < 0 || !plan.budget.currency.trim()) {
+    throw new Error('SAVE_INVALID_PLAN');
+  }
+  if (request.travelers && (request.travelers < 1 || request.travelers > 30)) {
+    throw new Error('SAVE_INVALID_PLAN');
+  }
+  if (request.dates && request.dates.start > request.dates.end) throw new Error('SAVE_INVALID_PLAN');
+}
+
+export async function saveTripPlan(trip: GeneratedTrip) {
+  validateTripForSave(trip);
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) throw new Error('SAVE_AUTH_REQUIRED');
+
   const { request, plan } = trip;
   const days = plan.days.length;
   const destination = [plan.destination.city, plan.destination.country].filter(Boolean).join(', ');
-  const { error } = await supabase.from('travel_plans').upsert({
+  const { data, error } = await supabase.from('travel_plans').upsert({
     client_id: trip.id,
-    user_id: userId,
+    user_id: authData.user.id,
     title: plan.title,
     destination,
     destination_country: plan.destination.country,
@@ -71,13 +90,30 @@ export async function saveTripPlan(trip: GeneratedTrip, userId: string) {
     itinerary: plan,
     planner_request: request,
     status: 'planned',
-  }, { onConflict: 'user_id,client_id' });
+  }, { onConflict: 'user_id,client_id' })
+    .select('id,user_id,client_id')
+    .single();
   if (error) throw error;
+  const saved = data as unknown as SavedRow | null;
+  if (!saved || saved.user_id !== authData.user.id || saved.client_id !== trip.id) {
+    throw new Error('SAVE_NOT_CONFIRMED');
+  }
+  return saved.id;
 }
 
 export function getSavePlanError(error: unknown) {
-  const message = error instanceof Error ? error.message.toLowerCase() : '';
-  if (message.includes('jwt') || message.includes('session')) return 'Сессия завершилась. Войдите снова — готовый маршрут сохранён и не потеряется.';
+  const details = error as { code?: string; message?: string; details?: string };
+  const message = details.message?.toLowerCase() ?? '';
+  if (details.message === 'SAVE_AUTH_REQUIRED' || message.includes('jwt') || message.includes('session')) {
+    return 'Сессия завершилась. Войдите снова — готовый маршрут останется на экране.';
+  }
+  if (details.message === 'SAVE_INVALID_PLAN') return 'Маршрут содержит неполные данные и не может быть сохранён. Создайте план ещё раз.';
+  if (details.message === 'SAVE_NOT_CONFIRMED') return 'Сервер не подтвердил сохранение. Нажмите «Сохранить план» ещё раз.';
+  if (details.code === '42501' || details.code === 'PGRST301') return 'Supabase отклонил запись из-за доступа. Выйдите из аккаунта, войдите снова и повторите сохранение.';
+  if (details.code === '23514' || details.code === '22003' || details.code === '22001') return 'Некоторые значения маршрута не подходят формату базы. Измените параметры поездки и создайте план заново.';
+  if (details.code === 'PGRST204' || details.code === '42703') return 'Структура базы не совпадает с приложением. Обновите страницу и попробуйте снова.';
   if (message.includes('fetch') || message.includes('network')) return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте ещё раз.';
-  return 'Не удалось сохранить план. Попробуйте ещё раз через несколько секунд.';
+  return details.code
+    ? `Не удалось сохранить план (код ${details.code}). Попробуйте ещё раз или сообщите этот код разработчику.`
+    : 'Не удалось сохранить план по неизвестной причине. Попробуйте ещё раз через несколько секунд.';
 }

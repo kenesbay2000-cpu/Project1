@@ -1,4 +1,4 @@
-.save-plan { position: relative; margin-top: 22px; padding: clamp(24px, 4vw, 36px); display: flex; align-items: center; justify-content: space-between; gap: 28px; background: #fff; border: 1px solid #dfdfd9; border-radius: 24px; box-shadow: 0 15px 36px rgba(20,45,53,.06); }
+.save-plan { position: relative; margin-top: 22px; padding: clamp(24px, 4vw, 36px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 28px; background: #fff; border: 1px solid #dfdfd9; border-radius: 24px; box-shadow: 0 15px 36px rgba(20,45,53,.06); }
 .save-plan > div:first-child > span { color: #d56644; font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .save-plan h2 { margin: 7px 0 5px; color: #17333e; font-family: Georgia, serif; font-size: clamp(22px, 3vw, 31px); font-weight: 400; }
 .save-plan > div:first-child > p { color: #78878b; font-size: 12px; }
@@ -8,8 +8,8 @@
 .save-plan__auth p { grid-column: 1 / -1; margin-bottom: 5px; font-size: 12px; line-height: 1.55; }
 .save-plan__auth a { padding: 10px 13px; color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; font-size: 11px; font-weight: 800; text-align: center; text-decoration: none; }
 .save-plan__auth a:last-child { color: #17333e; background: #fff; }
-.save-plan__error { width: 100%; color: #994331; font-size: 12px; }
+.save-plan__error { flex: 1 0 100%; width: 100%; padding: 12px 14px; color: #994331; background: #fff0eb; border-radius: 12px; font-size: 12px; line-height: 1.5; }
 .save-plan--success { justify-content: flex-start; color: #23594f; background: #eaf4ef; border-color: #cce2d8; }
 .save-plan--success > span { width: 42px; height: 42px; display: grid; place-items: center; color: #fff; background: #2f7163; border-radius: 50%; font-weight: 900; }
-.save-plan--success strong { color: #173f38; }.save-plan--success p { margin-top: 3px; font-size: 12px; }
+.save-plan--success strong { color: #173f38; }.save-plan--success p { margin-top: 3px; font-size: 12px; }.save-plan--success a { margin-top: 7px; display: inline-block; color: #245e53; font-size: 11px; font-weight: 800; text-decoration: none; }
 @media (max-width: 650px) { .save-plan { align-items: stretch; flex-direction: column; }.save-plan > button { width: 100%; }.save-plan__auth { position: static; width: 100%; } }

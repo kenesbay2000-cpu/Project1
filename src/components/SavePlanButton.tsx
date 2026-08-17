@@ -21,7 +21,7 @@ export function SavePlanButton({ trip }: SavePlanButtonProps) {
     setStatus('saving');
     setError('');
     try {
-      await saveTripPlan(trip, user.id);
+      await saveTripPlan(trip);
       clearPendingTrip();
       setStatus('saved');
     } catch (saveError) {
@@ -45,7 +45,7 @@ export function SavePlanButton({ trip }: SavePlanButtonProps) {
     }
   }
 
-  if (status === 'saved') return <div className="save-plan save-plan--success" role="status"><span>✓</span><div><strong>План сохранён</strong><p>Маршрут надёжно привязан к вашему аккаунту.</p></div></div>;
+  if (status === 'saved') return <div className="save-plan save-plan--success" role="status"><span>✓</span><div><strong>План сохранён</strong><p>Маршрут надёжно привязан к вашему аккаунту.</p><Link href="/my-plans">Открыть «Мои планы» →</Link></div></div>;
 
   return (
     <section className="save-plan">

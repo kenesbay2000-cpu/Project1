@@ -18,7 +18,7 @@ export function MyPlansPage() {
     if (!user) return;
     let isActive = true;
     setIsLoading(true); setError('');
-    void loadSavedPlans()
+    void loadSavedPlans(user.id)
       .then((items) => { if (isActive) setPlans(items); })
       .catch((loadError) => { if (isActive) setError(getPlansError('load', loadError)); })
       .finally(() => { if (isActive) setIsLoading(false); });
@@ -26,14 +26,16 @@ export function MyPlansPage() {
   }, [user, reloadKey]);
 
   async function rename(id: string, title: string) {
+    if (!user) throw new Error('Сессия завершилась. Войдите снова.');
     try {
-      await renameSavedPlan(id, title);
+      await renameSavedPlan(id, user.id, title);
       setPlans((items) => items.map((plan) => plan.id === id ? { ...plan, title: title.trim() } : plan));
     } catch (renameError) { throw new Error(getPlansError('rename', renameError)); }
   }
 
   async function remove(id: string) {
-    try { await deleteSavedPlan(id); setPlans((items) => items.filter((plan) => plan.id !== id)); }
+    if (!user) throw new Error('Сессия завершилась. Войдите снова.');
+    try { await deleteSavedPlan(id, user.id); setPlans((items) => items.filter((plan) => plan.id !== id)); }
     catch (deleteError) { throw new Error(getPlansError('delete', deleteError)); }
   }
 

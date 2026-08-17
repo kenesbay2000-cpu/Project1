@@ -19,7 +19,7 @@ export function SavedPlanPage() {
     if (!user || !params?.id) return;
     let isActive = true;
     setIsLoading(true); setError('');
-    void loadSavedPlan(params.id)
+    void loadSavedPlan(params.id, user.id)
       .then((savedTrip) => { if (isActive) { setTrip(savedTrip); if (!savedTrip) setError('Этот план не найден или у вас нет к нему доступа.'); } })
       .catch((loadError) => { if (isActive) setError(getPlansError('load', loadError)); })
       .finally(() => { if (isActive) setIsLoading(false); });
