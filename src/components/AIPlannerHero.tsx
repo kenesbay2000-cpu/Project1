@@ -45,6 +45,7 @@ export function AIPlannerHero() {
         <div className="ai-demo__budget"><span>Ориентир бюджета</span><strong>₸ 1 480 000</strong><small>Перелёт · жильё · впечатления</small></div>
         <div className="ai-demo__ready"><span>✓</span><p><strong>План реалистичен</strong><small>Переезды и темп проверены</small></p></div>
       </div>
+      <div className="ai-hero__fade" aria-hidden="true" />
     </section>
   );
 }
