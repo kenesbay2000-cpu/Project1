@@ -1,13 +1,18 @@
 import { DestinationGrid } from '../components/DestinationGrid';
 import { HeroShowcase } from '../components/HeroShowcase';
 import { DestinationVote } from '../components/DestinationVote';
+import { AIPlannerHero } from '../components/AIPlannerHero';
 import { Link } from 'wouter';
 import './HomePage.css';
 
 export function HomePage() {
   return (
     <main className="home-page">
+      <AIPlannerHero />
+
       <HeroShowcase />
+
+      <DestinationVote />
 
       <section className="ideas" id="ideas">
         <div className="ideas__heading">
@@ -22,7 +27,6 @@ export function HomePage() {
         </div>
         <DestinationGrid />
       </section>
-      <DestinationVote />
     </main>
   );
 }
