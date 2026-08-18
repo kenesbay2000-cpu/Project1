@@ -3,6 +3,7 @@ import { requestGemini } from './gemini.ts';
 import { buildPlannerPrompt, parsePlannerRequest } from './plannerRequest.ts';
 import { applyBudgetWarning, assessBudget } from './budgetPolicy.ts';
 import { analyzeClarifications } from './clarification.ts';
+import { createTripSummary, parseTripSummary } from './summary.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +13,7 @@ const cors = {
 function json(body: object, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...cors, 'Content-Type': 'application/json' },
+    headers: { ...cors, 'Content-Type': 'application/json; charset=utf-8' },
   });
 }
 
@@ -43,6 +44,20 @@ Deno.serve(async (request) => {
     const clarification = await analyzeClarifications(clarificationRequest.value);
     if (!clarification.ok) return failure(clarification.code, clarification.message, clarification.status);
     return json({ clarification: clarification.clarification });
+  }
+
+  if (isRecord(requestBody) && requestBody.mode === 'summarize') {
+    const summaryRequest = parsePlannerRequest(requestBody.request);
+    if ('error' in summaryRequest) return failure(summaryRequest.error.code, summaryRequest.error.message, 400);
+    const currentSummary = requestBody.currentSummary === undefined ? undefined : parseTripSummary(requestBody.currentSummary);
+    if (requestBody.currentSummary !== undefined && !currentSummary) {
+      return failure('INVALID_REQUEST', 'Текущая сводка заполнена некорректно.', 400);
+    }
+    const correction = typeof requestBody.correction === 'string' ? requestBody.correction.trim() : undefined;
+    if (correction && correction.length > 4_000) return failure('INVALID_REQUEST', 'Правка не должна превышать 4000 символов.', 400);
+    const result = await createTripSummary(summaryRequest.value, currentSummary, correction);
+    if (!result.ok) return failure(result.code, result.message, result.status);
+    return json({ summary: result.summary });
   }
 
   const parsedRequest = parsePlannerRequest(requestBody);

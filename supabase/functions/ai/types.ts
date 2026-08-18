@@ -6,10 +6,26 @@ export type PlannerRequest = {
   travelerAges?: number[];
   priceRange?: { min: number; max: number; currency: string };
   clarifications?: ClarificationTurn[];
+  summaryCorrections?: string[];
+  confirmedSummary?: TripSummary;
 };
 
 export type ClarificationQuestion = { id: string; text: string };
 export type ClarificationTurn = { questions: ClarificationQuestion[]; answer: string };
+export type TripSummary = {
+  destination: string;
+  originCity: string;
+  dates: { start: string; end: string };
+  durationDays: number;
+  travelers: { count: number; ages: number[]; description: string };
+  budget: { min: number; max: number; currency: string };
+  interests: string[];
+  pace: string;
+  lodging: string;
+  transport: string;
+  constraints: string[];
+  otherDetails: string[];
+};
 
 export type TripActivity = {
   time: string;

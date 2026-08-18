@@ -1,6 +1,7 @@
 import type { PlannerRequest } from './types.ts';
 import { assessBudget, budgetPromptGuidance } from './budgetPolicy.ts';
 import { buildPersonalizationGuidance } from './personalization.ts';
+import { parsePlannerContext } from './plannerContext.ts';
 
 type RequestErrorCode = 'INVALID_REQUEST' | 'INVALID_DATES';
 type ParseResult = { value: PlannerRequest } | { error: { code: RequestErrorCode; message: string } };
@@ -76,38 +77,18 @@ export function parsePlannerRequest(value: unknown): ParseResult {
     priceRange = { min, max, currency };
   }
 
-  let clarifications: PlannerRequest['clarifications'];
-  if (value.clarifications !== undefined) {
-    if (!Array.isArray(value.clarifications) || value.clarifications.length > 3) {
-      return invalid('Диалог уточнений заполнен некорректно.');
-    }
-    clarifications = [];
-    for (const turn of value.clarifications) {
-      if (!isRecord(turn) || !Array.isArray(turn.questions) || turn.questions.length < 1 || turn.questions.length > 3
-        || typeof turn.answer !== 'string' || !turn.answer.trim() || turn.answer.trim().length > 4_000) {
-        return invalid('Ответы на уточняющие вопросы заполнены некорректно.');
-      }
-      const questions = [];
-      for (const question of turn.questions) {
-        if (!isRecord(question) || typeof question.id !== 'string' || !/^[a-z0-9_]{2,60}$/.test(question.id)
-          || typeof question.text !== 'string' || !question.text.trim() || question.text.trim().length > 500) {
-          return invalid('Уточняющий вопрос заполнен некорректно.');
-        }
-        questions.push({ id: question.id, text: question.text.trim() });
-      }
-      clarifications.push({ questions, answer: turn.answer.trim() });
-    }
-  }
-
-  return { value: { prompt, originCity, dates, travelers, travelerAges, priceRange, clarifications } };
+  const context = parsePlannerContext(value);
+  if ('error' in context) return invalid(context.error);
+  return { value: { prompt, originCity, dates, travelers, travelerAges, priceRange, ...context.value } };
 }
 
 export function buildPlannerPrompt(request: PlannerRequest, isRetry = false, retryReason = '') {
   const clarificationText = request.clarifications?.map((turn) => (
     `${turn.questions.map((question) => question.text).join(' / ')}\nОтвет пользователя: ${turn.answer}`
   )).join('\n') ?? '';
-  const personalizedRequest = clarificationText
-    ? { ...request, prompt: `${request.prompt}\n${clarificationText}` }
+  const correctionText = request.summaryCorrections?.join('\n') ?? '';
+  const personalizedRequest = clarificationText || correctionText
+    ? { ...request, prompt: `${request.prompt}\n${clarificationText}\n${correctionText}` }
     : request;
   const requestedDays = request.dates
     ? Math.round((Date.parse(`${request.dates.end}T00:00:00Z`) - Date.parse(`${request.dates.start}T00:00:00Z`)) / 86_400_000) + 1
@@ -118,6 +99,8 @@ export function buildPlannerPrompt(request: PlannerRequest, isRetry = false, ret
   const budgetGuidance = budgetPromptGuidance(assessBudget(personalizedRequest));
   const personalization = buildPersonalizationGuidance(personalizedRequest);
   const details = [
+    request.confirmedSummary ? `Подтверждённое понимание поездки (главный источник истины):\n${JSON.stringify(request.confirmedSummary)}` : '',
+    correctionText ? `Правки сводки:\n${correctionText}` : '',
     clarificationText ? `Уточнения из диалога:\n${clarificationText}` : 'Уточнения из диалога: нет',
     `Запрос пользователя: ${request.prompt}`,
     `Город вылета: ${request.originCity ?? 'не указан'}`,

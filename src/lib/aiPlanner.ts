@@ -8,6 +8,8 @@ export type PlannerRequest = {
   travelerAges?: number[];
   priceRange?: { min: number; max: number; currency: string };
   clarifications?: ClarificationTurn[];
+  summaryCorrections?: string[];
+  confirmedSummary?: TripSummary;
 };
 
 export type ClarificationQuestion = { id: string; text: string };
@@ -17,6 +19,21 @@ export type ClarificationResult = {
   message: string;
   originCity?: string;
   questions: ClarificationQuestion[];
+};
+
+export type TripSummary = {
+  destination: string;
+  originCity: string;
+  dates: { start: string; end: string };
+  durationDays: number;
+  travelers: { count: number; ages: number[]; description: string };
+  budget: { min: number; max: number; currency: string };
+  interests: string[];
+  pace: string;
+  lodging: string;
+  transport: string;
+  constraints: string[];
+  otherDetails: string[];
 };
 
 export type GeneratedTrip = {
@@ -72,6 +89,7 @@ export type TripPlan = {
 
 type PlannerResponse = { plan?: TripPlan; error?: { message?: string } };
 type ClarificationResponse = { clarification?: ClarificationResult; error?: { message?: string } };
+type SummaryResponse = { summary?: TripSummary; error?: { message?: string } };
 
 const fallbackError = 'Не удалось определить причину сбоя. Проверьте данные и попробуйте создать маршрут ещё раз.';
 
@@ -111,4 +129,16 @@ export async function analyzeTripRequest(request: PlannerRequest) {
   if (error) throw new Error(await readFunctionError(error));
   if (!data?.clarification) throw new Error(data?.error?.message ?? fallbackError);
   return data.clarification;
+}
+
+export async function summarizeTripRequest(request: PlannerRequest, currentSummary?: TripSummary, correction?: string) {
+  if (!isSupabaseConfigured) throw new Error('AI Planner пока не настроен. Проверьте настройки Supabase.');
+
+  const { data, error } = await supabase.functions.invoke<SummaryResponse>('ai', {
+    body: { mode: 'summarize', request, currentSummary, correction },
+    timeout: 45_000,
+  });
+  if (error) throw new Error(await readFunctionError(error));
+  if (!data?.summary) throw new Error(data?.error?.message ?? fallbackError);
+  return data.summary;
 }

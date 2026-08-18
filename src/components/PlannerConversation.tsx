@@ -5,7 +5,7 @@ type PlannerConversationProps = {
   request: PlannerRequest;
   questions: ClarificationQuestion[];
   answer: string;
-  stage: 'idle' | 'analyzing' | 'generating';
+  stage: 'idle' | 'analyzing' | 'summarizing' | 'generating';
   error: string;
   onAnswerChange: (answer: string) => void;
   onAnswer: (event: FormEvent<HTMLFormElement>) => void;
@@ -41,7 +41,7 @@ export function PlannerConversation(props: PlannerConversationProps) {
         {stage !== 'idle' && (
           <div className="planner-dialog__message planner-dialog__message--ai planner-dialog__typing">
             <span className="planner-dialog__avatar">AI</span>
-            <div><strong>{stage === 'analyzing' ? 'Проверяю, достаточно ли деталей…' : 'Данных достаточно. Собираю полный маршрут…'}</strong><span><i /><i /><i /></span></div>
+            <div><strong>{stage === 'analyzing' ? 'Проверяю, достаточно ли деталей…' : stage === 'summarizing' ? 'Собираю сводку для подтверждения…' : 'Собираю полный маршрут…'}</strong><span><i /><i /><i /></span></div>
           </div>
         )}
       </div>
