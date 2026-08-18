@@ -1,0 +1,16 @@
+.guest-limit { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(16,35,45,.48); backdrop-filter: blur(9px); animation: guest-limit-in .22s ease both; }
+.guest-limit__card { position: relative; width: min(560px, 100%); padding: clamp(28px, 5vw, 46px); overflow: hidden; color: #263f48; background: #f6f0e5; border: 1px solid rgba(255,255,255,.65); border-radius: 28px; box-shadow: 0 30px 90px rgba(16,35,45,.3); }
+.guest-limit__card::before { content: ''; position: absolute; width: 220px; height: 220px; top: -130px; right: -80px; border-radius: 50%; background: rgba(199,95,61,.18); filter: blur(8px); }
+.guest-limit__close { position: absolute; z-index: 1; top: 15px; right: 17px; width: 36px; height: 36px; color: #52666d; background: rgba(255,255,255,.5); border: 1px solid #ded5c7; border-radius: 50%; font-size: 23px; line-height: 1; cursor: pointer; }
+.guest-limit__eyebrow { color: #b85337; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+.guest-limit h2 { max-width: 460px; margin: 12px 0 14px; color: #17333e; font-family: Georgia, serif; font-size: clamp(30px, 5vw, 44px); font-weight: 400; line-height: 1.08; letter-spacing: -.025em; }
+.guest-limit p { max-width: 470px; margin: 0; color: #66757b; font-size: 15px; line-height: 1.65; }
+.guest-limit__actions { display: flex; align-items: center; gap: 18px; margin-top: 28px; }
+.guest-limit__actions a { color: #52666d; font-size: 13px; font-weight: 800; text-decoration: none; }
+.guest-limit__actions a:first-child { padding: 14px 21px; color: #fff; background: linear-gradient(120deg, #c75f3d, #9f4532); border-radius: 999px; box-shadow: 0 12px 28px rgba(159,69,50,.24); transition: transform .2s, box-shadow .2s; }
+.guest-limit__actions a:first-child:hover { transform: translateY(-2px); box-shadow: 0 17px 34px rgba(159,69,50,.32); }
+.guest-limit__actions span { margin-left: 13px; }
+.guest-limit small { display: block; margin-top: 16px; color: #8b3825; line-height: 1.45; }
+@keyframes guest-limit-in { from { opacity: 0; } }
+@media (max-width: 560px) { .guest-limit__actions { align-items: stretch; flex-direction: column; }.guest-limit__actions a { text-align: center; } }
+@media (prefers-reduced-motion: reduce) { .guest-limit { animation: none; } }

@@ -2,6 +2,7 @@ import type { PlannerRequest } from './types.ts';
 import { assessBudget, budgetPromptGuidance } from './budgetPolicy.ts';
 import { buildPersonalizationGuidance } from './personalization.ts';
 import { parsePlannerContext } from './plannerContext.ts';
+import { RECOMMENDATION_SAFETY_GUIDANCE } from './recommendationSafety.ts';
 
 type RequestErrorCode = 'INVALID_REQUEST' | 'INVALID_DATES';
 type ParseResult = { value: PlannerRequest } | { error: { code: RequestErrorCode; message: string } };
@@ -113,6 +114,7 @@ export function buildPlannerPrompt(request: PlannerRequest, isRetry = false, ret
       : 'Бюджет: не указан',
     `Бюджетная политика: ${budgetGuidance}`,
     'Точность бюджета: начинай каждую budget.categories[].note с [ТИПИЧНЫЕ ЦЕНЫ] для расчёта по обычной цене за ночь, проезд или вход либо с [ГРУБАЯ ОЦЕНКА] для сильно переменных расходов без актуального предложения.',
+    RECOMMENDATION_SAFETY_GUIDANCE,
     `Обязательная персонализация:\n${personalization}`,
   ];
   const retry = isRetry

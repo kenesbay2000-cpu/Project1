@@ -3,6 +3,7 @@
 .planner-page__eyebrow { color: #c75f3d; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .planner-page__intro h1 { margin: 12px 0 16px; font-family: Georgia, serif; font-size: clamp(46px, 7vw, 76px); font-weight: 400; letter-spacing: -.04em; }
 .planner-page__intro p { color: #66757b; font-size: 17px; line-height: 1.65; }
+.planner-page__access-loading { margin: 36px auto; color: #66757b; text-align: center; }
 .planner-form { width: min(900px, 100%); margin: 0 auto; padding: clamp(24px, 4vw, 42px); border: 1px solid #deddd7; border-radius: 28px; background: rgba(255,255,255,.78); box-shadow: 0 22px 55px rgba(20,45,53,.08); }
 .planner-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
 .planner-form label { display: grid; gap: 8px; color: #52666d; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }

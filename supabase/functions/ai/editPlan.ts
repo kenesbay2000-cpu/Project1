@@ -3,6 +3,7 @@ import { applyBudgetWarning, assessBudget, budgetPromptGuidance } from './budget
 import { requestGemini } from './gemini.ts';
 import { applyBudgetCommand, type BudgetEdit } from './budgetEdit.ts';
 import type { PlannerRequest, TripPlan } from './types.ts';
+import { RECOMMENDATION_SAFETY_GUIDANCE } from './recommendationSafety.ts';
 
 type EditFailure = { ok: false; code: string; message: string; status: number };
 type EditSuccess = { ok: true; plan: TripPlan; request: PlannerRequest };
@@ -67,6 +68,7 @@ ${budgetEdit ? `Жёсткая цель обновлённого бюджета:
 - Пересчитай бюджет только в затронутых категориях. Не отказывай в генерации, кроме действительно абсурдно низкого максимума.
 - При снижении бюджета реально удешеви жильё, платные активности, питание или транспорт; запрещено просто уменьшать числа без изменения рекомендаций.
 - Каждую budget.categories[].note начинай с [ТИПИЧНЫЕ ЦЕНЫ], если сумма рассчитана по обычной цене за ночь, проезд или вход, либо с [ГРУБАЯ ОЦЕНКА], если цена сильно зависит от сезона и недоступна без актуального предложения.
+- ${RECOMMENDATION_SAFETY_GUIDANCE}
 - Обязательно сохрани полные отдельные разделы transport, accommodations, food, activities, usefulLinks и checklist.
 - Если запрос невозможно выполнить буквально, верни реалистичную адаптацию с realism.status adjusted и понятным предупреждением.${retry}`;
 }

@@ -7,7 +7,10 @@ import { PlannerConfirmation } from './PlannerConfirmation';
 import { PlannerConversation } from './PlannerConversation';
 import { PlannerInitialForm } from './PlannerInitialForm';
 
-type Props = { onPlanCreated: (trip: GeneratedTrip) => void };
+type Props = {
+  onPlanCreated: (trip: GeneratedTrip) => void;
+  onBeforeGenerate: () => boolean;
+};
 type Stage = 'idle' | 'analyzing' | 'summarizing' | 'generating';
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -29,7 +32,7 @@ function applySummary(request: PlannerRequest, summary: TripSummary): PlannerReq
   };
 }
 
-export function PlannerForm({ onPlanCreated }: Props) {
+export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
   const [stage, setStage] = useState<Stage>('idle');
   const [draft, setDraft] = useState<PlannerRequest | null>(null);
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
@@ -88,6 +91,7 @@ export function PlannerForm({ onPlanCreated }: Props) {
   };
   const confirm = async () => {
     if (!draft || !summary) return;
+    if (!onBeforeGenerate()) return;
     const confirmed = { ...applySummary(draft, summary), confirmedSummary: summary };
     setError(''); setStage('generating');
     try {
