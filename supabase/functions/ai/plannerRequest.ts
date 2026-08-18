@@ -112,6 +112,7 @@ export function buildPlannerPrompt(request: PlannerRequest, isRetry = false, ret
       ? `Бюджет: ${request.priceRange.min}–${request.priceRange.max} ${request.priceRange.currency}`
       : 'Бюджет: не указан',
     `Бюджетная политика: ${budgetGuidance}`,
+    'Точность бюджета: начинай каждую budget.categories[].note с [ТИПИЧНЫЕ ЦЕНЫ] для расчёта по обычной цене за ночь, проезд или вход либо с [ГРУБАЯ ОЦЕНКА] для сильно переменных расходов без актуального предложения.',
     `Обязательная персонализация:\n${personalization}`,
   ];
   const retry = isRetry

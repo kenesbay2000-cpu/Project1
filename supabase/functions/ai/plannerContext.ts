@@ -1,7 +1,7 @@
 import { parseTripSummary } from './summary.ts';
 import type { PlannerRequest } from './types.ts';
 
-type PlannerContext = Pick<PlannerRequest, 'clarifications' | 'summaryCorrections' | 'confirmedSummary'>;
+type PlannerContext = Pick<PlannerRequest, 'clarifications' | 'summaryCorrections' | 'confirmedSummary' | 'routeEdits'>;
 type ContextResult = { value: PlannerContext } | { error: string };
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -40,5 +40,13 @@ export function parsePlannerContext(value: Record<string, unknown>): ContextResu
 
   const confirmedSummary = value.confirmedSummary === undefined ? undefined : parseTripSummary(value.confirmedSummary);
   if (value.confirmedSummary !== undefined && !confirmedSummary) return { error: 'Подтверждённая сводка заполнена некорректно.' };
-  return { value: { clarifications, summaryCorrections, confirmedSummary } };
+  let routeEdits: string[] | undefined;
+  if (value.routeEdits !== undefined) {
+    if (!Array.isArray(value.routeEdits) || value.routeEdits.length > 10
+      || value.routeEdits.some((item) => typeof item !== 'string' || !item.trim() || item.trim().length > 1_000)) {
+      return { error: 'История изменений маршрута заполнена некорректно.' };
+    }
+    routeEdits = value.routeEdits.map((item) => String(item).trim());
+  }
+  return { value: { clarifications, summaryCorrections, confirmedSummary, routeEdits } };
 }

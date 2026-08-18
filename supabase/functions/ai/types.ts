@@ -8,6 +8,7 @@ export type PlannerRequest = {
   clarifications?: ClarificationTurn[];
   summaryCorrections?: string[];
   confirmedSummary?: TripSummary;
+  routeEdits?: string[];
 };
 
 export type ClarificationQuestion = { id: string; text: string };

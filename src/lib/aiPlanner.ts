@@ -10,6 +10,7 @@ export type PlannerRequest = {
   clarifications?: ClarificationTurn[];
   summaryCorrections?: string[];
   confirmedSummary?: TripSummary;
+  routeEdits?: string[];
 };
 
 export type ClarificationQuestion = { id: string; text: string };
@@ -90,6 +91,7 @@ export type TripPlan = {
 type PlannerResponse = { plan?: TripPlan; error?: { message?: string } };
 type ClarificationResponse = { clarification?: ClarificationResult; error?: { message?: string } };
 type SummaryResponse = { summary?: TripSummary; error?: { message?: string } };
+type EditResponse = { plan?: TripPlan; request?: PlannerRequest; error?: { message?: string } };
 
 const fallbackError = 'Не удалось определить причину сбоя. Проверьте данные и попробуйте создать маршрут ещё раз.';
 
@@ -141,4 +143,15 @@ export async function summarizeTripRequest(request: PlannerRequest, currentSumma
   if (error) throw new Error(await readFunctionError(error));
   if (!data?.summary) throw new Error(data?.error?.message ?? fallbackError);
   return data.summary;
+}
+
+export async function editTripPlan(trip: GeneratedTrip, command: string): Promise<GeneratedTrip> {
+  if (!isSupabaseConfigured) throw new Error('AI Planner пока не настроен. Проверьте настройки Supabase.');
+  const { data, error } = await supabase.functions.invoke<EditResponse>('ai', {
+    body: { mode: 'edit', request: trip.request, plan: trip.plan, command },
+    timeout: 155_000,
+  });
+  if (error) throw new Error(await readFunctionError(error));
+  if (!data?.plan || !data.request) throw new Error(data?.error?.message ?? fallbackError);
+  return { ...trip, request: data.request, plan: data.plan };
 }

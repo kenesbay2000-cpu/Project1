@@ -1,0 +1,20 @@
+.trip-editor { margin: clamp(34px, 6vw, 64px) 0; padding: clamp(25px, 4vw, 40px); overflow: hidden; position: relative; border: 1px solid rgba(23,59,69,.13); border-radius: 28px; background: linear-gradient(135deg, rgba(255,255,255,.88), rgba(239,232,219,.78)); box-shadow: 0 20px 50px rgba(20,45,53,.08); }
+.trip-editor::after { content: ''; width: 240px; height: 240px; position: absolute; right: -100px; top: -130px; border-radius: 50%; background: rgba(222,108,72,.1); pointer-events: none; }
+.trip-editor__intro { max-width: 660px; position: relative; z-index: 1; }
+.trip-editor__intro > span { color: #c46142; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.trip-editor__intro h2 { margin: 9px 0 8px; color: #17333e; font-family: Georgia, serif; font-size: clamp(28px, 4vw, 42px); font-weight: 400; }
+.trip-editor__intro p { color: #6b7b80; font-size: 14px; line-height: 1.6; }
+.trip-editor__examples { margin: 22px 0 18px; display: flex; flex-wrap: wrap; gap: 8px; }
+.trip-editor__examples button { padding: 9px 13px; color: #455f64; border: 1px solid #d8d8d1; border-radius: 999px; background: rgba(255,255,255,.72); font-size: 11px; cursor: pointer; transition: transform .2s, border-color .2s, box-shadow .2s; }
+.trip-editor__examples button:hover:not(:disabled) { transform: translateY(-2px); border-color: #c98a74; box-shadow: 0 8px 18px rgba(20,45,53,.08); }
+.trip-editor form { display: grid; gap: 8px; }
+.trip-editor form label { color: #52666d; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.trip-editor form > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; }
+.trip-editor input { min-width: 0; padding: 14px 16px; color: #17333e; border: 1px solid #d5d6d0; border-radius: 14px; background: #fff; outline: none; font-size: 14px; }
+.trip-editor input:focus { border-color: #78908f; box-shadow: 0 0 0 3px rgba(71,104,105,.1); }
+.trip-editor form button { padding: 14px 20px; color: #fff; border: 0; border-radius: 14px; background: #d96543; font-weight: 800; cursor: pointer; transition: transform .2s, box-shadow .2s; }
+.trip-editor form button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 11px 24px rgba(199,95,61,.24); }
+.trip-editor button:disabled, .trip-editor input:disabled { cursor: wait; opacity: .62; }
+.trip-editor__status, .trip-editor__success, .trip-editor__error { margin-top: 14px; font-size: 12px; line-height: 1.5; }
+.trip-editor__status { color: #65767b; }.trip-editor__success { color: #386d5d; }.trip-editor__error { padding: 11px 13px; color: #8b3825; border-radius: 10px; background: #fff0eb; }
+@media (max-width: 680px) { .trip-editor form > div { grid-template-columns: 1fr; }.trip-editor form button { width: 100%; }.trip-editor__examples { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }.trip-editor__examples button { flex: 0 0 auto; } }

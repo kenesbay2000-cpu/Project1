@@ -23,7 +23,7 @@ export function PlannerPage() {
         </section>
         <PlannerForm onPlanCreated={setTrip} />
       </div>
-      {trip && <TripPlanResult trip={trip} onEdit={editTrip} />}
+      {trip && <TripPlanResult trip={trip} onEdit={editTrip} onTripUpdated={setTrip} />}
     </main>
   );
 }

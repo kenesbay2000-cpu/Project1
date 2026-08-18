@@ -4,6 +4,8 @@ import { buildPlannerPrompt, parsePlannerRequest } from './plannerRequest.ts';
 import { applyBudgetWarning, assessBudget } from './budgetPolicy.ts';
 import { analyzeClarifications } from './clarification.ts';
 import { createTripSummary, parseTripSummary } from './summary.ts';
+import { editExistingPlan } from './editPlan.ts';
+import { isTripPlan } from './tripPlan.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -58,6 +60,17 @@ Deno.serve(async (request) => {
     const result = await createTripSummary(summaryRequest.value, currentSummary, correction);
     if (!result.ok) return failure(result.code, result.message, result.status);
     return json({ summary: result.summary });
+  }
+
+  if (isRecord(requestBody) && requestBody.mode === 'edit') {
+    const editRequest = parsePlannerRequest(requestBody.request);
+    if ('error' in editRequest) return failure(editRequest.error.code, editRequest.error.message, 400);
+    const command = typeof requestBody.command === 'string' ? requestBody.command.trim() : '';
+    if (!command || command.length > 1_000) return failure('INVALID_EDIT', 'Опишите изменение в пределах 1000 символов.', 400);
+    if (!isTripPlan(requestBody.plan)) return failure('INVALID_EDIT', 'Текущий маршрут повреждён или заполнен не полностью.', 400);
+    const edited = await editExistingPlan(editRequest.value, requestBody.plan, command);
+    if (!edited.ok) return failure(edited.code, edited.message, edited.status);
+    return json({ plan: edited.plan, request: edited.request });
   }
 
   const parsedRequest = parsePlannerRequest(requestBody);

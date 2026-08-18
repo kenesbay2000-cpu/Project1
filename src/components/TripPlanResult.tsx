@@ -4,15 +4,17 @@ import { TripDayCard } from './TripDayCard';
 import { SavePlanButton } from './SavePlanButton';
 import { TripPlanExtras } from './TripPlanExtras';
 import { TripRealismNotice } from './TripRealismNotice';
+import { TripPlanEditor } from './TripPlanEditor';
 import './TripPlanResult.css';
 
 type TripPlanResultProps = {
   trip: GeneratedTrip;
   onEdit?: () => void;
   heroEyebrow?: string;
+  onTripUpdated?: (trip: GeneratedTrip) => void;
 };
 
-export function TripPlanResult({ trip, onEdit, heroEyebrow = 'Персональный маршрут готов' }: TripPlanResultProps) {
+export function TripPlanResult({ trip, onEdit, onTripUpdated, heroEyebrow = 'Персональный маршрут готов' }: TripPlanResultProps) {
   const { plan } = trip;
   const hasPracticalGuide = [
     plan.transport, plan.accommodations, plan.food,
@@ -33,8 +35,9 @@ export function TripPlanResult({ trip, onEdit, heroEyebrow = 'Персональ
           <span><strong>{plan.budget.currency}</strong> валюта расчёта</span>
         </div>
       </header>
-      {onEdit && <SavePlanButton trip={trip} />}
+      {onEdit && <SavePlanButton key={`${trip.id}-${trip.request.routeEdits?.length ?? 0}`} trip={trip} />}
       <TripRealismNotice assessment={plan.realism} />
+      {onTripUpdated && <TripPlanEditor trip={trip} onUpdated={onTripUpdated} />}
 
       <section className="trip-result__section">
         <div className="trip-result__section-heading"><span>01</span><div><p>Ваше путешествие</p><h2>Маршрут по дням</h2></div></div>

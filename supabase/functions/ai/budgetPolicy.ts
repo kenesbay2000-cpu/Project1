@@ -12,6 +12,12 @@ export type BudgetAssessment = {
 // Hard rejection uses a deliberately low threshold, so normal market movement cannot trigger it.
 const USD_PER_UNIT: Record<string, number> = { USD: 1, EUR: 1.15, KZT: 1 / 475 };
 
+export function convertCurrency(amount: number, from: string, to: string) {
+  const fromRate = USD_PER_UNIT[from.toUpperCase()];
+  const toRate = USD_PER_UNIT[to.toUpperCase()];
+  return fromRate && toRate ? amount * fromRate / toRate : null;
+}
+
 function tripDays(request: PlannerRequest) {
   if (!request.dates) return 7;
   return Math.round((Date.parse(`${request.dates.end}T00:00:00Z`)
