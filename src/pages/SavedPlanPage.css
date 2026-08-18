@@ -1,5 +1,5 @@
 .saved-plan-page { min-height: calc(100vh - 92px); padding: clamp(32px, 5vw, 64px) clamp(20px, 6vw, 90px) 100px; background: #f6f3ed; }
-.saved-plan-page__back { width: min(1120px, 100%); margin: 0 auto 22px; display: block; color: #65777c; font-size: 12px; font-weight: 750; text-decoration: none; }
+.saved-plan-page__back { width: min(1380px, 100%); margin: 0 auto 22px; display: block; color: #65777c; font-size: 12px; font-weight: 750; text-decoration: none; }
 .saved-plan-page__back:hover { color: #d36342; }
 .saved-plan-page__state { width: min(720px, 100%); margin: 70px auto; padding: 42px; color: #66777c; background: #fff; border: 1px solid #dfdfd9; border-radius: 24px; text-align: center; }
 .saved-plan-page__state a { margin-top: 18px; display: inline-block; color: #c55f40; font-weight: 750; text-decoration: none; }

@@ -1,0 +1,29 @@
+.saved-workspace { width: min(1380px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 270px; align-items: start; gap: clamp(24px, 4vw, 52px); color: #405960; }
+.saved-workspace__content { min-width: 0; scroll-margin-top: 20px; }
+.saved-workspace__view { animation: saved-view-in .28s ease both; }
+.saved-workspace__heading { margin-bottom: 30px; padding: clamp(26px, 4vw, 40px); display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 17px; background: rgba(255,255,255,.62); border: 1px solid #ddd8cf; border-radius: 26px; }
+.saved-workspace__heading > span { margin-top: 7px; color: #b85337; font-size: 9px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; writing-mode: vertical-rl; transform: rotate(180deg); }
+.saved-workspace__heading h1 { color: #17333e; font-family: Georgia, serif; font-size: clamp(38px, 5vw, 58px); font-weight: 400; letter-spacing: -.04em; }
+.saved-workspace__heading p { max-width: 680px; margin-top: 10px; color: #718086; font-size: 14px; line-height: 1.65; }
+.saved-workspace__sidebar { position: sticky; top: 22px; max-height: calc(100vh - 44px); padding: 18px; overflow-y: auto; background: rgba(255,255,255,.66); border: 1px solid #ddd8cf; border-radius: 25px; box-shadow: 0 18px 45px rgba(20,45,53,.09); backdrop-filter: blur(16px); scrollbar-width: thin; }
+.saved-workspace__sidebar-title { padding: 8px 10px 16px; border-bottom: 1px solid #e0dcd3; }
+.saved-workspace__sidebar-title span { display: block; color: #9a7465; font-size: 8px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.saved-workspace__sidebar-title strong { display: block; margin-top: 5px; color: #17333e; font-family: Georgia, serif; font-size: 24px; font-weight: 400; }
+.saved-workspace__sidebar nav { padding-top: 10px; display: grid; gap: 4px; }
+.saved-workspace__sidebar nav button { position: relative; width: 100%; padding: 11px 12px; display: flex; align-items: center; gap: 11px; color: #66777c; background: transparent; border: 0; border-radius: 12px; font: inherit; font-size: 12px; font-weight: 700; text-align: left; cursor: pointer; transition: color .2s, background .2s, transform .2s; }
+.saved-workspace__sidebar nav button::before { content: ''; position: absolute; left: 0; width: 3px; height: 19px; background: #b85337; border-radius: 0 4px 4px 0; opacity: 0; transform: scaleY(.4); transition: opacity .2s, transform .2s; }
+.saved-workspace__sidebar nav button > span { width: 26px; height: 26px; display: grid; place-items: center; flex: 0 0 auto; color: #526d73; background: #ebe8e0; border-radius: 8px; font-family: Georgia, serif; font-size: 13px; }
+.saved-workspace__sidebar nav button:hover { color: #17333e; background: rgba(255,255,255,.8); transform: translateX(-2px); }
+.saved-workspace__sidebar nav button:focus-visible { outline: 3px solid rgba(199,95,61,.22); outline-offset: 1px; }
+.saved-workspace__sidebar nav button.is-active { color: #17333e; background: #f1e4da; box-shadow: inset 0 0 0 1px rgba(184,83,55,.1); }
+.saved-workspace__sidebar nav button.is-active::before { opacity: 1; transform: scaleY(1); }
+.saved-workspace__sidebar nav button.is-active > span { color: #fff; background: #b85337; }
+.saved-itinerary { display: grid; gap: 20px; }
+@keyframes saved-view-in { from { opacity: 0; transform: translateY(7px); } }
+@media (max-width: 900px) {
+  .saved-workspace { grid-template-columns: 1fr; }.saved-workspace__sidebar { z-index: 8; top: 0; order: -1; max-height: none; margin: 0 -20px 4px; padding: 10px 20px; overflow: hidden; border-width: 1px 0; border-radius: 0; box-shadow: 0 8px 24px rgba(20,45,53,.08); }
+  .saved-workspace__sidebar-title { display: none; }.saved-workspace__sidebar nav { padding: 0; display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; }.saved-workspace__sidebar nav::-webkit-scrollbar { display: none; }
+  .saved-workspace__sidebar nav button { width: auto; flex: 0 0 auto; padding: 8px 12px 8px 8px; }.saved-workspace__sidebar nav button::before { display: none; }.saved-workspace__sidebar nav button:hover { transform: translateY(-1px); }
+}
+@media (max-width: 560px) { .saved-workspace__heading { grid-template-columns: 1fr; }.saved-workspace__heading > span { writing-mode: initial; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .saved-workspace__view, .saved-workspace__sidebar nav button { animation: none; transition: none; } }

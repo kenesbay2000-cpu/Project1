@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useRoute } from 'wouter';
 import { ProtectedPage } from '../components/ProtectedPage';
-import { TripPlanResult } from '../components/TripPlanResult';
+import { SavedPlanWorkspace } from '../components/SavedPlanWorkspace';
 import { useAuth } from '../components/AuthProvider';
 import type { GeneratedTrip } from '../lib/aiPlanner';
 import { getPlansError, loadSavedPlan } from '../lib/savedPlanQueries';
@@ -32,7 +32,7 @@ export function SavedPlanPage() {
         <Link className="saved-plan-page__back" href="/my-plans">← Ко всем планам</Link>
         {isLoading && <div className="saved-plan-page__state" role="status">Загружаем маршрут…</div>}
         {error && <div className="saved-plan-page__state" role="alert"><p>{error}</p><Link href="/my-plans">Вернуться к списку</Link></div>}
-        {trip && <TripPlanResult trip={trip} heroEyebrow="Сохранённое путешествие" />}
+        {trip && <SavedPlanWorkspace trip={trip} />}
       </main>
     </ProtectedPage>
   );
