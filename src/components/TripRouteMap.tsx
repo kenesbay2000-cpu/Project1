@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { TripLocation } from '../lib/tripLocation';
+import { logTripMapRender } from '../lib/tripMapDiagnostics';
 import { getTripDayColor } from '../lib/tripMapColors';
 import type { TripMapPoint } from '../lib/tripMapGeocoding';
 
@@ -19,7 +20,7 @@ function popupContent(point: TripMapPoint) {
   const title = document.createElement('strong');
   title.textContent = point.title;
   const place = document.createElement('small');
-  place.textContent = `⌖ ${point.place}`;
+  place.textContent = point.accuracy === 'area' ? `≈ ${point.place} · положение по району` : `⌖ ${point.place}`;
   const description = document.createElement('p');
   description.textContent = point.description;
   popup.append(meta, title, place, description);
@@ -31,6 +32,31 @@ function groupByDay(points: TripMapPoint[]) {
   points.forEach((point) => groups.set(point.day, [...(groups.get(point.day) ?? []), point]));
   groups.forEach((items) => items.sort((a, b) => a.order - b.order));
   return groups;
+}
+
+function markerOffset(point: TripMapPoint, points: TripMapPoint[]) {
+  const colocated = points.filter((item) => item.latitude === point.latitude && item.longitude === point.longitude);
+  if (colocated.length < 2) return { x: 0, y: 0 };
+  const angle = (Math.PI * 2 * colocated.findIndex((item) => item.id === point.id)) / colocated.length;
+  return { x: Math.cos(angle) * 15, y: Math.sin(angle) * 15 };
+}
+
+function createPointIcon(point: TripMapPoint, isFocusedDay: boolean, visiblePoints: TripMapPoint[]) {
+  const marker = document.createElement('span');
+  marker.className = `saved-route-marker${isFocusedDay ? ' is-focused' : ''}${point.accuracy === 'area' ? ' is-approximate' : ''}`;
+  marker.style.setProperty('--marker-color', getTripDayColor(point.day));
+  const number = document.createElement('b');
+  number.textContent = String(point.order + 1);
+  marker.append(number);
+  const size = isFocusedDay ? 40 : 34;
+  const offset = markerOffset(point, visiblePoints);
+  return L.divIcon({
+    className: 'saved-route-marker-shell',
+    html: marker,
+    iconSize: [size, size],
+    iconAnchor: [size / 2 - offset.x, size / 2 - offset.y],
+    popupAnchor: [0, -(size / 2 + 5)],
+  });
 }
 
 export function TripRouteMap({ center, points, selectedDay }: Props) {
@@ -55,6 +81,7 @@ export function TripRouteMap({ center, points, selectedDay }: Props) {
 
   useEffect(() => {
     if (!map.current || !layer.current) return;
+    logTripMapRender(points, selectedDay);
     layer.current.clearLayers();
     const groups = groupByDay(points);
     groups.forEach((dayPoints, day) => {
@@ -70,10 +97,12 @@ export function TripRouteMap({ center, points, selectedDay }: Props) {
 
     const visiblePoints = selectedDay === null ? points : points.filter((point) => point.day === selectedDay);
     visiblePoints.forEach((point) => {
-      L.circleMarker([point.latitude, point.longitude], {
-        radius: selectedDay === null ? 9 : 11,
-        color: '#fff', weight: 3,
-        fillColor: getTripDayColor(point.day), fillOpacity: 1,
+      L.marker([point.latitude, point.longitude], {
+        icon: createPointIcon(point, selectedDay === point.day, visiblePoints),
+        riseOnHover: true,
+        zIndexOffset: 1_000 + point.order,
+        title: `${point.time} — ${point.title}`,
+        alt: `${point.title}, день ${point.day}`,
       }).bindPopup(popupContent(point), { maxWidth: 290, minWidth: 210, closeButton: true })
         .addTo(layer.current as L.LayerGroup);
     });

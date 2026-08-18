@@ -9,7 +9,7 @@ export function SavedPlanMap({ plan }: { plan: TripPlan }) {
   const [center, setCenter] = useState<TripLocation | null>(null);
   const [points, setPoints] = useState<TripMapPoint[]>([]);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [progress, setProgress] = useState({ completed: 0, total: 0 });
+  const [progress, setProgress] = useState({ completed: 0, total: 0, found: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const totalActivities = useMemo(() => plan.days.reduce((total, day) => total + day.activities.length, 0), [plan.days]);
   const visibleCount = selectedDay === null ? points.length : points.filter((point) => point.day === selectedDay).length;
@@ -18,10 +18,14 @@ export function SavedPlanMap({ plan }: { plan: TripPlan }) {
     const controller = new AbortController();
     setIsLoading(true);
     void loadTripMapData(plan, controller.signal, (completed, total, resolvedPoints) => {
-      setProgress({ completed, total });
+      setProgress({ completed, total, found: resolvedPoints.length });
       setPoints(resolvedPoints);
     }).then((result) => { setCenter(result.center); setPoints(result.points); })
-      .catch((error: unknown) => { if (!(error instanceof DOMException && error.name === 'AbortError')) setPoints([]); })
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          console.error('[TripMap] Не удалось завершить подготовку карты; уже найденные точки сохранены.', error);
+        }
+      })
       .finally(() => { if (!controller.signal.aborted) setIsLoading(false); });
     return () => controller.abort();
   }, [plan]);
@@ -34,7 +38,7 @@ export function SavedPlanMap({ plan }: { plan: TripPlan }) {
       </nav>
       <div className="saved-map-section__stage">
         <TripRouteMap center={center} points={points} selectedDay={selectedDay} />
-        {isLoading && <div className="saved-map-section__loading" role="status"><span /><strong>Наносим маршрут на карту</strong><small>{progress.total ? `${progress.completed} из ${progress.total} мест проверено` : 'Проверяем координаты…'}</small></div>}
+        {isLoading && <div className="saved-map-section__loading" role="status"><span /><strong>Наносим маршрут на карту</strong><small>{progress.total ? `${progress.completed} из ${progress.total} мест проверено · найдено ${progress.found}` : 'Проверяем координаты…'}</small></div>}
       </div>
       <div className="saved-map-section__note">
         <span>{visibleCount || '—'}</span>
