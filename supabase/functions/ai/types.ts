@@ -5,7 +5,11 @@ export type PlannerRequest = {
   travelers?: number;
   travelerAges?: number[];
   priceRange?: { min: number; max: number; currency: string };
+  clarifications?: ClarificationTurn[];
 };
+
+export type ClarificationQuestion = { id: string; text: string };
+export type ClarificationTurn = { questions: ClarificationQuestion[]; answer: string };
 
 export type TripActivity = {
   time: string;

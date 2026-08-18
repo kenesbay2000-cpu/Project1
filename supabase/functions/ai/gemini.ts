@@ -12,7 +12,14 @@ export type GeminiResult =
   | { ok: true; text: string }
   | { ok: false; code: 'AI_NOT_CONFIGURED' | 'AI_UNAVAILABLE' | 'AI_TIMEOUT'; message: string; status: number };
 
-export async function requestGemini(prompt: string, timeoutMs = 80_000): Promise<GeminiResult> {
+type GeminiOptions = {
+  systemInstruction?: string;
+  responseSchema?: Record<string, unknown>;
+  temperature?: number;
+  maxOutputTokens?: number;
+};
+
+export async function requestGemini(prompt: string, timeoutMs = 80_000, options: GeminiOptions = {}): Promise<GeminiResult> {
   if (!GEMINI_API_KEY) {
     console.error('GEMINI_API_KEY is not configured');
     return { ok: false, code: 'AI_NOT_CONFIGURED', message: 'Генератор маршрутов пока не настроен.', status: 503 };
@@ -26,15 +33,15 @@ export async function requestGemini(prompt: string, timeoutMs = 80_000): Promise
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
       body: JSON.stringify({
-        systemInstruction: {
+        systemInstruction: options.systemInstruction ? { parts: [{ text: options.systemInstruction }] } : {
           parts: [{ text: 'Ты опытный планировщик путешествий. Физическая реализуемость важнее красивого расписания, а персональные данные — реальные критерии выбора, не декоративное объяснение. Планируй любые направления мира независимо от каталога сайта. Группируй места географически, учитывай переезды, возраст, ограничения и отдых. Если запрос нельзя выполнить в срок, отметь маршрут как adjusted и предложи реалистичный вариант. Не выдумывай точные цены или часы работы.' }],
         },
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.55,
-          maxOutputTokens: 16_384,
+          temperature: options.temperature ?? 0.55,
+          maxOutputTokens: options.maxOutputTokens ?? 16_384,
           responseMimeType: 'application/json',
-          responseJsonSchema: PLANNER_AI_RESULT_SCHEMA,
+          responseJsonSchema: options.responseSchema ?? PLANNER_AI_RESULT_SCHEMA,
         },
       }),
     });

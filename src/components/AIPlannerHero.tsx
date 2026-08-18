@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { Link } from 'wouter';
+import { destinations } from '../lib/destinations';
 import './AIPlannerHero.css';
 
 const journeySteps = [
@@ -7,10 +9,50 @@ const journeySteps = [
   { time: '15:00', title: 'Токио с воды', note: 'Прогулка по реке · 45 минут' },
 ];
 
+const heroPhotos = ['tokyo', 'istanbul', 'bali'].flatMap((slug) => {
+  const image = destinations.find((destination) => destination.slug === slug)?.image;
+  if (!image) return [];
+
+  const url = new URL(image);
+  url.searchParams.set('w', '1800');
+  url.searchParams.set('q', '82');
+  return [url.toString()];
+});
+
 export function AIPlannerHero() {
+  const photoStageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const stage = photoStageRef.current;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (!stage || reduceMotion.matches) return undefined;
+
+    let frameId: number | undefined;
+    const updateParallax = () => {
+      frameId = undefined;
+      const distance = Math.min(Math.max(window.scrollY, 0), window.innerHeight);
+      stage.style.setProperty('--ai-photo-parallax', `${Math.round(distance * 0.08)}px`);
+    };
+    const handleScroll = () => {
+      if (frameId === undefined) frameId = window.requestAnimationFrame(updateParallax);
+    };
+
+    updateParallax();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (frameId !== undefined) window.cancelAnimationFrame(frameId);
+    };
+  }, []);
+
   return (
     <section className="ai-hero" aria-labelledby="ai-hero-title">
       <div className="ai-hero__glow" aria-hidden="true" />
+      <div className="ai-hero__photos" aria-hidden="true" ref={photoStageRef}>
+        {heroPhotos.map((photo, index) => (
+          <div className="ai-hero__photo" key={photo} style={{ animationDelay: `${index * 7}s`, backgroundImage: `url("${photo}")` }} />
+        ))}
+      </div>
       <div className="ai-hero__copy">
         <p className="ai-hero__eyebrow"><span /> Ваш личный AI-путеводитель</p>
         <h1 id="ai-hero-title">Опишите поездку.<br /><em>ИИ соберёт её целиком.</em></h1>

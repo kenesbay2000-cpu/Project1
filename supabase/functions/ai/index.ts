@@ -2,6 +2,7 @@ import { parsePlannerAIResult } from './aiResult.ts';
 import { requestGemini } from './gemini.ts';
 import { buildPlannerPrompt, parsePlannerRequest } from './plannerRequest.ts';
 import { applyBudgetWarning, assessBudget } from './budgetPolicy.ts';
+import { analyzeClarifications } from './clarification.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -19,6 +20,10 @@ function failure(code: string, message: string, status: number) {
   return json({ error: { code, message } }, status);
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (request.method !== 'POST') return failure('METHOD_NOT_ALLOWED', 'Используйте POST-запрос.', 405);
@@ -28,6 +33,16 @@ Deno.serve(async (request) => {
     requestBody = await request.json();
   } catch {
     return failure('INVALID_REQUEST', 'Тело запроса должно быть корректным JSON.', 400);
+  }
+
+  if (isRecord(requestBody) && requestBody.mode === 'clarify') {
+    const clarificationRequest = parsePlannerRequest(requestBody.request);
+    if ('error' in clarificationRequest) {
+      return failure(clarificationRequest.error.code, clarificationRequest.error.message, 400);
+    }
+    const clarification = await analyzeClarifications(clarificationRequest.value);
+    if (!clarification.ok) return failure(clarification.code, clarification.message, clarification.status);
+    return json({ clarification: clarification.clarification });
   }
 
   const parsedRequest = parsePlannerRequest(requestBody);
