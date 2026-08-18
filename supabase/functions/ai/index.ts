@@ -6,6 +6,7 @@ import { analyzeClarifications } from './clarification.ts';
 import { createTripSummary, parseTripSummary } from './summary.ts';
 import { editExistingPlan } from './editPlan.ts';
 import { isTripPlan } from './tripPlan.ts';
+import { PROTECTED_INFORMATION_MESSAGE, shouldRefuseProtectedInformation } from './security.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -36,6 +37,9 @@ Deno.serve(async (request) => {
     requestBody = await request.json();
   } catch {
     return failure('INVALID_REQUEST', 'Тело запроса должно быть корректным JSON.', 400);
+  }
+  if (shouldRefuseProtectedInformation(requestBody)) {
+    return failure('PROTECTED_INFORMATION', PROTECTED_INFORMATION_MESSAGE, 400);
   }
 
   if (isRecord(requestBody) && requestBody.mode === 'clarify') {
