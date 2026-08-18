@@ -2,6 +2,7 @@ import { getTripPlanValidationIssue, isTripPlan, TRIP_PLAN_SCHEMA } from './trip
 import { getPlanRealismIssue } from './tripPlanRealism.ts';
 import { limitAdjustedActivities, normalizePlanSchedule } from './tripPlanNormalization.ts';
 import type { PlannerAIResult, PlannerRequest } from './types.ts';
+import { applyPersonalizedPace } from './personalization.ts';
 
 export const PLANNER_AI_RESULT_SCHEMA = {
   type: 'object',
@@ -45,7 +46,8 @@ export function parsePlannerAIResult(text: string, request: PlannerRequest): Par
   }
   const normalizedPlan = limitAdjustedActivities(value.plan);
   if (value.status === 'success' && typeof value.message === 'string' && isTripPlan(normalizedPlan)) {
-    const scheduledPlan = normalizePlanSchedule(normalizedPlan);
+    const personalizedPlan = applyPersonalizedPace(normalizedPlan, request);
+    const scheduledPlan = normalizePlanSchedule(personalizedPlan);
     const realismIssue = getPlanRealismIssue(scheduledPlan, request);
     if (realismIssue) return { error: `Plan realism check failed: ${realismIssue}` };
     return { value: { status: 'success', message: value.message, plan: scheduledPlan } };
