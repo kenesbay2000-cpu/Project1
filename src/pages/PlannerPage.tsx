@@ -1,7 +1,7 @@
 import { type CSSProperties, useState } from 'react';
 import { PlannerForm } from '../components/PlannerForm';
 import { GuestPlanLimitNotice } from '../components/GuestPlanLimitNotice';
-import { TripPlanResult } from '../components/TripPlanResult';
+import { SavedPlanWorkspace } from '../components/SavedPlanWorkspace';
 import { useAuth } from '../components/AuthProvider';
 import type { GeneratedTrip } from '../lib/aiPlanner';
 import { destinations } from '../lib/destinations';
@@ -48,7 +48,7 @@ export function PlannerPage() {
         {!isLoading && <PlannerForm onPlanCreated={handlePlanCreated} onBeforeGenerate={canGenerateNewPlan} />}
         {isLoading && <p className="planner-page__access-loading" role="status">Проверяем сессию…</p>}
       </div>
-      {trip && <TripPlanResult trip={trip} onEdit={editTrip} onTripUpdated={setTrip} />}
+      {trip && <SavedPlanWorkspace trip={trip} onEdit={editTrip} onTripUpdated={setTrip} />}
       {showGuestLimit && !user && <GuestPlanLimitNotice trip={trip} onClose={() => setShowGuestLimit(false)} />}
     </main>
   );

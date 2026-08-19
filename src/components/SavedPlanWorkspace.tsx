@@ -11,6 +11,12 @@ import './TripPlanResult.css';
 import './SavedPlanWorkspace.css';
 import './SavedPlanSections.css';
 
+type SavedPlanWorkspaceProps = {
+  trip: GeneratedTrip;
+  onEdit?: () => void;
+  onTripUpdated?: (trip: GeneratedTrip) => void;
+};
+
 const sectionCopy: Record<SavedPlanSectionId, { eyebrow: string; description: string }> = {
   overview: { eyebrow: 'Отправная точка', description: '' },
   itinerary: { eyebrow: 'День за днём', description: 'Полное расписание поездки с длительностью активностей, переездами и ориентировочными расходами.' },
@@ -24,7 +30,7 @@ const sectionCopy: Record<SavedPlanSectionId, { eyebrow: string; description: st
   checklist: { eyebrow: 'Ничего не забыть', description: 'Персональный список действий перед этой поездкой.' },
 };
 
-export function SavedPlanWorkspace({ trip }: { trip: GeneratedTrip }) {
+export function SavedPlanWorkspace({ trip, onEdit, onTripUpdated }: SavedPlanWorkspaceProps) {
   const [active, setActive] = useState<SavedPlanSectionId>('overview');
   const content = useRef<HTMLDivElement>(null);
   const currentSection = savedPlanSections.find((section) => section.id === active) ?? savedPlanSections[0];
@@ -38,7 +44,7 @@ export function SavedPlanWorkspace({ trip }: { trip: GeneratedTrip }) {
   }
 
   function renderContent() {
-    if (active === 'overview') return <SavedPlanOverview trip={trip} />;
+    if (active === 'overview') return <SavedPlanOverview trip={trip} onEdit={onEdit} onTripUpdated={onTripUpdated} />;
     if (active === 'itinerary') return <div className="saved-itinerary">{trip.plan.days.map((day) => <TripDayCard key={day.day} day={day} currency={trip.plan.budget.currency} />)}</div>;
     if (active === 'map') return <SavedPlanMap plan={trip.plan} />;
     if (active === 'weather') return <SavedPlanWeather trip={trip} />;
