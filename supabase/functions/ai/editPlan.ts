@@ -5,6 +5,7 @@ import { applyBudgetCommand, type BudgetEdit } from './budgetEdit.ts';
 import type { PlannerRequest, TripPlan } from './types.ts';
 import { RECOMMENDATION_SAFETY_GUIDANCE } from './recommendationSafety.ts';
 import { localizedPlannerText, responseLanguageInstruction } from './responseLanguage.ts';
+import type { CurrencyRates } from './exchangeRates.ts';
 
 type EditFailure = { ok: false; code: string; message: string; status: number };
 type EditSuccess = { ok: true; plan: TripPlan; request: PlannerRequest };
@@ -28,8 +29,8 @@ function shiftDate(date: string, days: number) {
   return value.toISOString().slice(0, 10);
 }
 
-function updateRequest(request: PlannerRequest, plan: TripPlan, command: string) {
-  const budgetEdit = applyBudgetCommand(request, plan, command);
+function updateRequest(request: PlannerRequest, plan: TripPlan, command: string, rates: CurrencyRates) {
+  const budgetEdit = applyBudgetCommand(request, plan, command, rates);
   const budgetRequest = budgetEdit?.request ?? request;
   const delta = requestedDayDelta(command);
   const targetDays = plan.days.length + delta;
@@ -48,7 +49,7 @@ function updateRequest(request: PlannerRequest, plan: TripPlan, command: string)
   return { value: { ...budgetRequest, dates, confirmedSummary, routeEdits }, targetDays, budgetEdit } as const;
 }
 
-function editPrompt(request: PlannerRequest, plan: TripPlan, command: string, targetDays: number, budgetEdit?: BudgetEdit | null, retryReason = '') {
+function editPrompt(request: PlannerRequest, plan: TripPlan, command: string, targetDays: number, rates: CurrencyRates, budgetEdit?: BudgetEdit | null, retryReason = '') {
   const retry = retryReason ? `\nПредыдущая версия не прошла проверку: ${retryReason}. Исправь эту ошибку.` : '';
   return `${responseLanguageInstruction(request)}
 Отредактируй существующий план поездки по короткой команде пользователя.
@@ -56,7 +57,7 @@ function editPrompt(request: PlannerRequest, plan: TripPlan, command: string, ta
 Контекст подтверждённой поездки: ${JSON.stringify(request)}
 Текущий план — основной источник для всего, что пользователь не просил менять: ${JSON.stringify(plan)}
 После изменения в days должно быть ровно ${targetDays} дней.
-Бюджетная политика: ${budgetPromptGuidance(assessBudget(request))}
+Бюджетная политика: ${budgetPromptGuidance(assessBudget(request, rates))}
 ${budgetEdit ? `Жёсткая цель обновлённого бюджета: не более ${budgetEdit.description}.` : ''}
 
 Верни полный результат в ТОЧНО той же JSON-структуре, что при первоначальной генерации.
@@ -115,17 +116,18 @@ export async function editExistingPlan(
   request: PlannerRequest,
   plan: TripPlan,
   command: string,
+  rates: CurrencyRates,
 ): Promise<EditFailure | EditSuccess> {
-  const updated = updateRequest(request, plan, command);
+  const updated = updateRequest(request, plan, command, rates);
   if ('error' in updated) return { ok: false, code: 'INVALID_EDIT', message: updated.error, status: 400 };
-  const budget = assessBudget(updated.value);
+  const budget = assessBudget(updated.value, rates);
   if (budget.level === 'absurdly_low') {
     return { ok: false, code: 'BUDGET_TOO_LOW', message: 'После изменения верхняя граница бюджета стала нереалистично низкой для поездки.', status: 422 };
   }
 
   let lastError = '';
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const gemini = await requestGemini(editPrompt(updated.value, plan, command, updated.targetDays, updated.budgetEdit, lastError), attempt ? 55_000 : 80_000, {
+    const gemini = await requestGemini(editPrompt(updated.value, plan, command, updated.targetDays, rates, updated.budgetEdit, lastError), attempt ? 55_000 : 80_000, {
       temperature: 0.25,
       maxOutputTokens: 16_384,
     });

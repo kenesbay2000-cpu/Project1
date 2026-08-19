@@ -1,4 +1,5 @@
 import type { PlannerRequest, TripPlan } from './types.ts';
+import type { CurrencyRates } from './exchangeRates.ts';
 
 type BudgetLevel = 'none' | 'sufficient' | 'tight' | 'absurdly_low';
 
@@ -8,13 +9,9 @@ export type BudgetAssessment = {
   maximumLabel: string;
 };
 
-// Conservative reference rates based on National Bank of Kazakhstan daily rates, August 2026.
-// Hard rejection uses a deliberately low threshold, so normal market movement cannot trigger it.
-const USD_PER_UNIT: Record<string, number> = { USD: 1, EUR: 1.15, KZT: 1 / 475 };
-
-export function convertCurrency(amount: number, from: string, to: string) {
-  const fromRate = USD_PER_UNIT[from.toUpperCase()];
-  const toRate = USD_PER_UNIT[to.toUpperCase()];
+export function convertCurrency(amount: number, from: string, to: string, rates: CurrencyRates) {
+  const fromRate = rates[from.toUpperCase()];
+  const toRate = rates[to.toUpperCase()];
   return fromRate && toRate ? amount * fromRate / toRate : null;
 }
 
@@ -24,10 +21,10 @@ function tripDays(request: PlannerRequest) {
     - Date.parse(`${request.dates.start}T00:00:00Z`)) / 86_400_000) + 1;
 }
 
-export function assessBudget(request: PlannerRequest): BudgetAssessment {
+export function assessBudget(request: PlannerRequest, rates: CurrencyRates): BudgetAssessment {
   if (!request.priceRange) return { level: 'none', maximumInUsd: null, maximumLabel: 'не указан' };
   const { max, currency } = request.priceRange;
-  const rate = USD_PER_UNIT[currency];
+  const rate = rates[currency] && rates.USD ? rates[currency] / rates.USD : null;
   const maximumLabel = `${max.toLocaleString('en-US')} ${currency}`;
   if (!rate) return { level: 'sufficient', maximumInUsd: null, maximumLabel };
 

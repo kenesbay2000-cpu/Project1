@@ -4,6 +4,7 @@ import { buildPersonalizationGuidance } from './personalization.ts';
 import { parsePlannerContext } from './plannerContext.ts';
 import { RECOMMENDATION_SAFETY_GUIDANCE } from './recommendationSafety.ts';
 import { responseLanguageInstruction } from './responseLanguage.ts';
+import type { CurrencyRates } from './exchangeRates.ts';
 
 type RequestErrorCode = 'INVALID_REQUEST' | 'INVALID_DATES';
 type ParseResult = { value: PlannerRequest } | { error: { code: RequestErrorCode; message: string } };
@@ -85,7 +86,7 @@ export function parsePlannerRequest(value: unknown): ParseResult {
   return { value: { prompt, responseLanguage, originCity, dates, travelers, travelerAges, priceRange, ...context.value } };
 }
 
-export function buildPlannerPrompt(request: PlannerRequest, isRetry = false, retryReason = '') {
+export function buildPlannerPrompt(request: PlannerRequest, rates: CurrencyRates, isRetry = false, retryReason = '') {
   const clarificationText = request.clarifications?.map((turn) => (
     `${turn.questions.map((question) => question.text).join(' / ')}\nОтвет пользователя: ${turn.answer}`
   )).join('\n') ?? '';
@@ -99,7 +100,7 @@ export function buildPlannerPrompt(request: PlannerRequest, isRetry = false, ret
   const activityVolume = requestedDays && requestedDays >= 15
     ? '2–3 активности в обычный день'
     : requestedDays && requestedDays >= 8 ? '2–4 активности в обычный день' : '3–5 активностей в обычный день';
-  const budgetGuidance = budgetPromptGuidance(assessBudget(personalizedRequest));
+  const budgetGuidance = budgetPromptGuidance(assessBudget(personalizedRequest, rates));
   const personalization = buildPersonalizationGuidance(personalizedRequest);
   const details = [
     responseLanguageInstruction(request),

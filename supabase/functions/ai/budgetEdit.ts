@@ -1,4 +1,5 @@
 import { convertCurrency } from './budgetPolicy.ts';
+import type { CurrencyRates } from './exchangeRates.ts';
 import type { PlannerRequest, TripPlan } from './types.ts';
 
 export type BudgetEdit = { request: PlannerRequest; target: number; currency: string; description: string };
@@ -18,7 +19,7 @@ function commandAmount(command: string) {
   return Number.isFinite(amount) && amount > 0 ? amount : null;
 }
 
-export function applyBudgetCommand(request: PlannerRequest, plan: TripPlan, command: string): BudgetEdit | null {
+export function applyBudgetCommand(request: PlannerRequest, plan: TripPlan, command: string, rates: CurrencyRates): BudgetEdit | null {
   if (!/(?:бюдж|дешев|эконом|сниз\S*\s+(?:цен|стоим)|budget|cheaper|save)/i.test(command)) return null;
   const planCurrency = plan.budget.currency.toUpperCase();
   const statedCurrency = detectCurrency(command, planCurrency);
@@ -28,7 +29,7 @@ export function applyBudgetCommand(request: PlannerRequest, plan: TripPlan, comm
   let target: number;
 
   if (isReduction && amount) {
-    const reduction = convertCurrency(amount, statedCurrency, planCurrency);
+    const reduction = convertCurrency(amount, statedCurrency, planCurrency, rates);
     if (reduction === null) return null;
     target = Math.max(0, plan.budget.total - reduction);
   } else if (amount) {
@@ -39,7 +40,7 @@ export function applyBudgetCommand(request: PlannerRequest, plan: TripPlan, comm
   }
   target = Math.round(target);
   const previousMin = request.priceRange
-    ? convertCurrency(request.priceRange.min, request.priceRange.currency, targetCurrency) ?? 0
+    ? convertCurrency(request.priceRange.min, request.priceRange.currency, targetCurrency, rates) ?? 0
     : 0;
   const priceRange = { min: Math.min(Math.round(previousMin), target), max: target, currency: targetCurrency };
   const confirmedSummary = request.confirmedSummary ? {

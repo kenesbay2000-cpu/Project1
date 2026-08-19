@@ -9,6 +9,7 @@ import { isTripPlan } from './tripPlan.ts';
 import { PROTECTED_INFORMATION_MESSAGE, shouldRefuseProtectedInformation } from './security.ts';
 import { learnTravelPreferences, parseKnownPreferences } from './preferenceLearning.ts';
 import { localizedPlannerText } from './responseLanguage.ts';
+import { loadExchangeRates } from './exchangeRates.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -82,7 +83,9 @@ Deno.serve(async (request) => {
     const command = typeof requestBody.command === 'string' ? requestBody.command.trim() : '';
     if (!command || command.length > 1_000) return failure('INVALID_EDIT', 'Опишите изменение в пределах 1000 символов.', 400);
     if (!isTripPlan(requestBody.plan)) return failure('INVALID_EDIT', 'Текущий маршрут повреждён или заполнен не полностью.', 400);
-    const edited = await editExistingPlan(editRequest.value, requestBody.plan, command);
+    const exchangeRates = await loadExchangeRates();
+    if (!exchangeRates.ok) return failure('EXCHANGE_RATES_UNAVAILABLE', exchangeRates.message, 503);
+    const edited = await editExistingPlan(editRequest.value, requestBody.plan, command, exchangeRates.rates);
     if (!edited.ok) return failure(edited.code, edited.message, edited.status);
     return json({ plan: edited.plan, request: edited.request });
   }
@@ -92,7 +95,13 @@ Deno.serve(async (request) => {
     return failure(parsedRequest.error.code, parsedRequest.error.message, 400);
   }
 
-  const budgetAssessment = assessBudget(parsedRequest.value);
+  const exchangeRates = await loadExchangeRates();
+  if (!exchangeRates.ok) return failure(
+    'EXCHANGE_RATES_UNAVAILABLE',
+    localizedPlannerText(parsedRequest.value, 'Не удалось загрузить сохранённые курсы валют. Попробуйте ещё раз немного позже.', 'Saved exchange rates could not be loaded. Please try again shortly.'),
+    503,
+  );
+  const budgetAssessment = assessBudget(parsedRequest.value, exchangeRates.rates);
   if (budgetAssessment.level === 'absurdly_low') {
     return failure(
       'BUDGET_TOO_LOW',
@@ -105,7 +114,7 @@ Deno.serve(async (request) => {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const attemptTimeout = attempt === 0 ? 80_000 : 55_000;
     const gemini = await requestGemini(
-      buildPlannerPrompt(parsedRequest.value, attempt > 0, lastParseError),
+      buildPlannerPrompt(parsedRequest.value, exchangeRates.rates, attempt > 0, lastParseError),
       attemptTimeout,
     );
     if (!gemini.ok) return failure(gemini.code, gemini.message, gemini.status);
