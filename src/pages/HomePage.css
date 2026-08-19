@@ -3,12 +3,6 @@
 
 :root:has(.home-page), body:has(.home-page), .site-shell:has(.home-page), .page-transition:has(.home-page) { background: #e9e0d2; }
 .home-page { --home-ink-deep: #172433; --home-ink: #273342; --home-ink-soft: #334557; --home-paper: #e9e0d2; --home-surface: #f0e8dc; --home-mist: #ded2c1; --home-line: #c7b9a5; --home-text: #273342; --home-muted: #59636d; --home-coral: #a94d3a; --home-coral-deep: #8f3d2f; --home-coral-soft: #c46a54; min-height: 100vh; color: var(--home-text); background: var(--home-paper); }
-body:has(.home-page) .site-header--overlay { color: #273342; background: rgba(233,224,210,.94); border-color: #c7b9a5; backdrop-filter: blur(18px); }
-body:has(.home-page) .site-header--overlay .brand, body:has(.home-page) .site-header--overlay nav a { color: #273342; }
-body:has(.home-page) .site-header--overlay nav a:hover, body:has(.home-page) .site-header--overlay nav a.is-active { color: #172433; }
-body:has(.home-page) .site-header--overlay .brand__mark { color: #a94d3a; border-color: #a99a85; }
-body:has(.home-page) .site-header--overlay .header-action { color: #fff; background: #a94d3a; border-color: #a94d3a; box-shadow: 0 9px 22px rgba(92,46,39,.22); }
-body:has(.home-page) .site-header--overlay nav .header-auth > a { color: #59636d; }
 .home-page :is(.ai-hero__cta, .ai-features__cta a, .planner__submit, .destination-vote__card form > button, .destination-vote__login a) { transition: transform .24s cubic-bezier(.2,.7,.2,1), box-shadow .24s ease, filter .24s ease, background-color .24s ease; }
 .home-page :is(.ai-hero__cta, .ai-features__cta a, .planner__submit, .destination-vote__card form > button, .destination-vote__login a):hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 16px 32px rgba(7,30,38,.2); filter: brightness(1.025); }
 .home-page :is(.ai-hero__cta, .ai-features__cta a, .planner__submit, .destination-vote__card form > button, .destination-vote__login a):active:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(7,30,38,.16); transition-duration: .1s; }

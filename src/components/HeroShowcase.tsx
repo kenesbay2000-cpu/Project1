@@ -17,7 +17,7 @@ export function HeroShowcase() {
   };
 
   return (
-    <section className="hero" style={{ '--hero-photo': `url(${active.image})` } as React.CSSProperties}>
+    <section className="hero" data-header-theme="dark" style={{ '--hero-photo': `url(${active.image})` } as React.CSSProperties}>
       <div className="hero__backdrop" key={active.image} />
       <div className="hero__layout">
         <div className="hero__content" key={active.city}>

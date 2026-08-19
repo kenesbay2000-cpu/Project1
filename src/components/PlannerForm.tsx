@@ -105,6 +105,6 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
   const reset = () => { setDraft(null); setQuestions([]); setAnswer(''); setSummary(null); setCorrection(''); setError(''); setStage('idle'); };
 
   if (!draft) return <PlannerInitialForm onContinue={start} />;
-  if (summary) return <PlannerConfirmation summary={summary} correction={correction} isBusy={stage !== 'idle'} error={error} onCorrectionChange={setCorrection} onCorrection={submitCorrection} onConfirm={() => void confirm()} onReset={reset} />;
+  if (summary) return <PlannerConfirmation summary={summary} correction={correction} isBusy={stage !== 'idle'} isGenerating={stage === 'generating'} error={error} onCorrectionChange={setCorrection} onCorrection={submitCorrection} onConfirm={() => void confirm()} onReset={reset} />;
   return <PlannerConversation request={draft} questions={questions} answer={answer} stage={stage} error={error} onAnswerChange={setAnswer} onAnswer={submitAnswer} onReset={reset} onRetry={() => void continuePlanning(draft)} />;
 }

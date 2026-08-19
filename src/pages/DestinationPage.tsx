@@ -26,15 +26,15 @@ export function DestinationPage() {
   }
 
   return (
-    <main className="destination-page">
+    <main className="destination-page" data-header-overlay>
       <DestinationHero destination={destination} lead={guide.lead} />
-      <article className="destination-article">
+      <article className="destination-article" data-header-theme="light">
         <DestinationArticleIntro guide={guide} />
         <DestinationHighlights items={guide.highlights} />
         <DestinationEssentials destination={destination} guide={guide} />
         <DestinationCautions guide={guide} />
       </article>
-      <section className="article-cta">
+      <section className="article-cta" data-header-theme="dark">
         <div><p className="article-kicker">Следующий шаг</p><h2>Соберите поездку под себя</h2></div>
         <Link href="/planner">Создать маршрут <span>→</span></Link>
       </section>

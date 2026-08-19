@@ -8,7 +8,7 @@ export function DestinationHero({ destination, lead }: DestinationHeroProps) {
   const heroStyle = { '--destination-photo': `url(${destination.image})` } as CSSProperties;
 
   return (
-    <header className="article-hero" style={heroStyle}>
+    <header className="article-hero" data-header-theme="dark" style={heroStyle}>
       <img src={destination.image} alt={`Панорама направления ${destination.city}`} fetchPriority="high" />
       <div className="article-hero__shade" />
       <div className="article-hero__content">

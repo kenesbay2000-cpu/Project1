@@ -8,11 +8,11 @@ import './HomePage.css';
 
 export function HomePage() {
   return (
-    <main className="home-page">
+    <main className="home-page" data-header-overlay>
       <AIPlannerHero />
       <AIPlannerFeatures />
 
-      <section className="home-discovery" aria-labelledby="home-discovery-title">
+      <section className="home-discovery" data-header-theme="light" aria-labelledby="home-discovery-title">
         <header className="home-discovery__heading">
           <span>Продолжите с вдохновения</span>
           <h2 id="home-discovery-title">Присмотритесь к направлениям</h2>
@@ -22,7 +22,7 @@ export function HomePage() {
         <DestinationVote />
       </section>
 
-      <section className="ideas" id="ideas">
+      <section className="ideas" id="ideas" data-header-theme="light">
         <div className="ideas__heading">
           <div>
             <span className="section-label">Вдохновение для вас</span>

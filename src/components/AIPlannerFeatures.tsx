@@ -29,7 +29,7 @@ export function AIPlannerFeatures() {
   }, []);
 
   return (
-    <section className="ai-features" ref={sectionRef} aria-labelledby="ai-features-title">
+    <section className="ai-features" ref={sectionRef} data-header-theme="light" aria-labelledby="ai-features-title">
       <div className="ai-features__inner">
         <header className="ai-features__heading" data-reveal>
           <p><span /> Планирование нового поколения</p>

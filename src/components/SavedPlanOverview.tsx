@@ -21,7 +21,7 @@ export function SavedPlanOverview({ trip, onEdit, onTripUpdated }: SavedPlanOver
   const { plan, request } = trip;
   return (
     <div className="saved-overview">
-      <header className="saved-overview__hero">
+      <header className="saved-overview__hero" data-header-theme="dark">
         {onEdit && <button className="saved-overview__edit" type="button" onClick={onEdit}>← Изменить запрос</button>}
         <span>{onEdit ? 'Персональный маршрут готов' : 'Сохранённое путешествие'}</span>
         <h1>{plan.title}</h1>

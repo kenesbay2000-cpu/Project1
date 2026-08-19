@@ -34,7 +34,7 @@ export function AIPlannerHero() {
   const previousDestination = destinations[previousIndex];
 
   return (
-    <section className="ai-hero" aria-labelledby="ai-hero-title">
+    <section className="ai-hero" data-header-theme="dark" aria-labelledby="ai-hero-title">
       <div className="ai-hero__photos" aria-hidden="true">
         <img className="ai-hero__photo ai-hero__photo--previous" src={previousDestination.image} alt="" />
         <img className="ai-hero__photo ai-hero__photo--active" src={currentDestination.image} alt="" key={currentDestination.image} />

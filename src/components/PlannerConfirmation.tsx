@@ -1,10 +1,12 @@
 import type { FormEvent } from 'react';
 import type { TripSummary } from '../lib/aiPlanner';
+import { PlannerGenerationProgress } from './PlannerGenerationProgress';
 
 type Props = {
   summary: TripSummary;
   correction: string;
   isBusy: boolean;
+  isGenerating: boolean;
   error: string;
   onCorrectionChange: (value: string) => void;
   onCorrection: (event: FormEvent<HTMLFormElement>) => void;
@@ -15,7 +17,7 @@ function show(value: string) { return value || 'Не указано'; }
 function list(values: string[]) { return values.length ? values.join(' · ') : 'Не указано'; }
 
 export function PlannerConfirmation(props: Props) {
-  const { summary, correction, isBusy, error, onCorrectionChange, onCorrection, onConfirm, onReset } = props;
+  const { summary, correction, isBusy, isGenerating, error, onCorrectionChange, onCorrection, onConfirm, onReset } = props;
   const dates = summary.dates.start && summary.dates.end ? `${summary.dates.start} — ${summary.dates.end}` : 'Не указаны';
   const travelers = summary.travelers.count
     ? `${summary.travelers.count}; ${summary.travelers.ages.length ? `возраст: ${summary.travelers.ages.join(', ')}` : show(summary.travelers.description)}`
@@ -38,9 +40,10 @@ export function PlannerConfirmation(props: Props) {
         <dl><dt>Жильё и транспорт</dt><dd>{show(summary.lodging)} · {show(summary.transport)}</dd></dl>
         {(summary.constraints.length > 0 || summary.otherDetails.length > 0) && <dl><dt>Важные детали</dt><dd>{list([...summary.constraints, ...summary.otherDetails])}</dd></dl>}
       </div>
+      {isGenerating && <PlannerGenerationProgress />}
       {error && <div className="planner-form__error" role="alert">{error}</div>}
       <div className="planner-confirmation__actions">
-        <button className="planner-confirmation__confirm" type="button" disabled={isBusy} onClick={onConfirm}>{isBusy ? 'Подождите…' : 'Да, создать полный маршрут'}</button>
+        <button className="planner-confirmation__confirm" type="button" disabled={isBusy} onClick={onConfirm}>{isGenerating ? 'Создаём маршрут…' : isBusy ? 'Подождите…' : 'Да, создать полный маршрут'}</button>
         <button className="planner-dialog__reset" type="button" disabled={isBusy} onClick={onReset}>Изменить исходные данные</button>
       </div>
       <form className="planner-confirmation__correction" onSubmit={onCorrection}>

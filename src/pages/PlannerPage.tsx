@@ -37,6 +37,8 @@ export function PlannerPage() {
   return (
     <main
       className={`planner-page${trip ? ' planner-page--result' : ''}`}
+      data-header-overlay={trip ? undefined : ''}
+      data-header-theme={trip ? 'light' : 'dark'}
       style={{ '--planner-backdrop': `url(${destinations.find((item) => item.slug === 'bali')?.image})` } as CSSProperties}
     >
       <div hidden={Boolean(trip)}>
