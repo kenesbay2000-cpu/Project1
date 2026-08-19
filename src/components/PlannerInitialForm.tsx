@@ -4,17 +4,12 @@ import { PlannerPreferenceChoice } from './PlannerPreferenceChoice';
 import { applyPreferenceSelection } from '../lib/preferenceSelection';
 import './PlannerInitialForm.css';
 import { useI18n } from '../i18n/I18nProvider';
+import { budgetSettings, currencyName, supportedCurrencies, type CurrencyCode } from '../lib/currencies';
 
 type Props = {
   preferences: string[];
   defaultUsePreferences: boolean;
   onContinue: (request: PlannerRequest, usePreferences?: boolean) => Promise<void>;
-};
-
-const budgetSettings = {
-  KZT: { min: 300_000, max: 1_200_000, limit: 5_000_000, step: 50_000 },
-  USD: { min: 1_000, max: 4_000, limit: 30_000, step: 100 },
-  EUR: { min: 1_000, max: 4_000, limit: 30_000, step: 100 },
 };
 
 function parseAges(value: string, errorMessage: string) {
@@ -37,7 +32,7 @@ export function PlannerInitialForm({ preferences, defaultUsePreferences, onConti
   const [ages, setAges] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [currency, setCurrency] = useState<keyof typeof budgetSettings>('KZT');
+  const [currency, setCurrency] = useState<CurrencyCode>('KZT');
   const [error, setError] = useState('');
   const [usePreferences, setUsePreferences] = useState(defaultUsePreferences);
   const [isStarting, setIsStarting] = useState(false);
@@ -56,7 +51,7 @@ export function PlannerInitialForm({ preferences, defaultUsePreferences, onConti
     setTravelers(String(Math.min(20, Math.max(1, current + step))));
   };
 
-  const changeCurrency = (nextCurrency: keyof typeof budgetSettings) => {
+  const changeCurrency = (nextCurrency: CurrencyCode) => {
     setCurrency(nextCurrency);
     setMinPrice('');
     setMaxPrice('');
@@ -137,7 +132,7 @@ export function PlannerInitialForm({ preferences, defaultUsePreferences, onConti
       <section className="planner-form__section planner-form__section--budget">
         <header><span aria-hidden="true">₸</span><div><small>{t('planner.meansEyebrow')}</small><h2>{t('planner.tripBudget')}</h2></div></header>
         <div className="planner-budget">
-          <div className="planner-budget__heading"><p>{minPrice && maxPrice ? <><strong>{shownMin.toLocaleString(locale)}–{shownMax.toLocaleString(locale)}</strong> {currency}</> : t('planner.budgetSkip')}</p><select aria-label={t('planner.currency')} value={currency} onChange={(event) => changeCurrency(event.target.value as keyof typeof budgetSettings)}><option value="KZT">KZT</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
+          <div className="planner-budget__heading"><p>{minPrice && maxPrice ? <><strong>{shownMin.toLocaleString(locale)}–{shownMax.toLocaleString(locale)}</strong> {currency}</> : t('planner.budgetSkip')}</p><select aria-label={t('planner.currency')} value={currency} onChange={(event) => changeCurrency(event.target.value as CurrencyCode)}>{supportedCurrencies.map((code) => <option value={code} key={code}>{code} · {currencyName(code, language)}</option>)}</select></div>
           <label><span>{t('planner.minimum')} <output>{shownMin.toLocaleString(locale)} {currency}</output></span><input type="range" min="0" max={budget.limit} step={budget.step} value={shownMin} onChange={(event) => changeBudgetMin(Number(event.target.value))} /></label>
           <label><span>{t('planner.maximum')} <output>{shownMax.toLocaleString(locale)} {currency}</output></span><input type="range" min="0" max={budget.limit} step={budget.step} value={shownMax} onChange={(event) => changeBudgetMax(Number(event.target.value))} /></label>
           {(minPrice || maxPrice) && <button className="planner-budget__reset" type="button" onClick={() => { setMinPrice(''); setMaxPrice(''); }}>{t('planner.noBudget')}</button>}

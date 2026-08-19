@@ -5,6 +5,7 @@ import { parsePlannerContext } from './plannerContext.ts';
 import { RECOMMENDATION_SAFETY_GUIDANCE } from './recommendationSafety.ts';
 import { responseLanguageInstruction } from './responseLanguage.ts';
 import type { CurrencyRates } from './exchangeRates.ts';
+import { isSupportedCurrency } from './currencies.ts';
 
 type RequestErrorCode = 'INVALID_REQUEST' | 'INVALID_DATES';
 type ParseResult = { value: PlannerRequest } | { error: { code: RequestErrorCode; message: string } };
@@ -75,8 +76,8 @@ export function parsePlannerRequest(value: unknown): ParseResult {
     const min = Number(value.priceRange.min);
     const max = Number(value.priceRange.max);
     const currency = typeof value.priceRange.currency === 'string' ? value.priceRange.currency.trim().toUpperCase() : 'KZT';
-    if (!Number.isFinite(min) || !Number.isFinite(max) || min < 0 || max < min || !/^[A-Z]{3}$/.test(currency)) {
-      return invalid('Укажите корректный диапазон цен и трёхбуквенный код валюты.');
+    if (!Number.isFinite(min) || !Number.isFinite(max) || min < 0 || max < min || !isSupportedCurrency(currency)) {
+      return invalid('Укажите корректный диапазон цен и поддерживаемую валюту.');
     }
     priceRange = { min, max, currency };
   }

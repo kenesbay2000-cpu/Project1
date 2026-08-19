@@ -1,3 +1,5 @@
+import { SUPPORTED_CURRENCIES, isSupportedCurrency } from './currencies.ts';
+
 export type CurrencyRates = Readonly<Record<string, number>>;
 
 type ExchangeRateRow = {
@@ -33,7 +35,7 @@ export async function loadExchangeRates(): Promise<RatesResult> {
 
   try {
     const response = await fetch(
-      `${supabaseUrl}/rest/v1/exchange_rates?select=currency,kzt_per_unit,fetched_at&currency=in.(KZT,USD,EUR)`,
+      `${supabaseUrl}/rest/v1/exchange_rates?select=currency,kzt_per_unit,fetched_at&currency=in.(${SUPPORTED_CURRENCIES.join(',')})`,
       { headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` } },
     );
     if (!response.ok) throw new Error(`database returned ${response.status}`);
@@ -48,12 +50,12 @@ export async function loadExchangeRates(): Promise<RatesResult> {
       const currency = typeof row.currency === 'string' ? row.currency : '';
       const rate = Number(row.kzt_per_unit);
       const fetchedAt = typeof row.fetched_at === 'string' ? Date.parse(row.fetched_at) : Number.NaN;
-      if (['KZT', 'USD', 'EUR'].includes(currency) && Number.isFinite(rate) && rate > 0 && Number.isFinite(fetchedAt)) {
+      if (isSupportedCurrency(currency) && Number.isFinite(rate) && rate > 0 && Number.isFinite(fetchedAt)) {
         rates[currency] = rate;
         fetchedTimes.push(fetchedAt);
       }
     }
-    if (!rates.KZT || !rates.USD || !rates.EUR || fetchedTimes.length !== 3) {
+    if (SUPPORTED_CURRENCIES.some((currency) => !rates[currency]) || fetchedTimes.length !== SUPPORTED_CURRENCIES.length) {
       throw new Error('one or more required currencies are missing');
     }
     cache = { rates, loadedAt: Date.now(), oldestFetch: Math.min(...fetchedTimes) };
