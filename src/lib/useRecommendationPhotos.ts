@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { RecommendationTier, TripPlan } from './aiPlanner';
+import type { TripPlan } from './aiPlanner';
 import { findTripLocation } from './tripLocation';
-import { illustrativePhoto, type RecommendationPhoto, type RecommendationPhotoKind } from './placePhotoFallbacks';
+import type { RecommendationPhoto, RecommendationPhotoKind } from './placePhotoTypes';
 import { findExactPlacePhoto } from './placePhotoProvider';
-import { recommendationTier } from './recommendationTiers';
 
 const CACHE_KEY = 'roamly.place-photos.v1';
 const EXACT_TTL_MS = 30 * 86_400_000;
 const MISS_TTL_MS = 86_400_000;
 type CacheEntry = { checkedAt: number; photo: RecommendationPhoto | null };
-export type RecommendationPhotoState = { loading: boolean; photo: RecommendationPhoto };
+export type RecommendationPhotoState = { loading: boolean; photo: RecommendationPhoto | null };
 
 function cacheKey(kind: RecommendationPhotoKind, name: string, plan: TripPlan) {
   return [kind, name, plan.destination.city, plan.destination.country].join('|').toLocaleLowerCase('en-US');
@@ -33,11 +32,10 @@ function saveCache(cache: Record<string, CacheEntry>) {
 export function useRecommendationPhotos(
   plan: TripPlan,
   kind: RecommendationPhotoKind,
-  items: Array<{ name: string; tier?: RecommendationTier }>,
+  items: Array<{ name: string }>,
 ) {
-  const entries = useMemo(() => items.map((item, index) => ({
+  const entries = useMemo(() => items.map((item) => ({
     key: cacheKey(kind, item.name, plan), name: item.name,
-    fallback: illustrativePhoto(kind, recommendationTier(item.tier, index, items.length)),
   })), [items, kind, plan]);
   const [states, setStates] = useState<Record<string, RecommendationPhotoState>>({});
 
@@ -46,7 +44,7 @@ export function useRecommendationPhotos(
     const cache = readCache();
     const initial = Object.fromEntries(entries.map((entry) => {
       const saved = cache[entry.key];
-      return [entry.key, { loading: !usableEntry(saved), photo: saved?.photo ?? entry.fallback }];
+      return [entry.key, { loading: !usableEntry(saved), photo: saved?.photo ?? null }];
     }));
     setStates(initial);
 
@@ -59,10 +57,10 @@ export function useRecommendationPhotos(
           const photo = await findExactPlacePhoto(entry.name, plan.destination.city, plan.destination.country, center, controller.signal);
           cache[entry.key] = { checkedAt: Date.now(), photo };
           saveCache(cache);
-          setStates((current) => ({ ...current, [entry.key]: { loading: false, photo: photo ?? entry.fallback } }));
+          setStates((current) => ({ ...current, [entry.key]: { loading: false, photo } }));
         } catch (error) {
           if (error instanceof DOMException && error.name === 'AbortError') throw error;
-          setStates((current) => ({ ...current, [entry.key]: { loading: false, photo: entry.fallback } }));
+          setStates((current) => ({ ...current, [entry.key]: { loading: false, photo: null } }));
         }
       }
     }
@@ -70,7 +68,7 @@ export function useRecommendationPhotos(
       if (!(error instanceof DOMException && error.name === 'AbortError')) {
         setStates((current) => Object.fromEntries(entries.map((entry) => {
           const saved = current[entry.key];
-          return [entry.key, saved && !saved.loading ? saved : { loading: false, photo: entry.fallback }];
+          return [entry.key, saved && !saved.loading ? saved : { loading: false, photo: null }];
         })));
       }
     });

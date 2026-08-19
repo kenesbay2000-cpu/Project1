@@ -1,6 +1,6 @@
 import type { Coordinates } from './tripMapProvider';
 import { searchNominatimPhotoPlace } from './nominatimPhotoProvider';
-import type { RecommendationPhoto } from './placePhotoFallbacks';
+import type { RecommendationPhoto } from './placePhotoTypes';
 
 const WIKIDATA_API = 'https://www.wikidata.org/w/api.php';
 const COMMONS_API = 'https://commons.wikimedia.org/w/api.php';
@@ -57,7 +57,7 @@ async function commonsPhoto(file: string, signal: AbortSignal): Promise<Recommen
   if (!url || !info.descriptionurl) return null;
   const artist = plainText(info.extmetadata?.Artist?.value);
   const license = plainText(info.extmetadata?.LicenseShortName?.value);
-  return { url, sourceUrl: info.descriptionurl, credit: [artist, license].filter(Boolean).join(' · ') || 'Wikimedia Commons', match: 'exact' };
+  return { url, sourceUrl: info.descriptionurl, credit: [artist, license].filter(Boolean).join(' · ') || 'Wikimedia Commons' };
 }
 
 export async function findExactPlacePhoto(name: string, city: string, country: string, center: Coordinates | null, signal: AbortSignal) {
