@@ -1,6 +1,6 @@
-const NOMINATIM_URL = import.meta.env.VITE_NOMINATIM_URL?.trim() || 'https://nominatim.openstreetmap.org';
-const PHOTON_URL = import.meta.env.VITE_PHOTON_URL?.trim() || 'https://photon.komoot.io';
-const REQUEST_INTERVAL_MS = 1_100;
+import { requestNominatimJson } from './nominatimClient';
+
+const PHOTON_URL = import.meta.env?.VITE_PHOTON_URL?.trim() || 'https://photon.komoot.io';
 const SEARCH_RADIUS_KM = 25;
 
 export type Coordinates = { latitude: number; longitude: number };
@@ -23,37 +23,11 @@ const ADMINISTRATIVE_TYPES = new Set([
   'suburb', 'town', 'village',
 ]);
 
-let requestQueue: Promise<void> = Promise.resolve();
-let lastRequestAt = 0;
-
 export function validCoordinates(latitude: unknown, longitude: unknown): Coordinates | undefined {
   const lat = Number(latitude);
   const lon = Number(longitude);
   return Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180
     ? { latitude: lat, longitude: lon } : undefined;
-}
-
-function delay(ms: number, signal: AbortSignal) {
-  return new Promise<void>((resolve, reject) => {
-    if (signal.aborted) return reject(new DOMException('Aborted', 'AbortError'));
-    const timeout = globalThis.setTimeout(resolve, ms);
-    signal.addEventListener('abort', () => {
-      globalThis.clearTimeout(timeout);
-      reject(new DOMException('Aborted', 'AbortError'));
-    }, { once: true });
-  });
-}
-
-function enqueueRequest<T>(signal: AbortSignal, request: () => Promise<T>) {
-  const run = async () => {
-    const wait = Math.max(0, REQUEST_INTERVAL_MS - (Date.now() - lastRequestAt));
-    if (wait) await delay(wait, signal);
-    if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
-    try { return await request(); } finally { lastRequestAt = Date.now(); }
-  };
-  const result = requestQueue.then(run, run);
-  requestQueue = result.then(() => undefined, () => undefined);
-  return result;
 }
 
 function searchBounds(center: Coordinates) {
@@ -80,7 +54,7 @@ function localCoordinates(latitude: unknown, longitude: unknown, center: Coordin
 }
 
 async function requestJson(url: string, signal: AbortSignal) {
-  const response = await enqueueRequest(signal, () => fetch(url, { signal }));
+  const response = await fetch(url, { signal });
   if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`.trim());
   return response.json() as Promise<unknown>;
 }
@@ -96,7 +70,7 @@ export async function searchNominatim(query: string, center: Coordinates | null,
       params.set('viewbox', `${bounds.left},${bounds.top},${bounds.right},${bounds.bottom}`);
       params.set('bounded', '1');
     }
-    const results = await requestJson(`${NOMINATIM_URL}/search?${params}`, signal) as NominatimResult[];
+    const results = await requestNominatimJson(`/search?${params}`, signal) as NominatimResult[];
     const coordinates = results.map((result) => {
       const type = result.addresstype ?? result.type ?? '';
       if (result.category === 'boundary' || (result.category === 'place' && ADMINISTRATIVE_TYPES.has(type))) return undefined;
