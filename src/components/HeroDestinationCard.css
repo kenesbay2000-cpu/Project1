@@ -1,0 +1,31 @@
+.ai-destination-card { align-self: end; width: min(300px, 100%); min-width: 0; max-width: 100%; padding: 17px; border: 1px solid rgba(255,255,255,.17); border-radius: 21px; color: rgba(255,255,255,.82); background: rgba(12,24,34,.32); box-shadow: 0 16px 38px rgba(3,12,18,.16); backdrop-filter: blur(16px) saturate(1.05); }
+.ai-destination-card__top, .ai-destination-card__footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.ai-destination-card__top { color: rgba(255,255,255,.52); font-size: 9px; font-weight: 750; letter-spacing: .11em; text-transform: uppercase; }
+.ai-destination-card__top span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-destination-card__trip { padding: 28px 0 22px; }
+.ai-destination-card__trip :is(small, strong), .ai-destination-card__rating :is(b, small) { display: block; }
+.ai-destination-card__trip small, .ai-destination-card__rating small { color: rgba(255,255,255,.5); font-size: 10px; }
+.ai-destination-card__trip strong { margin-top: 5px; color: rgba(255,255,255,.9); font-family: Georgia, serif; font-size: 25px; font-weight: 400; letter-spacing: -.025em; }
+.ai-destination-card__footer { padding-top: 14px; border-top: 1px solid rgba(255,255,255,.12); }
+.ai-destination-card__rating b { margin-bottom: 2px; color: #edb39f; font-size: 12px; }
+.ai-destination-card__arrows { display: flex; gap: 7px; }
+.ai-destination-card__arrows button { width: 37px; height: 37px; padding: 0; border: 1px solid rgba(255,255,255,.23); border-radius: 50%; color: rgba(255,255,255,.86); background: rgba(255,255,255,.06); font-size: 16px; cursor: pointer; transition: transform .22s ease, border-color .22s ease, background .22s ease; }
+.ai-destination-card__arrows button:hover { transform: translateY(-2px); border-color: rgba(255,255,255,.42); background: rgba(255,255,255,.12); }
+.ai-destination-card__arrows button:focus-visible { outline: 3px solid rgba(255,255,255,.78); outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .ai-destination-card { width: min(470px, 100%); }
+  .ai-destination-card__trip { padding: 20px 0 16px; }
+}
+
+@media (max-width: 580px) {
+  .ai-destination-card { width: 100%; padding: 14px; border-radius: 18px; }
+  .ai-destination-card__trip { padding: 14px 0 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; }
+  .ai-destination-card__trip strong { margin: 0; font-size: 20px; white-space: nowrap; }
+  .ai-destination-card__arrows button { width: 34px; height: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-destination-card__arrows button { transition: none; }
+  .ai-destination-card__arrows button:hover { transform: none; }
+}
