@@ -1,5 +1,6 @@
 import { searchCities } from './citySearch';
 import { destinations } from './destinations';
+import { getDestinations } from './content';
 
 export type TripLocation = {
   latitude: number;
@@ -14,8 +15,14 @@ function normalize(value: string) {
 export function findCatalogDestination(city: string, country = '') {
   const normalizedCity = normalize(city);
   const normalizedCountry = normalize(country);
-  return destinations.find((item) => normalize(item.city) === normalizedCity
-    && (!normalizedCountry || normalize(item.country) === normalizedCountry));
+  const englishBySlug = new Map(getDestinations('en').map((item) => [item.slug, item]));
+  return destinations.find((item) => {
+    const english = englishBySlug.get(item.slug);
+    const cityMatches = normalize(item.city) === normalizedCity || (english && normalize(english.city) === normalizedCity);
+    const countryMatches = !normalizedCountry || normalize(item.country) === normalizedCountry
+      || (english && normalize(english.country) === normalizedCountry);
+    return cityMatches && countryMatches;
+  });
 }
 
 export async function findTripLocation(city: string, country: string, signal?: AbortSignal): Promise<TripLocation | null> {

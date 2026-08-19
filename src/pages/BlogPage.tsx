@@ -5,7 +5,7 @@ export function BlogPage() {
   const { t } = useI18n();
   return (
     <PagePlaceholder
-      eyebrow="Travel notes"
+      eyebrow={t('common.blogEyebrow')}
       title={t('common.blogTitle')}
       description={t('common.blogText')}
     />

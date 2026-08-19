@@ -3,15 +3,19 @@ import { CatalogDestinationCard } from '../components/CatalogDestinationCard';
 import { CatalogFilterPanel } from '../components/CatalogFilterPanel';
 import { defaultFilters, filterDestinations, PRICE_MAX, PRICE_MIN, sortDestinations, type CatalogFilters, type SortOption } from '../lib/catalogFilters';
 import { destinations } from '../lib/destinations';
+import { getDestinations } from '../lib/content';
 import './catalogPage.css';
 import './catalogFilters.css';
 import { useI18n } from '../i18n/I18nProvider';
 
 export function DestinationsPage() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [filters, setFilters] = useState<CatalogFilters>(defaultFilters);
   const [sort, setSort] = useState<SortOption>('featured');
-  const results = useMemo(() => sortDestinations(filterDestinations(destinations, filters), sort), [filters, sort]);
+  const results = useMemo(() => {
+    const visibleSlugs = new Set(filterDestinations(destinations, filters).map((item) => item.slug));
+    return sortDestinations(getDestinations(language).filter((item) => visibleSlugs.has(item.slug)), sort);
+  }, [filters, language, sort]);
   const activeCount = (filters.region !== 'all' ? 1 : 0) + filters.tags.length
     + (filters.minPrice !== PRICE_MIN || filters.maxPrice !== PRICE_MAX ? 1 : 0)
     + (filters.minRating > 0 ? 1 : 0) + (filters.visa !== 'all' ? 1 : 0);

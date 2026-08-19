@@ -3,13 +3,14 @@ import { Link } from 'wouter';
 import { loadTravelSurveyResponse, loadTravelVoteStats, saveTravelSurveyResponse, type TravelVoteStats } from '../lib/travelSurvey';
 import { searchCities, type CityOption } from '../lib/citySearch';
 import { destinations } from '../lib/destinations';
+import { getDestinations } from '../lib/content';
 import { useAuth } from './AuthProvider';
 import { CityAutocomplete } from './CityAutocomplete';
 import './DestinationVote.css';
 import { useI18n } from '../i18n/I18nProvider';
 
 export function DestinationVote() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { user, isLoading: isAuthLoading } = useAuth();
   const [city, setCity] = useState<CityOption | null>(null);
   const [savedCity, setSavedCity] = useState('');
@@ -61,14 +62,20 @@ export function DestinationVote() {
   }
 
   const leader = stats?.leadingDestination ?? '';
-  const catalogLeader = destinations.find((destination) => destination.city.localeCompare(leader, 'ru', { sensitivity: 'base' }) === 0);
+  const catalogLeaderBase = destinations.find((destination) => destination.city.localeCompare(leader, 'ru', { sensitivity: 'base' }) === 0);
+  const localizedDestinations = getDestinations(language);
+  const catalogLeader = localizedDestinations.find((destination) => destination.slug === catalogLeaderBase?.slug);
+  const localizeCatalogCity = (cityName: string) => {
+    const source = destinations.find((destination) => destination.city.localeCompare(cityName, 'ru', { sensitivity: 'base' }) === 0);
+    return localizedDestinations.find((destination) => destination.slug === source?.slug)?.city ?? cityName;
+  };
   const backgroundStyle = catalogLeader ? { '--vote-photo': `url(${catalogLeader.image})` } as CSSProperties : undefined;
 
   return (
     <section className={`destination-vote${catalogLeader ? ' has-leader-photo' : ''}`} style={backgroundStyle} aria-labelledby="destination-vote-title">
       <div className="destination-vote__copy">
         <span className="section-label">{t('vote.eyebrow')}</span>
-        <h2 id="destination-vote-title">{leader || t('vote.shareDream')}</h2>
+        <h2 id="destination-vote-title">{catalogLeader?.city || leader || t('vote.shareDream')}</h2>
         <p>{leader
           ? catalogLeader?.description ?? t('vote.leaderFallback')
           : t('vote.prompt')}</p>
@@ -81,7 +88,7 @@ export function DestinationVote() {
             <ol>
               {stats.topDestinations.map((item) => (
                 <li key={item.destination}>
-                  <span>{item.destination}</span><strong>{item.votes}</strong>
+                  <span>{localizeCatalogCity(item.destination)}</span><strong>{item.votes}</strong>
                 </li>
               ))}
             </ol>

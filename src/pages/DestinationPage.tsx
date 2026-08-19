@@ -4,17 +4,16 @@ import { DestinationCautions } from '../components/DestinationCautions';
 import { DestinationEssentials } from '../components/DestinationEssentials';
 import { DestinationHero } from '../components/DestinationHero';
 import { DestinationHighlights } from '../components/DestinationHighlights';
-import { destinations } from '../lib/destinations';
-import { destinationGuides } from '../lib/destinationGuides';
+import { getDestinationGuide, getDestinations } from '../lib/content';
 import './DestinationPage.css';
 import './destinationArticle.css';
 import { useI18n } from '../i18n/I18nProvider';
 
 export function DestinationPage() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [, params] = useRoute('/destinations/:slug');
-  const destination = destinations.find((item) => item.slug === params?.slug);
-  const guide = destination ? destinationGuides[destination.slug] : undefined;
+  const destination = getDestinations(language).find((item) => item.slug === params?.slug);
+  const guide = destination ? getDestinationGuide(destination.slug, language) : undefined;
 
   if (!destination || !guide) {
     return (

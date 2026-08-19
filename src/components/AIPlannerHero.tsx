@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
-import { destinations } from '../lib/destinations';
+import { getDestinations } from '../lib/content';
 import { HeroDestinationCard } from './HeroDestinationCard';
 import './AIPlannerHero.css';
 import { useI18n } from '../i18n/I18nProvider';
 
 export function AIPlannerHero() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const destinations = getDestinations(language);
   const [activeIndex, setActiveIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(0);
 
@@ -23,7 +24,7 @@ export function AIPlannerHero() {
       setActiveIndex(nextIndex);
     }, 6_500);
     return () => window.clearTimeout(timer);
-  }, [activeIndex]);
+  }, [activeIndex, language]);
 
   const showDestination = (index: number) => {
     const normalizedIndex = (index + destinations.length) % destinations.length;

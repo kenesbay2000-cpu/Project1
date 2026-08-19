@@ -1,9 +1,10 @@
 import { Link } from 'wouter';
-import { destinations } from '../lib/destinations';
+import { getDestinations } from '../lib/content';
 import { useI18n } from '../i18n/I18nProvider';
 
 export function DestinationGrid() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const destinations = getDestinations(language);
   return (
     <div className="destinations">
       {destinations.slice(1, 5).map((destination) => (

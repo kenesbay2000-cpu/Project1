@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
-import { destinations } from '../lib/destinations';
+import { getDestinations } from '../lib/content';
 import { TripPlanner } from './TripPlanner';
 import { useI18n } from '../i18n/I18nProvider';
 
 export function HeroShowcase() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const destinations = getDestinations(language);
   const [activeIndex, setActiveIndex] = useState(0);
   const active = destinations[activeIndex];
 
   useEffect(() => {
     const nextImage = new Image();
     nextImage.src = destinations[(activeIndex + 1) % destinations.length].image;
-  }, [activeIndex]);
+  }, [activeIndex, language]);
 
   const changeDestination = (step: number) => {
     setActiveIndex((current) => (current + step + destinations.length) % destinations.length);

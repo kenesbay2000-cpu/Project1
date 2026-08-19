@@ -1,14 +1,17 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { DestinationsMap } from '../components/DestinationsMap';
 import { MapDestinationPreview } from '../components/MapDestinationPreview';
-import { destinations, type Destination } from '../lib/destinations';
+import type { Destination } from '../lib/destinations';
+import { getDestinations } from '../lib/content';
 import './MapPage.css';
 import { useI18n } from '../i18n/I18nProvider';
 
 export function MapPage() {
-  const { t } = useI18n();
-  const [selected, setSelected] = useState<Destination | null>(null);
-  const selectDestination = useCallback((destination: Destination) => setSelected(destination), []);
+  const { t, language } = useI18n();
+  const destinations = useMemo(() => getDestinations(language), [language]);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const selected = destinations.find((item) => item.slug === selectedSlug) ?? null;
+  const selectDestination = useCallback((destination: Destination) => setSelectedSlug(destination.slug), []);
 
   return (
     <main className="map-page">
@@ -18,8 +21,8 @@ export function MapPage() {
       </header>
       <section className="map-stage">
         <div className="map-stage__label"><span /> {t('map.hint')}</div>
-        <DestinationsMap destinations={destinations} selectedSlug={selected?.slug ?? null} onSelect={selectDestination} />
-        {selected && <MapDestinationPreview destination={selected} onClose={() => setSelected(null)} />}
+        <DestinationsMap destinations={destinations} selectedSlug={selectedSlug} onSelect={selectDestination} />
+        {selected && <MapDestinationPreview destination={selected} onClose={() => setSelectedSlug(null)} />}
       </section>
     </main>
   );
