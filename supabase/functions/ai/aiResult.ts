@@ -47,7 +47,8 @@ export function parsePlannerAIResult(text: string, request: PlannerRequest): Par
   }
   const language = request.responseLanguage === 'en' ? 'en' : 'ru';
   const normalizedPlan = limitAdjustedActivities(value.plan, language);
-  if (value.status === 'success' && typeof value.message === 'string' && isTripPlan(normalizedPlan)) {
+  const schemaIssue = getTripPlanValidationIssue(normalizedPlan, true);
+  if (value.status === 'success' && typeof value.message === 'string' && !schemaIssue && isTripPlan(normalizedPlan)) {
     const personalizedPlan = applyPersonalizedPace(normalizedPlan, request);
     const cautiousPlan = applyRecommendationCautions(personalizedPlan, language);
     const scheduledPlan = normalizePlanSchedule(cautiousPlan, language);
@@ -56,7 +57,7 @@ export function parsePlannerAIResult(text: string, request: PlannerRequest): Par
     return { value: { status: 'success', message: value.message, plan: scheduledPlan } };
   }
   if (value.status === 'success' && typeof value.message === 'string') {
-    return { error: `Plan schema check failed: ${getTripPlanValidationIssue(normalizedPlan) ?? 'неизвестная ошибка схемы.'}` };
+    return { error: `Plan schema check failed: ${schemaIssue ?? 'неизвестная ошибка схемы.'}` };
   }
   return { error: 'Response does not match the planner result schema' };
 }

@@ -67,12 +67,15 @@ export type TransportOption = {
   recommendation: string;
 };
 
+export type RecommendationTier = 'budget' | 'comfortable' | 'luxury';
+
 export type AccommodationOption = {
   name: string;
   area: string;
   type: string;
   pricePerNight: number;
   description: string;
+  tier?: RecommendationTier;
 };
 
 export type FoodRecommendation = {
@@ -80,9 +83,10 @@ export type FoodRecommendation = {
   cuisine: string;
   priceLevel: string;
   description: string;
+  tier?: RecommendationTier;
 };
 
-export type ActivityOverview = { name: string; category: string; summary: string };
+export type ActivityOverview = { name: string; category: string; summary: string; tier?: RecommendationTier };
 export type UsefulRecommendation = { title: string; recommendation: string };
 export type ChecklistItem = { task: string; timing: string; details: string };
 export type RealismAssessment = {

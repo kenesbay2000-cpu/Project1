@@ -47,9 +47,15 @@ function addAccommodationCaution(
 }
 
 export function applyRecommendationCautions(plan: TripPlan, language: 'ru' | 'en' = 'ru'): TripPlan {
-  const typicalPrice = median(plan.accommodations.map((item) => item.pricePerNight).filter((price) => price > 0));
+  const allPrices = plan.accommodations.map((item) => item.pricePerNight).filter((price) => price > 0);
   const currency = plan.budget.currency.toUpperCase();
-  const accommodations = plan.accommodations.map((item) => addAccommodationCaution(item, typicalPrice, currency, language));
+  const accommodations = plan.accommodations.map((item) => {
+    const comparablePrices = plan.accommodations
+      .filter((option) => option.tier === item.tier)
+      .map((option) => option.pricePerNight)
+      .filter((price) => price > 0);
+    return addAccommodationCaution(item, median(comparablePrices.length ? comparablePrices : allPrices), currency, language);
+  });
   return accommodations.every((item, index) => item === plan.accommodations[index])
     ? plan
     : { ...plan, accommodations };

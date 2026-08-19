@@ -123,7 +123,7 @@ function isBudgetCategory(value: unknown) {
   return isRecord(value) && isText(value.category) && isMoney(value.amount) && isText(value.note);
 }
 
-export function getTripPlanValidationIssue(value: unknown) {
+export function getTripPlanValidationIssue(value: unknown, requireTierCoverage = false) {
   if (!isRecord(value)) return 'План не является объектом.';
   if (!isText(value.title) || !isText(value.rationale)) return 'Не заполнены название или объяснение маршрута.';
   const destination = value.destination;
@@ -140,7 +140,7 @@ export function getTripPlanValidationIssue(value: unknown) {
   if (!isRecord(budget) || !isText(budget.currency) || !isMoney(budget.total)
     || !Array.isArray(budget.categories) || budget.categories.length === 0
     || !budget.categories.every(isBudgetCategory)) return 'Не заполнен бюджет.';
-  const extrasIssue = getTripPlanExtrasIssue(value);
+  const extrasIssue = getTripPlanExtrasIssue(value, requireTierCoverage);
   if (extrasIssue) return extrasIssue;
   if (!isRealismAssessment(value.realism)) return 'Не заполнена оценка реалистичности.';
   return null;

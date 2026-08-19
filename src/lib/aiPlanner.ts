@@ -46,6 +46,8 @@ export type GeneratedTrip = {
   plan: TripPlan;
 };
 
+export type RecommendationTier = 'budget' | 'comfortable' | 'luxury';
+
 export type TripPlan = {
   title: string;
   destination: { city: string; country: string };
@@ -78,9 +80,10 @@ export type TripPlan = {
     type: string;
     pricePerNight: number;
     description: string;
+    tier?: RecommendationTier;
   }>;
-  food: Array<{ name: string; cuisine: string; priceLevel: string; description: string }>;
-  activities: Array<{ name: string; category: string; summary: string }>;
+  food: Array<{ name: string; cuisine: string; priceLevel: string; description: string; tier?: RecommendationTier }>;
+  activities: Array<{ name: string; category: string; summary: string; tier?: RecommendationTier }>;
   usefulLinks: Array<{ title: string; recommendation: string }>;
   checklist: Array<{ task: string; timing: string; details: string }>;
   realism: {

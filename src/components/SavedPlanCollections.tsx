@@ -1,17 +1,32 @@
-import type { TripPlan } from '../lib/aiPlanner';
+import { useState } from 'react';
+import type { RecommendationTier, TripPlan } from '../lib/aiPlanner';
 import { useI18n } from '../i18n/I18nProvider';
+import { filterByRecommendationTier, recommendationTier, type RecommendationTierFilterValue } from '../lib/recommendationTiers';
+import { RecommendationTierFilter } from './RecommendationTierFilter';
+
+function TierBadge({ tier }: { tier?: RecommendationTier }) {
+  const { t } = useI18n();
+  const resolved = recommendationTier(tier);
+  return <span className={`recommendation-tier recommendation-tier--${resolved}`}>{t(`extras.tier.${resolved}`)}</span>;
+}
 
 export function SavedAccommodations({ plan }: { plan: TripPlan }) {
   const { t, language } = useI18n();
-  return <div className="saved-card-grid saved-card-grid--large">{plan.accommodations.map((item, index) => <article key={`${item.name}-${index}`}><small>{item.type} · {item.area}</small><h3>{item.name}</h3><strong>{item.pricePerNight.toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US')} {plan.budget.currency} {t('extras.perNight')}</strong><p>{item.description}</p></article>)}</div>;
+  const [tier, setTier] = useState<RecommendationTierFilterValue>('all');
+  const items = filterByRecommendationTier(plan.accommodations, tier);
+  return <><RecommendationTierFilter value={tier} onChange={setTier} /><div className="saved-card-grid saved-card-grid--large">{items.map((item, index) => <article key={`${item.name}-${index}`}><TierBadge tier={item.tier} /><small>{item.type} · {item.area}</small><h3>{item.name}</h3><strong>{item.pricePerNight.toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US')} {plan.budget.currency} {t('extras.perNight')}</strong><p>{item.description}</p></article>)}</div></>;
 }
 
 export function SavedFood({ plan }: { plan: TripPlan }) {
-  return <div className="saved-card-grid">{plan.food.map((item, index) => <article key={`${item.name}-${index}`}><small>{item.cuisine} · {item.priceLevel}</small><h3>{item.name}</h3><p>{item.description}</p></article>)}</div>;
+  const [tier, setTier] = useState<RecommendationTierFilterValue>('all');
+  const items = filterByRecommendationTier(plan.food, tier);
+  return <><RecommendationTierFilter value={tier} onChange={setTier} /><div className="saved-card-grid">{items.map((item, index) => <article key={`${item.name}-${index}`}><TierBadge tier={item.tier} /><small>{item.cuisine} · {item.priceLevel}</small><h3>{item.name}</h3><p>{item.description}</p></article>)}</div></>;
 }
 
 export function SavedActivities({ plan }: { plan: TripPlan }) {
-  return <div className="saved-card-grid">{plan.activities.map((item, index) => <article key={`${item.name}-${index}`}><small>{item.category}</small><h3>{item.name}</h3><p>{item.summary}</p></article>)}</div>;
+  const [tier, setTier] = useState<RecommendationTierFilterValue>('all');
+  const items = filterByRecommendationTier(plan.activities, tier);
+  return <><RecommendationTierFilter value={tier} onChange={setTier} /><div className="saved-card-grid">{items.map((item, index) => <article key={`${item.name}-${index}`}><TierBadge tier={item.tier} /><small>{item.category}</small><h3>{item.name}</h3><p>{item.summary}</p></article>)}</div></>;
 }
 
 export function SavedUsefulLinks({ plan }: { plan: TripPlan }) {
