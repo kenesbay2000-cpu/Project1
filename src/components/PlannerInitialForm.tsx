@@ -1,8 +1,14 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import type { PlannerRequest } from '../lib/aiPlanner';
+import { PlannerPreferenceChoice } from './PlannerPreferenceChoice';
+import { applyPreferenceSelection } from '../lib/preferenceSelection';
 import './PlannerInitialForm.css';
 
-type Props = { onContinue: (request: PlannerRequest) => void };
+type Props = {
+  preferences: string[];
+  defaultUsePreferences: boolean;
+  onContinue: (request: PlannerRequest, usePreferences?: boolean) => Promise<void>;
+};
 
 const promptExamples = [
   'Хочу неделю в Японии: природа, небольшие кафе и спокойный темп…',
@@ -24,7 +30,7 @@ function parseAges(value: string) {
   return ages;
 }
 
-export function PlannerInitialForm({ onContinue }: Props) {
+export function PlannerInitialForm({ preferences, defaultUsePreferences, onContinue }: Props) {
   const [prompt, setPrompt] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [originCity, setOriginCity] = useState('');
@@ -36,6 +42,8 @@ export function PlannerInitialForm({ onContinue }: Props) {
   const [maxPrice, setMaxPrice] = useState('');
   const [currency, setCurrency] = useState<keyof typeof budgetSettings>('KZT');
   const [error, setError] = useState('');
+  const [usePreferences, setUsePreferences] = useState(defaultUsePreferences);
+  const [isStarting, setIsStarting] = useState(false);
   const budget = budgetSettings[currency];
   const shownMin = Number(minPrice || budget.min);
   const shownMax = Number(maxPrice || budget.max);
@@ -67,11 +75,11 @@ export function PlannerInitialForm({ onContinue }: Props) {
     if (!minPrice) setMinPrice(String(budget.min));
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
     try {
-      const request: PlannerRequest = { prompt: prompt.trim() };
+      let request: PlannerRequest = { prompt: prompt.trim() };
       if (originCity.trim()) request.originCity = originCity.trim();
       if (startDate || endDate) {
         if (!startDate || !endDate) throw new Error('Укажите обе даты поездки или оставьте обе пустыми.');
@@ -91,10 +99,12 @@ export function PlannerInitialForm({ onContinue }: Props) {
         if (min < 0 || max < min) throw new Error('Проверьте минимальную и максимальную сумму бюджета.');
         request.priceRange = { min, max, currency };
       }
-      onContinue(request);
+      request = applyPreferenceSelection(request, preferences, usePreferences);
+      setIsStarting(true);
+      await onContinue(request, preferences.length ? usePreferences : undefined);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Проверьте исходные данные.');
-    }
+    } finally { setIsStarting(false); }
   };
 
   return (
@@ -107,6 +117,8 @@ export function PlannerInitialForm({ onContinue }: Props) {
           <small>{prompt.length.toLocaleString('ru-RU')} / 4 000</small>
         </label>
       </section>
+
+      {preferences.length > 0 && <PlannerPreferenceChoice preferences={preferences} usePreferences={usePreferences} onChange={setUsePreferences} />}
 
       <section className="planner-form__section">
         <header><span aria-hidden="true">⌖</span><div><small>01 · Маршрут</small><h2>Когда и откуда</h2></div></header>
@@ -136,7 +148,7 @@ export function PlannerInitialForm({ onContinue }: Props) {
       </section>
 
       {error && <div className="planner-form__error" role="alert">{error}</div>}
-      <footer className="planner-form__footer"><button className="planner-form__submit" type="submit">Продолжить с AI <span>→</span></button><p>AI задаст только важные уточнения и покажет сводку перед генерацией.</p></footer>
+      <footer className="planner-form__footer"><button className="planner-form__submit" type="submit" disabled={isStarting}>{isStarting ? 'Сохраняем выбор…' : 'Продолжить с AI'} <span>→</span></button><p>AI задаст только важные уточнения и покажет сводку перед генерацией.</p></footer>
     </form>
   );
 }

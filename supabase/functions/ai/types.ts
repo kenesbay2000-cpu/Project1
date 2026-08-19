@@ -9,6 +9,7 @@ export type PlannerRequest = {
   summaryCorrections?: string[];
   confirmedSummary?: TripSummary;
   routeEdits?: string[];
+  savedPreferences?: string[];
 };
 
 export type ClarificationQuestion = { id: string; text: string };

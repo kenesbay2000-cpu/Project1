@@ -1,7 +1,7 @@
 import { parseTripSummary } from './summary.ts';
 import type { PlannerRequest } from './types.ts';
 
-type PlannerContext = Pick<PlannerRequest, 'clarifications' | 'summaryCorrections' | 'confirmedSummary' | 'routeEdits'>;
+type PlannerContext = Pick<PlannerRequest, 'clarifications' | 'summaryCorrections' | 'confirmedSummary' | 'routeEdits' | 'savedPreferences'>;
 type ContextResult = { value: PlannerContext } | { error: string };
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -48,5 +48,13 @@ export function parsePlannerContext(value: Record<string, unknown>): ContextResu
     }
     routeEdits = value.routeEdits.map((item) => String(item).trim());
   }
-  return { value: { clarifications, summaryCorrections, confirmedSummary, routeEdits } };
+  let savedPreferences: string[] | undefined;
+  if (value.savedPreferences !== undefined) {
+    if (!Array.isArray(value.savedPreferences) || value.savedPreferences.length > 12
+      || value.savedPreferences.some((item) => typeof item !== 'string' || !item.trim() || item.trim().length > 180)) {
+      return { error: 'Сохранённые предпочтения заполнены некорректно.' };
+    }
+    savedPreferences = value.savedPreferences.map((item) => String(item).trim());
+  }
+  return { value: { clarifications, summaryCorrections, confirmedSummary, routeEdits, savedPreferences } };
 }

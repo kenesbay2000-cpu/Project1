@@ -7,6 +7,7 @@ import { createTripSummary, parseTripSummary } from './summary.ts';
 import { editExistingPlan } from './editPlan.ts';
 import { isTripPlan } from './tripPlan.ts';
 import { PROTECTED_INFORMATION_MESSAGE, shouldRefuseProtectedInformation } from './security.ts';
+import { learnTravelPreferences, parseKnownPreferences } from './preferenceLearning.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -64,6 +65,14 @@ Deno.serve(async (request) => {
     const result = await createTripSummary(summaryRequest.value, currentSummary, correction);
     if (!result.ok) return failure(result.code, result.message, result.status);
     return json({ summary: result.summary });
+  }
+
+  if (isRecord(requestBody) && requestBody.mode === 'learn_preferences') {
+    const preferenceRequest = parsePlannerRequest(requestBody.request);
+    if ('error' in preferenceRequest) return failure(preferenceRequest.error.code, preferenceRequest.error.message, 400);
+    const result = await learnTravelPreferences(preferenceRequest.value, parseKnownPreferences(requestBody.known));
+    if (!result.ok) return failure(result.code, result.message, result.status);
+    return json({ candidates: result.candidates });
   }
 
   if (isRecord(requestBody) && requestBody.mode === 'edit') {

@@ -1,8 +1,10 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import {
-  analyzeTripRequest, generateTripPlan, summarizeTripRequest,
+  analyzeTripRequest, extractTravelPreferences, generateTripPlan, summarizeTripRequest,
   type ClarificationQuestion, type GeneratedTrip, type PlannerRequest, type TripSummary,
 } from '../lib/aiPlanner';
+import { loadPreferenceProfile, recordPreferenceCandidates, savePreferenceDefault, type PreferenceProfile } from '../lib/travelPreferences';
+import { useAuth } from './AuthProvider';
 import { PlannerConfirmation } from './PlannerConfirmation';
 import { PlannerConversation } from './PlannerConversation';
 import { PlannerInitialForm } from './PlannerInitialForm';
@@ -33,6 +35,7 @@ function applySummary(request: PlannerRequest, summary: TripSummary): PlannerReq
 }
 
 export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [stage, setStage] = useState<Stage>('idle');
   const [draft, setDraft] = useState<PlannerRequest | null>(null);
   const [questions, setQuestions] = useState<ClarificationQuestion[]>([]);
@@ -40,6 +43,20 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
   const [summary, setSummary] = useState<TripSummary | null>(null);
   const [correction, setCorrection] = useState('');
   const [error, setError] = useState('');
+  const [preferenceProfile, setPreferenceProfile] = useState<PreferenceProfile | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (isAuthLoading) return () => { active = false; };
+    if (!user) {
+      setPreferenceProfile({ active: [], signals: [], useByDefault: true });
+      return () => { active = false; };
+    }
+    void loadPreferenceProfile(user.id)
+      .then((profile) => { if (active) setPreferenceProfile(profile); })
+      .catch(() => { if (active) setPreferenceProfile({ active: [], signals: [], useByDefault: true }); });
+    return () => { active = false; };
+  }, [isAuthLoading, user]);
 
   const showSummary = async (request: PlannerRequest, current?: TripSummary, change?: string) => {
     setError('');
@@ -78,7 +95,14 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
     }
   };
 
-  const start = (request: PlannerRequest) => { setDraft(request); void continuePlanning(request); };
+  const start = async (request: PlannerRequest, usePreferences?: boolean) => {
+    if (user && usePreferences !== undefined) {
+      try { await savePreferenceDefault(user.id, usePreferences); }
+      catch { throw new Error('Не удалось сохранить выбор предпочтений. Проверьте соединение и попробуйте ещё раз.'); }
+    }
+    setDraft(request);
+    await continuePlanning(request);
+  };
   const submitAnswer = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!draft || !answer.trim() || questions.length === 0) return;
@@ -96,6 +120,11 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
     setError(''); setStage('generating');
     try {
       const plan = await generateTripPlan(confirmed);
+      if (user && preferenceProfile) {
+        void extractTravelPreferences(confirmed, preferenceProfile.signals)
+          .then((candidates) => recordPreferenceCandidates(user.id, preferenceProfile.signals, candidates))
+          .catch(() => undefined);
+      }
       onPlanCreated({ id: crypto.randomUUID(), request: confirmed, plan });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Не удалось создать маршрут. Попробуйте ещё раз.');
@@ -104,7 +133,10 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
   };
   const reset = () => { setDraft(null); setQuestions([]); setAnswer(''); setSummary(null); setCorrection(''); setError(''); setStage('idle'); };
 
-  if (!draft) return <PlannerInitialForm onContinue={start} />;
+  if (!draft) {
+    if (!preferenceProfile) return <div className="planner-preferences-loading" role="status"><span />Загружаем настройки AI Planner…</div>;
+    return <PlannerInitialForm preferences={preferenceProfile.active.map((item) => item.label)} defaultUsePreferences={preferenceProfile.useByDefault} onContinue={start} />;
+  }
   if (summary) return <PlannerConfirmation summary={summary} correction={correction} isBusy={stage !== 'idle'} isGenerating={stage === 'generating'} error={error} onCorrectionChange={setCorrection} onCorrection={submitCorrection} onConfirm={() => void confirm()} onReset={reset} />;
   return <PlannerConversation request={draft} questions={questions} answer={answer} stage={stage} error={error} onAnswerChange={setAnswer} onAnswer={submitAnswer} onReset={reset} onRetry={() => void continuePlanning(draft)} />;
 }

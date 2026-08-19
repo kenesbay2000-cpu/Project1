@@ -1,4 +1,5 @@
 import { isSupabaseConfigured, supabase } from './supabase';
+import type { PreferenceCandidate, TravelPreference } from './travelPreferences';
 
 export type PlannerRequest = {
   prompt: string;
@@ -11,6 +12,7 @@ export type PlannerRequest = {
   summaryCorrections?: string[];
   confirmedSummary?: TripSummary;
   routeEdits?: string[];
+  savedPreferences?: string[];
 };
 
 export type ClarificationQuestion = { id: string; text: string };
@@ -92,6 +94,7 @@ type PlannerResponse = { plan?: TripPlan; error?: { message?: string } };
 type ClarificationResponse = { clarification?: ClarificationResult; error?: { message?: string } };
 type SummaryResponse = { summary?: TripSummary; error?: { message?: string } };
 type EditResponse = { plan?: TripPlan; request?: PlannerRequest; error?: { message?: string } };
+type PreferenceResponse = { candidates?: PreferenceCandidate[]; error?: { message?: string } };
 
 const fallbackError = 'Не удалось определить причину сбоя. Проверьте данные и попробуйте создать маршрут ещё раз.';
 
@@ -143,6 +146,19 @@ export async function summarizeTripRequest(request: PlannerRequest, currentSumma
   if (error) throw new Error(await readFunctionError(error));
   if (!data?.summary) throw new Error(data?.error?.message ?? fallbackError);
   return data.summary;
+}
+
+export async function extractTravelPreferences(request: PlannerRequest, known: TravelPreference[]) {
+  const { data, error } = await supabase.functions.invoke<PreferenceResponse>('ai', {
+    body: {
+      mode: 'learn_preferences',
+      request,
+      known: known.slice(0, 20).map((item) => ({ key: item.key, label: item.label })),
+    },
+    timeout: 30_000,
+  });
+  if (error) throw new Error(await readFunctionError(error));
+  return data?.candidates ?? [];
 }
 
 export async function editTripPlan(trip: GeneratedTrip, command: string): Promise<GeneratedTrip> {
