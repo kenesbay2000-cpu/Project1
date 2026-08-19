@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import type { GeneratedTrip } from '../lib/aiPlanner';
 import { storePendingTrip } from '../lib/savedPlans';
 import './GuestPlanLimitNotice.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 type Props = {
   trip: GeneratedTrip | null;
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export function GuestPlanLimitNotice({ trip, onClose }: Props) {
+  const { t } = useI18n();
   const [error, setError] = useState('');
   const closeButton = useRef<HTMLButtonElement>(null);
 
@@ -31,7 +33,7 @@ export function GuestPlanLimitNotice({ trip, onClose }: Props) {
       storePendingTrip(trip);
     } catch {
       event.preventDefault();
-      setError('Не удалось временно сохранить маршрут. Освободите место в браузере и попробуйте снова.');
+      setError(t('guest.browserError'));
     }
   }
 
@@ -40,13 +42,13 @@ export function GuestPlanLimitNotice({ trip, onClose }: Props) {
       if (event.target === event.currentTarget) onClose();
     }}>
       <section className="guest-limit__card" role="dialog" aria-modal="true" aria-labelledby="guest-limit-title" aria-describedby="guest-limit-description">
-        <button ref={closeButton} className="guest-limit__close" type="button" aria-label="Закрыть" onClick={onClose}>×</button>
-        <span className="guest-limit__eyebrow">Ваш первый маршрут готов</span>
-        <h2 id="guest-limit-title">Сохрани эту поездку и продолжи планировать новые</h2>
-        <p id="guest-limit-description">Зарегистрируйтесь бесплатно, чтобы создавать новые маршруты и возвращаться к своим планам в любое время.</p>
+        <button ref={closeButton} className="guest-limit__close" type="button" aria-label={t('guest.close')} onClick={onClose}>×</button>
+        <span className="guest-limit__eyebrow">{t('guest.eyebrow')}</span>
+        <h2 id="guest-limit-title">{t('guest.title')}</h2>
+        <p id="guest-limit-description">{t('guest.text')}</p>
         <div className="guest-limit__actions">
-          <Link href="/signup" onClick={preserveTrip}>Зарегистрироваться бесплатно <span>→</span></Link>
-          <Link href="/login" onClick={preserveTrip}>Уже есть аккаунт</Link>
+          <Link href="/signup" onClick={preserveTrip}>{t('guest.signup')} <span>→</span></Link>
+          <Link href="/login" onClick={preserveTrip}>{t('guest.login')}</Link>
         </div>
         {error && <small role="alert">{error}</small>}
       </section>

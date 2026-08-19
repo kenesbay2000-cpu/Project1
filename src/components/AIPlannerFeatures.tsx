@@ -1,13 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import './AIPlannerFeatures.css';
-
-const planParts = [
-  ['01', 'Маршрут'], ['02', 'Транспорт'], ['03', 'Жильё'],
-  ['04', 'Еда'], ['05', 'Активности'], ['06', 'Бюджет'],
-];
+import { useI18n } from '../i18n/I18nProvider';
 
 export function AIPlannerFeatures() {
+  const { t } = useI18n();
+  const planParts = [t('features.route'), t('features.transport'), t('features.stay'), t('features.food'), t('features.activities'), t('features.budget')];
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -32,58 +30,58 @@ export function AIPlannerFeatures() {
     <section className="ai-features" ref={sectionRef} data-header-theme="light" aria-labelledby="ai-features-title">
       <div className="ai-features__inner">
         <header className="ai-features__heading" data-reveal>
-          <p><span /> Планирование нового поколения</p>
-          <h2 id="ai-features-title">Не просто отвечает.<br /><em>Думает о поездке целиком.</em></h2>
-          <div>AI Planner ведёт диалог, замечает ограничения и превращает ваши пожелания в связный план, которым действительно можно пользоваться.</div>
+          <p><span /> {t('features.eyebrow')}</p>
+          <h2 id="ai-features-title">{t('features.title')}<br /><em>{t('features.titleAccent')}</em></h2>
+          <div>{t('features.intro')}</div>
         </header>
 
         <div className="ai-features__grid">
           <article className="ai-feature ai-feature--dialog" data-reveal>
-            <FeatureTitle number="01" title="Уточняет, прежде чем планировать" text="ИИ сам замечает недостающие детали и задаёт только важные вопросы." />
+            <FeatureTitle number="01" title={t('features.f1Title')} text={t('features.f1Text')} />
             <div className="feature-chat">
-              <p>Хочу в Италию осенью, без спешки</p>
-              <span><b>AI</b> Отлично. Вы путешествуете вдвоём? Что важнее: гастрономия, искусство или природа?</span>
-              <p>Вдвоём, любим локальную кухню и маленькие города</p>
+              <p>{t('features.chat1')}</p>
+              <span><b>AI</b> {t('features.chat2')}</span>
+              <p>{t('features.chat3')}</p>
             </div>
           </article>
 
           <article className="ai-feature ai-feature--understand" data-reveal>
-            <FeatureTitle number="02" title="Понимает свободный текст" text="Можно описать поездку своими словами — без длинной анкеты." />
-            <div className="feature-prompt"><span>«10 дней в Японии, спокойно, с ребёнком, до 2 млн ₸»</span><i /></div>
-            <div className="feature-tags"><span>Япония</span><span>10 дней</span><span>Семья</span><span>Спокойно</span><span>≤ 2 млн ₸</span></div>
+            <FeatureTitle number="02" title={t('features.f2Title')} text={t('features.f2Text')} />
+            <div className="feature-prompt"><span>{t('features.prompt')}</span><i /></div>
+            <div className="feature-tags"><span>{t('features.japan')}</span><span>{t('features.tenDays')}</span><span>{t('features.family')}</span><span>{t('features.calm')}</span><span>≤ 2 млн ₸</span></div>
           </article>
 
           <article className="ai-feature ai-feature--complete" data-reveal>
-            <FeatureTitle number="03" title="Собирает полный план" text="Не подборка идей, а единая структура поездки со всеми ключевыми решениями." />
+            <FeatureTitle number="03" title={t('features.f3Title')} text={t('features.f3Text')} />
             <div className="feature-plan-parts">
-              {planParts.map(([number, label]) => <span key={number}><small>{number}</small><strong>{label}</strong><i>↗</i></span>)}
+              {planParts.map((label, index) => <span key={label}><small>{String(index + 1).padStart(2, '0')}</small><strong>{label}</strong><i>↗</i></span>)}
             </div>
           </article>
 
           <article className="ai-feature ai-feature--realism" data-reveal>
-            <FeatureTitle number="04" title="Проверяет реалистичность" text="Учитывает расстояния, переезды, темп и настоящую нагрузку на день." />
-            <div className="feature-day"><span>09:30</span><i /><p><b>Музей Орсе</b><small>2 ч 30 мин</small></p></div>
-            <div className="feature-transfer"><span>18 минут пешком</span><i>✓</i></div>
-            <div className="feature-day"><span>13:00</span><i /><p><b>Обед в Сен-Жермен</b><small>Рядом · без спешки</small></p></div>
+            <FeatureTitle number="04" title={t('features.f4Title')} text={t('features.f4Text')} />
+            <div className="feature-day"><span>09:30</span><i /><p><b>{t('features.museum')}</b><small>{t('features.duration')}</small></p></div>
+            <div className="feature-transfer"><span>{t('features.walk')}</span><i>✓</i></div>
+            <div className="feature-day"><span>13:00</span><i /><p><b>{t('features.lunch')}</b><small>{t('features.nearby')}</small></p></div>
           </article>
 
           <article className="ai-feature ai-feature--refine" data-reveal>
-            <FeatureTitle number="05" title="Меняется вместе с вами" text="Донастройте готовый результат одной короткой командой — без нового старта." />
-            <div className="feature-commands"><span>Сделай поездку дешевле <i>→</i></span><span>Добавь ещё одно направление <i>→</i></span><span>Оставь больше свободного времени <i>→</i></span></div>
+            <FeatureTitle number="05" title={t('features.f5Title')} text={t('features.f5Text')} />
+            <div className="feature-commands"><span>{t('features.cheaper')} <i>→</i></span><span>{t('features.addDestination')} <i>→</i></span><span>{t('features.moreFreeTime')} <i>→</i></span></div>
           </article>
 
           <article className="ai-feature ai-feature--saved" data-reveal>
-            <FeatureTitle number="06" title="Всегда под рукой" text="Сохраняйте планы в профиле и возвращайтесь к ним в любой момент." />
-            <div className="feature-saved-card"><span>12–20 октября</span><h3>Осенняя Япония</h3><p>8 дней · Токио и Киото</p><b>Сохранено <i>✓</i></b></div>
+            <FeatureTitle number="06" title={t('features.f6Title')} text={t('features.f6Text')} />
+            <div className="feature-saved-card"><span>{t('features.dates')}</span><h3>{t('features.savedTitle')}</h3><p>{t('features.savedMeta')}</p><b>{t('features.saved')} <i>✓</i></b></div>
           </article>
         </div>
 
         <div className="ai-features__cta" data-reveal>
-          <p>Ваша следующая поездка может начаться с одного предложения.</p>
-          <Link href="/planner">Открыть AI Planner <span>→</span></Link>
+          <p>{t('features.ctaText')}</p>
+          <Link href="/planner">{t('features.openPlanner')} <span>→</span></Link>
         </div>
       </div>
-      <div className="ai-features__transition"><span>Или начните с вдохновения</span><i>↓</i></div>
+      <div className="ai-features__transition"><span>{t('features.inspiration')}</span><i>↓</i></div>
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import { requestGemini, type GeminiResult } from './gemini.ts';
 import type { PlannerRequest } from './types.ts';
+import { responseLanguageInstruction } from './responseLanguage.ts';
 
 export type PreferenceCandidate = { key: string; label: string; explicit: boolean };
 type KnownPreference = { key: string; label: string };
@@ -41,7 +42,8 @@ function buildPrompt(request: PlannerRequest, known: KnownPreference[]) {
     clarifications: request.clarifications ?? [],
     corrections: request.summaryCorrections ?? [],
   };
-  return `Найди только возможные УСТОЙЧИВЫЕ предпочтения путешественника в новой беседе.
+  return `${responseLanguageInstruction(request)}
+Найди только возможные УСТОЙЧИВЫЕ предпочтения путешественника в новой беседе.
 Новая беседа: ${JSON.stringify(conversation)}
 Ранее замеченные сигналы (для смыслового совпадения и повторного использования key): ${JSON.stringify(known)}
 
@@ -49,7 +51,7 @@ function buildPrompt(request: PlannerRequest, known: KnownPreference[]) {
 - Не извлекай направление, даты, бюджет, состав компании и другие детали одной конкретной поездки.
 - explicit=true только для явно постоянной привычки: «всегда», «обычно», «не люблю», «предпочитаю», «для меня важно», «запомни». Простое пожелание к этой поездке получает explicit=false.
 - Если смысл совпадает с ранее замеченным сигналом, обязательно используй его существующий key.
-- Иначе key — короткий стабильный snake_case на английском, label — нейтральная короткая формулировка на русском от первого лица.
+- Иначе key — короткий стабильный snake_case на английском, label — нейтральная короткая формулировка от первого лица строго на языке OUTPUT LANGUAGE.
 - Не делай психологических выводов и не додумывай. При сомнении верни пустой массив.`;
 }
 
@@ -73,7 +75,7 @@ export async function learnTravelPreferences(
   known: KnownPreference[],
 ): Promise<GeminiFailure | { ok: true; candidates: PreferenceCandidate[] }> {
   const result = await requestGemini(buildPrompt(request, known), 20_000, {
-    systemInstruction: 'Ты осторожно выделяешь только явно устойчивые travel-предпочтения без домыслов.',
+    systemInstruction: `Ты осторожно выделяешь только явно устойчивые travel-предпочтения без домыслов. ${responseLanguageInstruction(request)}`,
     responseSchema: PREFERENCE_SCHEMA,
     temperature: 0.1,
     maxOutputTokens: 700,

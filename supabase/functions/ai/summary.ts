@@ -1,5 +1,6 @@
 import { requestGemini, type GeminiResult } from './gemini.ts';
 import type { PlannerRequest, TripSummary } from './types.ts';
+import { localizedPlannerText, responseLanguageInstruction } from './responseLanguage.ts';
 
 export const TRIP_SUMMARY_SCHEMA = {
   type: 'object',
@@ -88,7 +89,8 @@ export function parseTripSummary(value: unknown): TripSummary | null {
 }
 
 function buildSummaryPrompt(request: PlannerRequest, currentSummary?: TripSummary, correction?: string) {
-  return `Составь короткую структурированную сводку поездки для подтверждения пользователем.
+  return `${responseLanguageInstruction(request)}
+Составь короткую структурированную сводку поездки для подтверждения пользователем.
 Исходные данные и диалог: ${JSON.stringify(request)}
 ${currentSummary ? `Текущая сводка: ${JSON.stringify(currentSummary)}` : ''}
 ${correction ? `Последняя правка пользователя, имеющая наивысший приоритет: ${correction}` : ''}
@@ -103,7 +105,7 @@ ${correction ? `Последняя правка пользователя, име
 - Следи, чтобы нижняя граница бюджета не превышала верхнюю; при правке уменьшай нижнюю границу при необходимости.
 - interests — интересы и пожелания к содержанию; constraints — ограничения и особые потребности.
 - otherDetails — только важные детали, которые не подходят в остальные поля.
-- Формулировки должны быть короткими, спокойными и понятными на русском языке.`;
+- Все пользовательские значения в сводке должны быть короткими, спокойными и строго на языке OUTPUT LANGUAGE.`;
 }
 
 export async function createTripSummary(
@@ -112,7 +114,7 @@ export async function createTripSummary(
   correction?: string,
 ): Promise<GeminiFailure | { ok: true; summary: TripSummary }> {
   const result = await requestGemini(buildSummaryPrompt(request, currentSummary, correction), 30_000, {
-    systemInstruction: 'Ты внимательный travel-консьерж. Точно своди собранные сведения и применяй правки пользователя без домыслов.',
+    systemInstruction: `Ты внимательный travel-консьерж. Точно своди собранные сведения и применяй правки пользователя без домыслов. ${responseLanguageInstruction(request)}`,
     responseSchema: TRIP_SUMMARY_SCHEMA,
     temperature: 0.15,
     maxOutputTokens: 1_500,
@@ -122,7 +124,7 @@ export async function createTripSummary(
   try { raw = JSON.parse(result.text); } catch { raw = null; }
   const summary = parseTripSummary(raw);
   if (!summary) {
-    return { ok: false, code: 'AI_UNAVAILABLE', message: 'ИИ не смог подготовить сводку поездки. Попробуйте ещё раз.', status: 502 };
+    return { ok: false, code: 'AI_UNAVAILABLE', message: localizedPlannerText(request, 'ИИ не смог подготовить сводку поездки. Попробуйте ещё раз.', 'AI could not prepare the trip summary. Please try again.'), status: 502 };
   }
   return { ok: true, summary };
 }

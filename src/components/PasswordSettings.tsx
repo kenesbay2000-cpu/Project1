@@ -5,8 +5,10 @@ import { useAuth } from './AuthProvider';
 import { PasswordInput } from './PasswordInput';
 import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import './PasswordSettings.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 export function PasswordSettings() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -26,17 +28,17 @@ export function PasswordSettings() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(''); setSuccess('');
-    if (!strength.isAcceptable) { setError('Новый пароль слишком слабый. Выполните рекомендации индикатора надёжности.'); return; }
-    if (newPassword !== confirmation) { setError('Новый пароль и подтверждение не совпадают.'); return; }
-    if (hasPassword && !currentPassword) { setError('Введите текущий пароль для подтверждения личности.'); return; }
-    if (hasPassword && currentPassword === newPassword) { setError('Новый пароль должен отличаться от текущего.'); return; }
+    if (!strength.isAcceptable) { setError(t('password.weak')); return; }
+    if (newPassword !== confirmation) { setError(t('auth.passwordMismatch')); return; }
+    if (hasPassword && !currentPassword) { setError(t('password.currentRequired')); return; }
+    if (hasPassword && currentPassword === newPassword) { setError(t('password.mustDiffer')); return; }
 
     setBusy(true);
     try {
       if (hasPassword) await changePassword(currentPassword, newPassword);
       else await addPasswordToAccount(newPassword);
       setCurrentPassword(''); setNewPassword(''); setConfirmation('');
-      setSuccess(hasPassword ? 'Пароль успешно изменён.' : 'Пароль установлен. Теперь можно входить через Google или по email и паролю.');
+      setSuccess(hasPassword ? t('password.success') : t('password.addSuccess'));
     } catch (passwordError) {
       setError(getPasswordError(passwordError, !hasPassword));
     } finally {
@@ -46,16 +48,16 @@ export function PasswordSettings() {
 
   return (
     <section className="password-settings">
-      <header><div><p>Безопасность</p><h2>{hasPassword ? 'Изменить пароль' : 'Добавить пароль'}</h2></div><span aria-hidden="true">◈</span></header>
-      {!hasPassword && <div className="password-settings__oauth"><strong>Вы входите через Google</strong><p>Установите пароль, чтобы получить запасной способ входа по email. Аккаунт Google останется подключён.</p></div>}
+      <header><div><p>{t('password.eyebrow')}</p><h2>{hasPassword ? t('password.title') : t('password.addTitle')}</h2></div><span aria-hidden="true">◈</span></header>
+      {!hasPassword && <div className="password-settings__oauth"><strong>{t('password.oauthTitle')}</strong><p>{t('password.oauthText')}</p></div>}
       <form onSubmit={submit} noValidate>
-        {hasPassword && <PasswordInput id="current-password" label="Текущий пароль" value={currentPassword} autoComplete="current-password" onChange={(value) => updateField(setCurrentPassword, value)} />}
-        <PasswordInput id="new-password" label="Новый пароль" value={newPassword} autoComplete="new-password" onChange={(value) => updateField(setNewPassword, value)} />
+        {hasPassword && <PasswordInput id="current-password" label={t('password.current')} value={currentPassword} autoComplete="current-password" onChange={(value) => updateField(setCurrentPassword, value)} />}
+        <PasswordInput id="new-password" label={t('password.new')} value={newPassword} autoComplete="new-password" onChange={(value) => updateField(setNewPassword, value)} />
         <PasswordStrengthMeter strength={strength} hasPassword={Boolean(newPassword)} />
-        <PasswordInput id="password-confirmation" label="Подтвердите новый пароль" value={confirmation} autoComplete="new-password" error={confirmation && confirmation !== newPassword ? 'Пароли не совпадают.' : undefined} onChange={(value) => updateField(setConfirmation, value)} />
+        <PasswordInput id="password-confirmation" label={t('password.repeat')} value={confirmation} autoComplete="new-password" error={confirmation && confirmation !== newPassword ? t('auth.passwordMismatch') : undefined} onChange={(value) => updateField(setConfirmation, value)} />
         {error && <p className="password-settings__message password-settings__message--error" role="alert">{error}</p>}
         {success && <p className="password-settings__message" role="status">✓ {success}</p>}
-        <button type="submit" disabled={busy}>{busy ? 'Сохраняем…' : hasPassword ? 'Изменить пароль' : 'Установить пароль'} <span>→</span></button>
+        <button type="submit" disabled={busy}>{busy ? t('password.saving') : hasPassword ? t('password.button') : t('password.setButton')} <span>→</span></button>
       </form>
     </section>
   );

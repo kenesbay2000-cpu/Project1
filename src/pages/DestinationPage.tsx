@@ -8,8 +8,10 @@ import { destinations } from '../lib/destinations';
 import { destinationGuides } from '../lib/destinationGuides';
 import './DestinationPage.css';
 import './destinationArticle.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 export function DestinationPage() {
+  const { t } = useI18n();
   const [, params] = useRoute('/destinations/:slug');
   const destination = destinations.find((item) => item.slug === params?.slug);
   const guide = destination ? destinationGuides[destination.slug] : undefined;
@@ -18,8 +20,8 @@ export function DestinationPage() {
     return (
       <main className="placeholder-page">
         <section className="placeholder-card">
-          <span>404</span><h1>Направление не найдено</h1>
-          <Link href="/destinations">← К каталогу</Link>
+          <span>404</span><h1>{t('guide.notFound')}</h1>
+          <Link href="/destinations">← {t('guide.backCatalog')}</Link>
         </section>
       </main>
     );
@@ -35,8 +37,8 @@ export function DestinationPage() {
         <DestinationCautions guide={guide} />
       </article>
       <section className="article-cta" data-header-theme="dark">
-        <div><p className="article-kicker">Следующий шаг</p><h2>Соберите поездку под себя</h2></div>
-        <Link href="/planner">Создать маршрут <span>→</span></Link>
+        <div><p className="article-kicker">{t('guide.nextStep')}</p><h2>{t('guide.planTitle')}</h2></div>
+        <Link href="/planner">{t('guide.createRoute')} <span>→</span></Link>
       </section>
     </main>
   );

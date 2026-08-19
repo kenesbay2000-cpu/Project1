@@ -4,8 +4,10 @@ import type { TripLocation } from '../lib/tripLocation';
 import { getTripDayColor } from '../lib/tripMapColors';
 import { loadTripMapData, type TripMapPoint } from '../lib/tripMapGeocoding';
 import { TripRouteMap } from './TripRouteMap';
+import { useI18n } from '../i18n/I18nProvider';
 
 export function SavedPlanMap({ plan }: { plan: TripPlan }) {
+  const { t } = useI18n();
   const [center, setCenter] = useState<TripLocation | null>(null);
   const [points, setPoints] = useState<TripMapPoint[]>([]);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -32,20 +34,20 @@ export function SavedPlanMap({ plan }: { plan: TripPlan }) {
 
   return (
     <div className="saved-map-section">
-      <nav className="saved-map-days" aria-label="Фильтр маршрута по дням">
-        <button type="button" className={selectedDay === null ? 'is-active' : ''} aria-pressed={selectedDay === null} onClick={() => setSelectedDay(null)}><span>Все</span><strong>Вся поездка</strong></button>
-        {plan.days.map((day) => <button type="button" key={day.day} className={selectedDay === day.day ? 'is-active' : ''} aria-pressed={selectedDay === day.day} onClick={() => setSelectedDay(day.day)}><span style={{ background: getTripDayColor(day.day) }} /><strong>День {day.day}</strong><small>{day.title}</small></button>)}
+      <nav className="saved-map-days" aria-label={t('route.filterAria')}>
+        <button type="button" className={selectedDay === null ? 'is-active' : ''} aria-pressed={selectedDay === null} onClick={() => setSelectedDay(null)}><span>{t('route.all')}</span><strong>{t('route.entireTrip')}</strong></button>
+        {plan.days.map((day) => <button type="button" key={day.day} className={selectedDay === day.day ? 'is-active' : ''} aria-pressed={selectedDay === day.day} onClick={() => setSelectedDay(day.day)}><span style={{ background: getTripDayColor(day.day) }} /><strong>{t('route.day', { day: day.day })}</strong><small>{day.title}</small></button>)}
       </nav>
       <div className="saved-map-section__stage">
         <TripRouteMap center={center} points={points} selectedDay={selectedDay} />
-        {isLoading && <div className="saved-map-section__loading" role="status"><span /><strong>Наносим маршрут на карту</strong><small>{progress.total ? `${progress.completed} из ${progress.total} мест проверено · найдено ${progress.found}` : 'Проверяем координаты…'}</small></div>}
+        {isLoading && <div className="saved-map-section__loading" role="status"><span /><strong>{t('route.mapping')}</strong><small>{progress.total ? t('route.progress', progress) : t('route.checking')}</small></div>}
       </div>
       <div className="saved-map-section__note">
         <span>{visibleCount || '—'}</span>
-        <p>{visibleCount ? `${selectedDay === null ? 'Точек всей поездки' : `Точек дня ${selectedDay}`} показано на карте. Линии соединяют активности в порядке сохранённого расписания.` : isLoading ? 'Карта заполняется только подтверждёнными точками.' : 'Для выбранного дня точные координаты не найдены — сомнительные маркеры не показываются.'}</p>
+        <p>{visibleCount ? selectedDay === null ? t('route.visibleAll') : t('route.visibleDay', { day: selectedDay }) : isLoading ? t('route.loadingNote') : t('route.none')}</p>
       </div>
-      {!isLoading && points.length < totalActivities && <p className="saved-map-section__omitted">Не отмечено точек: {totalActivities - points.length}. Для них не удалось уверенно определить координаты.</p>}
-      <small className="saved-map-section__source">Карта и поиск мест: <a href="https://www.openstreetmap.org/" target="_blank" rel="noreferrer">OpenStreetMap</a>. Для скорости сохраняем найденные координаты в этом браузере.</small>
+      {!isLoading && points.length < totalActivities && <p className="saved-map-section__omitted">{t('route.omitted', { count: totalActivities - points.length })}</p>}
+      <small className="saved-map-section__source">{t('route.sourceStart')} <a href="https://www.openstreetmap.org/" target="_blank" rel="noreferrer">OpenStreetMap</a>. {t('route.sourceEnd')}</small>
     </div>
   );
 }

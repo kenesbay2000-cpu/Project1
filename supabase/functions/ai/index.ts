@@ -8,6 +8,7 @@ import { editExistingPlan } from './editPlan.ts';
 import { isTripPlan } from './tripPlan.ts';
 import { PROTECTED_INFORMATION_MESSAGE, shouldRefuseProtectedInformation } from './security.ts';
 import { learnTravelPreferences, parseKnownPreferences } from './preferenceLearning.ts';
+import { localizedPlannerText } from './responseLanguage.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -95,7 +96,7 @@ Deno.serve(async (request) => {
   if (budgetAssessment.level === 'absurdly_low') {
     return failure(
       'BUDGET_TOO_LOW',
-      'Даже верхняя граница бюджета выглядит слишком низкой для указанной длительности и числа путешественников. Увеличьте бюджет или сократите поездку.',
+      localizedPlannerText(parsedRequest.value, 'Даже верхняя граница бюджета выглядит слишком низкой для указанной длительности и числа путешественников. Увеличьте бюджет или сократите поездку.', 'Even the upper budget limit appears too low for this duration and number of travellers. Increase the budget or shorten the trip.'),
       422,
     );
   }
@@ -119,7 +120,7 @@ Deno.serve(async (request) => {
       lastParseError = `Модель ошибочно отклонила бюджет до ${budgetAssessment.maximumLabel}. Этот запрос не прошёл порог абсурдно низкого бюджета: верни полный plan со status success.`;
       continue;
     }
-    return json({ plan: applyBudgetWarning(parsedResult.value.plan, budgetAssessment) });
+    return json({ plan: applyBudgetWarning(parsedResult.value.plan, budgetAssessment, parsedRequest.value.responseLanguage) });
   }
 
   const realismPrefix = 'Plan realism check failed: ';
@@ -127,7 +128,7 @@ Deno.serve(async (request) => {
     const reason = lastParseError.slice(realismPrefix.length);
     return failure(
       'UNREALISTIC_AI_PLAN',
-      `ИИ не смог собрать физически выполнимое расписание даже после повторной проверки. ${reason} Измените сроки или сократите число мест.`,
+      `${localizedPlannerText(parsedRequest.value, 'ИИ не смог собрать физически выполнимое расписание даже после повторной проверки.', 'AI could not create a physically achievable schedule after a second check.')} ${reason} ${localizedPlannerText(parsedRequest.value, 'Измените сроки или сократите число мест.', 'Adjust the dates or reduce the number of places.')}`,
       502,
     );
   }
@@ -135,14 +136,14 @@ Deno.serve(async (request) => {
   if (lastParseError.startsWith(schemaPrefix)) {
     return failure(
       'INCOMPLETE_AI_PLAN',
-      `ИИ дважды вернул неполный план. ${lastParseError.slice(schemaPrefix.length)} Попробуйте ещё раз или немного упростите запрос.`,
+      `${localizedPlannerText(parsedRequest.value, 'ИИ дважды вернул неполный план.', 'AI returned an incomplete itinerary twice.')} ${lastParseError.slice(schemaPrefix.length)} ${localizedPlannerText(parsedRequest.value, 'Попробуйте ещё раз или немного упростите запрос.', 'Try again or simplify the request slightly.')}`,
       502,
     );
   }
 
   return failure(
     'INVALID_AI_RESPONSE',
-    'Ответ ИИ дважды пришёл неполным или повреждённым. Попробуйте уточнить запрос и запустить генерацию ещё раз.',
+    localizedPlannerText(parsedRequest.value, 'Ответ ИИ дважды пришёл неполным или повреждённым. Попробуйте уточнить запрос и запустить генерацию ещё раз.', 'The AI response was incomplete or invalid twice. Refine the request and try generating again.'),
     502,
   );
 });

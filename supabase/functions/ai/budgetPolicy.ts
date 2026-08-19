@@ -53,10 +53,10 @@ export function budgetPromptGuidance(assessment: BudgetAssessment) {
   return `Верхняя граница ${assessment.maximumLabel}${converted} признана достаточной. Не возвращай budget_too_low; ориентируйся прежде всего на максимум диапазона.`;
 }
 
-export function applyBudgetWarning(plan: TripPlan, assessment: BudgetAssessment) {
+export function applyBudgetWarning(plan: TripPlan, assessment: BudgetAssessment, language: 'ru' | 'en' = 'ru') {
   if (assessment.level !== 'tight') return plan;
-  const warning = 'Бюджет достаточно плотный для такой поездки. Стоит выбирать более доступное жильё, транспорт и активности, оставив небольшой резерв.';
-  const adjustment = 'План адаптирован под верхнюю границу бюджета с приоритетом бюджетных вариантов.';
+  const warning = language === 'en' ? 'This is a tight budget for the trip. Prioritise more affordable stays, transport, and activities while keeping a small reserve.' : 'Бюджет достаточно плотный для такой поездки. Стоит выбирать более доступное жильё, транспорт и активности, оставив небольшой резерв.';
+  const adjustment = language === 'en' ? 'The itinerary was adapted to the upper budget limit, prioritising good-value options.' : 'План адаптирован под верхнюю границу бюджета с приоритетом бюджетных вариантов.';
   return {
     ...plan,
     realism: {

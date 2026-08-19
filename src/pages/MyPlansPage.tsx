@@ -6,8 +6,10 @@ import { useAuth } from '../components/AuthProvider';
 import { deleteSavedPlan, getPlansError, loadSavedPlans, renameSavedPlan, type SavedPlanSummary } from '../lib/savedPlanQueries';
 import './ProfilePage.css';
 import './MyPlansPage.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 export function MyPlansPage() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const [plans, setPlans] = useState<SavedPlanSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +28,7 @@ export function MyPlansPage() {
   }, [user, reloadKey]);
 
   async function rename(id: string, title: string) {
-    if (!user) throw new Error('Сессия завершилась. Войдите снова.');
+    if (!user) throw new Error(t('plans.sessionExpired'));
     try {
       await renameSavedPlan(id, user.id, title);
       setPlans((items) => items.map((plan) => plan.id === id ? { ...plan, title: title.trim() } : plan));
@@ -34,19 +36,19 @@ export function MyPlansPage() {
   }
 
   async function remove(id: string) {
-    if (!user) throw new Error('Сессия завершилась. Войдите снова.');
+    if (!user) throw new Error(t('plans.sessionExpired'));
     try { await deleteSavedPlan(id, user.id); setPlans((items) => items.filter((plan) => plan.id !== id)); }
     catch (deleteError) { throw new Error(getPlansError('delete', deleteError)); }
   }
 
   return (
-    <ProtectedPage label="Мои планы" guestDescription="Сохранённые поездки доступны после авторизации.">
+    <ProtectedPage label={t('plans.label')} guestDescription={t('plans.guest')}>
       <main className="my-plans-page">
-        <header><span>Личная коллекция</span><h1>Мои планы</h1><p>Сохранённые маршруты всегда под рукой — открывайте детали или наводите порядок в коллекции.</p></header>
-        {isLoading && <div className="my-plans-loading" role="status"><span />Загружаем поездки…</div>}
-        {error && <div className="my-plans-error" role="alert"><p>{error}</p><button type="button" onClick={() => setReloadKey((key) => key + 1)}>Попробовать снова</button></div>}
-        {!isLoading && !error && plans.length > 0 && <section className="saved-plans-grid" aria-label="Сохранённые поездки">{plans.map((plan) => <SavedPlanCard key={plan.id} plan={plan} onRename={rename} onDelete={remove} />)}</section>}
-        {!isLoading && !error && plans.length === 0 && <section className="my-plans-empty"><div aria-hidden="true">⌖</div><span>Путешествие начинается с идеи</span><h2>Пока нет сохранённых поездок</h2><p>Создайте персональный маршрут в AI Planner и сохраните его в аккаунте.</p><Link href="/planner">Создать первый маршрут <span>→</span></Link></section>}
+        <header><span>{t('plans.eyebrow')}</span><h1>{t('plans.title')}</h1><p>{t('plans.intro')}</p></header>
+        {isLoading && <div className="my-plans-loading" role="status"><span />{t('plans.loading')}</div>}
+        {error && <div className="my-plans-error" role="alert"><p>{error}</p><button type="button" onClick={() => setReloadKey((key) => key + 1)}>{t('plans.retry')}</button></div>}
+        {!isLoading && !error && plans.length > 0 && <section className="saved-plans-grid" aria-label={t('plans.savedAria')}>{plans.map((plan) => <SavedPlanCard key={plan.id} plan={plan} onRename={rename} onDelete={remove} />)}</section>}
+        {!isLoading && !error && plans.length === 0 && <section className="my-plans-empty"><div aria-hidden="true">⌖</div><span>{t('plans.emptyEyebrow')}</span><h2>{t('plans.emptyTitle')}</h2><p>{t('plans.emptyText')}</p><Link href="/planner">{t('plans.createFirst')} <span>→</span></Link></section>}
       </main>
     </ProtectedPage>
   );

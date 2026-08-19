@@ -4,12 +4,14 @@ import type { GeneratedTrip } from '../lib/aiPlanner';
 import { clearPendingTrip, getPendingTrip, getSavePlanError, saveTripPlan, storePendingTrip } from '../lib/savedPlans';
 import { useAuth } from './AuthProvider';
 import './SavePlanButton.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 type SavePlanButtonProps = {
   trip: GeneratedTrip;
 };
 
 export function SavePlanButton({ trip }: SavePlanButtonProps) {
+  const { t } = useI18n();
   const { user, isLoading } = useAuth();
   const autoSaveStarted = useRef(false);
   const [showAuth, setShowAuth] = useState(false);
@@ -41,19 +43,19 @@ export function SavePlanButton({ trip }: SavePlanButtonProps) {
     try { storePendingTrip(trip); }
     catch {
       event.preventDefault();
-      setError('Не удалось временно сохранить маршрут в браузере. Освободите место и попробуйте снова.');
+      setError(t('save.browserError'));
     }
   }
 
-  if (status === 'saved') return <div className="save-plan save-plan--success" role="status"><span>✓</span><div><strong>План сохранён</strong><p>Маршрут надёжно привязан к вашему аккаунту.</p><Link href="/my-plans">Открыть «Мои планы» →</Link></div></div>;
+  if (status === 'saved') return <div className="save-plan save-plan--success" role="status"><span>✓</span><div><strong>{t('save.saved')}</strong><p>{t('save.savedText')}</p><Link href="/my-plans">{t('save.openPlans')}</Link></div></div>;
 
   return (
     <section className="save-plan">
-      <div><span>Сохранить путешествие</span><h2>Вернитесь к маршруту в любое время</h2><p>План будет привязан к вашему аккаунту.</p></div>
+      <div><span>{t('save.eyebrow')}</span><h2>{t('save.title')}</h2><p>{t('save.text')}</p></div>
       <button type="button" disabled={isLoading || status === 'saving'} onClick={() => user ? void save() : setShowAuth(true)}>
-        {status === 'saving' ? 'Сохраняем…' : 'Сохранить план'}
+        {status === 'saving' ? t('save.saving') : t('save.button')}
       </button>
-      {showAuth && !user && <div className="save-plan__auth"><p>Войдите или создайте аккаунт — маршрут сохранится автоматически после авторизации.</p><Link href="/login" onClick={prepareAuth}>Войти</Link><Link href="/signup" onClick={prepareAuth}>Регистрация</Link></div>}
+      {showAuth && !user && <div className="save-plan__auth"><p>{t('save.authText')}</p><Link href="/login" onClick={prepareAuth}>{t('save.login')}</Link><Link href="/signup" onClick={prepareAuth}>{t('save.signup')}</Link></div>}
       {error && <p className="save-plan__error" role="alert">{error}</p>}
     </section>
   );

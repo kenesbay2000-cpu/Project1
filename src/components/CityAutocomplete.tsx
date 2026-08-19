@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { formatCityOption, searchCities, type CityOption } from '../lib/citySearch';
 import './CityAutocomplete.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 type CityAutocompleteProps = {
   label: string;
@@ -13,8 +14,10 @@ type CityAutocompleteProps = {
 };
 
 export function CityAutocomplete({
-  label, value, onChange, name, placeholder = 'Начните вводить город', required = false, disabled = false,
+  label, value, onChange, name, placeholder, required = false, disabled = false,
 }: CityAutocompleteProps) {
+  const { t } = useI18n();
+  const inputPlaceholder = placeholder ?? t('city.placeholder');
   const inputId = useId();
   const listId = `${inputId}-listbox`;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,7 +44,7 @@ export function CityAutocomplete({
         const cities = await searchCities(query, controller.signal);
         setOptions(cities); setIsOpen(true); setActiveIndex(-1);
       } catch (searchError) {
-        if ((searchError as Error).name !== 'AbortError') setError('Не удалось найти города. Попробуйте ещё раз.');
+        if ((searchError as Error).name !== 'AbortError') setError(t('city.searchError'));
       } finally {
         if (!controller.signal.aborted) setIsLoading(false);
       }
@@ -62,21 +65,21 @@ export function CityAutocomplete({
     if (event.key === 'Escape') setIsOpen(false);
   }
 
-  const validationMessage = query.trim() && !value ? 'Выберите город из списка подсказок.' : '';
+  const validationMessage = query.trim() && !value ? t('city.choose') : '';
 
   return (
     <div className="city-autocomplete">
       <label htmlFor={inputId}>{label}</label>
       <div className="city-autocomplete__control">
-        <input ref={inputRef} id={inputId} name={name} value={query} placeholder={placeholder}
+        <input ref={inputRef} id={inputId} name={name} value={query} placeholder={inputPlaceholder}
           autoComplete="off" disabled={disabled} required={required} role="combobox"
           aria-autocomplete="list" aria-expanded={isOpen} aria-controls={listId}
           aria-invalid={Boolean(error || validationMessage)}
           aria-activedescendant={activeIndex >= 0 ? `${inputId}-option-${activeIndex}` : undefined}
-          onChange={(event) => { setQuery(event.target.value); onChange(null); setError(''); event.target.setCustomValidity('Выберите город из списка подсказок.'); }}
+          onChange={(event) => { setQuery(event.target.value); onChange(null); setError(''); event.target.setCustomValidity(t('city.choose')); }}
           onFocus={() => options.length > 0 && setIsOpen(true)} onKeyDown={handleKeyDown}
           onBlur={(event) => { event.currentTarget.setCustomValidity(validationMessage); window.setTimeout(() => setIsOpen(false), 150); }} />
-        {isLoading && <span className="city-autocomplete__spinner" aria-label="Ищем города" />}
+        {isLoading && <span className="city-autocomplete__spinner" aria-label={t('city.searching')} />}
         {isOpen && (
           <ul id={listId} className="city-autocomplete__options" role="listbox">
             {options.map((city, index) => (
@@ -85,7 +88,7 @@ export function CityAutocomplete({
                 <strong>{city.name}</strong><small>{[city.region, city.country].filter(Boolean).join(', ')}</small>
               </li>
             ))}
-            {!isLoading && options.length === 0 && <li className="city-autocomplete__empty" role="option" aria-disabled="true">Города не найдены</li>}
+            {!isLoading && options.length === 0 && <li className="city-autocomplete__empty" role="option" aria-disabled="true">{t('city.empty')}</li>}
           </ul>
         )}
       </div>

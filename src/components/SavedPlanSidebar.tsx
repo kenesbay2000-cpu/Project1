@@ -1,16 +1,12 @@
 import { useRef, type KeyboardEvent } from 'react';
+import { useI18n } from '../i18n/I18nProvider';
 
 export const savedPlanSections = [
-  { id: 'overview', icon: '◫', label: 'Обзор' },
-  { id: 'itinerary', icon: '≋', label: 'Маршрут по дням' },
-  { id: 'map', icon: '⌖', label: 'Карта' },
-  { id: 'weather', icon: '☼', label: 'Погода' },
-  { id: 'budget', icon: '◉', label: 'Бюджет' },
-  { id: 'accommodations', icon: '⌂', label: 'Жильё' },
-  { id: 'food', icon: '◌', label: 'Еда' },
-  { id: 'activities', icon: '◇', label: 'Активности' },
-  { id: 'useful', icon: 'i', label: 'Полезные ссылки' },
-  { id: 'checklist', icon: '✓', label: 'Подготовка' },
+  { id: 'overview', icon: '◫', labelKey: 'workspace.overview' }, { id: 'itinerary', icon: '≋', labelKey: 'workspace.itinerary' },
+  { id: 'map', icon: '⌖', labelKey: 'workspace.map' }, { id: 'weather', icon: '☼', labelKey: 'workspace.weather' },
+  { id: 'budget', icon: '◉', labelKey: 'workspace.budget' }, { id: 'accommodations', icon: '⌂', labelKey: 'workspace.stays' },
+  { id: 'food', icon: '◌', labelKey: 'workspace.food' }, { id: 'activities', icon: '◇', labelKey: 'workspace.activities' },
+  { id: 'useful', icon: 'i', labelKey: 'workspace.useful' }, { id: 'checklist', icon: '✓', labelKey: 'workspace.checklist' },
 ] as const;
 
 export type SavedPlanSectionId = typeof savedPlanSections[number]['id'];
@@ -21,6 +17,7 @@ type Props = {
 };
 
 export function SavedPlanSidebar({ active, onSelect }: Props) {
+  const { t } = useI18n();
   const buttons = useRef<Array<HTMLButtonElement | null>>([]);
 
   function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -38,8 +35,8 @@ export function SavedPlanSidebar({ active, onSelect }: Props) {
 
   return (
     <aside className="saved-workspace__sidebar">
-      <div className="saved-workspace__sidebar-title"><span>Разделы поездки</span><strong>Workspace</strong></div>
-      <nav aria-label="Разделы сохранённого плана">
+      <div className="saved-workspace__sidebar-title"><span>{t('workspace.sections')}</span><strong>Workspace</strong></div>
+      <nav aria-label={t('workspace.sectionsAria')}>
         {savedPlanSections.map((section, index) => (
           <button
             ref={(element) => { buttons.current[index] = element; }}
@@ -50,7 +47,7 @@ export function SavedPlanSidebar({ active, onSelect }: Props) {
             onClick={() => onSelect(section.id)}
             onKeyDown={(event) => handleKeyDown(event, index)}
           >
-            <span aria-hidden="true">{section.icon}</span>{section.label}
+            <span aria-hidden="true">{section.icon}</span>{t(section.labelKey)}
           </button>
         ))}
       </nav>

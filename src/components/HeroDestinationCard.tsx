@@ -1,5 +1,6 @@
 import type { Destination } from '../lib/destinations';
 import './HeroDestinationCard.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 type HeroDestinationCardProps = {
   destination: Destination;
@@ -18,6 +19,7 @@ export function HeroDestinationCard({
   onPrevious,
   onNext,
 }: HeroDestinationCardProps) {
+  const { t } = useI18n();
   return (
     <aside className="ai-destination-card" aria-live="polite">
       <div className="ai-destination-card__top">
@@ -36,8 +38,8 @@ export function HeroDestinationCard({
           <small>{destination.reviews}</small>
         </span>
         <div className="ai-destination-card__arrows">
-          <button type="button" onClick={onPrevious} aria-label="Предыдущее направление">←</button>
-          <button type="button" onClick={onNext} aria-label="Следующее направление">→</button>
+          <button type="button" onClick={onPrevious} aria-label={t('showcase.previous')}>←</button>
+          <button type="button" onClick={onNext} aria-label={t('showcase.next')}>→</button>
         </div>
       </div>
     </aside>

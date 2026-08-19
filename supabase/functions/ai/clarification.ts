@@ -1,5 +1,6 @@
 import { requestGemini, type GeminiResult } from './gemini.ts';
 import type { ClarificationQuestion, PlannerRequest } from './types.ts';
+import { localizedPlannerText, responseLanguageInstruction } from './responseLanguage.ts';
 
 const CLARIFICATION_SCHEMA = {
   type: 'object',
@@ -45,7 +46,8 @@ function inferOriginCity(request: PlannerRequest) {
 
 function buildPrompt(request: PlannerRequest) {
   const asked = request.clarifications?.flatMap((turn) => turn.questions.map((question) => question.id)) ?? [];
-  return `Проанализируй данные поездки и реши, нужны ли уточнения перед полным планом.
+  return `${responseLanguageInstruction(request)}
+Проанализируй данные поездки и реши, нужны ли уточнения перед полным планом.
 Данные пользователя: ${JSON.stringify(request)}
 Уже заданные категории вопросов: ${asked.join(', ') || 'нет'}.
 
@@ -55,7 +57,7 @@ function buildPrompt(request: PlannerRequest) {
 - За один ответ задай от 1 до 3 коротких вопросов. После шести уже заданных вопросов новых не задавай.
 - Город вылета обязателен: извлеки его в originCity из любых данных. Если его нигде нет и origin_city ещё не спрашивали, вопрос origin_city должен быть первым.
 - Возможные темы для анализа: сроки, бюджет, компания и возраст, интересы, темп, жильё, транспорт, ограничения. Не спрашивай все темы автоматически.
-- Для каждого вопроса дай стабильный id латиницей в snake_case и естественный русский текст.
+- Для каждого вопроса дай стабильный id латиницей в snake_case; текст вопроса строго на языке OUTPUT LANGUAGE.
 - Если важных пробелов больше нет, верни status ready и пустой questions.
 - message — одна спокойная короткая реплика ИИ для интерфейса.`;
 }
@@ -83,15 +85,15 @@ function parseResult(text: string, request: PlannerRequest): ClarificationResult
 
   const mustAskOrigin = !originCity && !askedIds.has('origin_city');
   if (mustAskOrigin && !questions.some((question) => question.id === 'origin_city')) {
-    questions.unshift({ id: 'origin_city', text: 'Из какого города вы планируете отправляться?' });
+    questions.unshift({ id: 'origin_city', text: localizedPlannerText(request, 'Из какого города вы планируете отправляться?', 'Which city will you be departing from?') });
   }
   const reachedLimit = askedIds.size >= 6 || (request.clarifications?.length ?? 0) >= 3;
   const limitedQuestions = reachedLimit && !mustAskOrigin ? [] : questions.slice(0, 3);
   return {
     status: limitedQuestions.length > 0 ? 'questions' : 'ready',
     message: limitedQuestions.length > 0
-      ? (typeof record.message === 'string' && record.message.trim() ? record.message.trim() : 'Уточню несколько деталей, которые заметно улучшат план.')
-      : 'Данных достаточно — начинаю собирать маршрут.',
+      ? (typeof record.message === 'string' && record.message.trim() ? record.message.trim() : localizedPlannerText(request, 'Уточню несколько деталей, которые заметно улучшат план.', 'I’ll clarify a few details that will make your itinerary more precise.'))
+      : localizedPlannerText(request, 'Данных достаточно — начинаю собирать маршрут.', 'I have everything I need to begin shaping your itinerary.'),
     originCity,
     questions: limitedQuestions,
   };
@@ -99,7 +101,7 @@ function parseResult(text: string, request: PlannerRequest): ClarificationResult
 
 export async function analyzeClarifications(request: PlannerRequest): Promise<GeminiFailure | { ok: true; clarification: ClarificationResult }> {
   const result = await requestGemini(buildPrompt(request), 30_000, {
-    systemInstruction: 'Ты внимательный travel-консьерж. Задавай только действительно полезные уточнения и никогда не повторяй уже известные данные.',
+    systemInstruction: `Ты внимательный travel-консьерж. Задавай только действительно полезные уточнения и никогда не повторяй уже известные данные. ${responseLanguageInstruction(request)}`,
     responseSchema: CLARIFICATION_SCHEMA,
     temperature: 0.25,
     maxOutputTokens: 1_024,

@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
 import { destinations } from '../lib/destinations';
 import { TripPlanner } from './TripPlanner';
+import { useI18n } from '../i18n/I18nProvider';
 
 export function HeroShowcase() {
+  const { t } = useI18n();
   const [activeIndex, setActiveIndex] = useState(0);
   const active = destinations[activeIndex];
 
@@ -21,15 +23,15 @@ export function HeroShowcase() {
       <div className="hero__backdrop" key={active.image} />
       <div className="hero__layout">
         <div className="hero__content" key={active.city}>
-          <div className="hero__eyebrow"><span /> Подборка · популярно из Казахстана</div>
+          <div className="hero__eyebrow"><span /> {t('showcase.eyebrow')}</div>
           <p className="hero__country">{active.country}</p>
           <h2>{active.city}</h2>
           <p className="hero__description">{active.description}</p>
           <div className="hero__facts">
-            <span><small>Визовый режим</small>{active.visa}</span>
-            <span><small>Лучшее время</small>{active.season}</span>
+            <span><small>{t('showcase.visa')}</small>{active.visa}</span>
+            <span><small>{t('showcase.bestTime')}</small>{active.season}</span>
           </div>
-          <Link className="hero__details" href={`/destinations/${active.slug}`}>О направлении <span>↗</span></Link>
+          <Link className="hero__details" href={`/destinations/${active.slug}`}>{t('showcase.details')} <span>↗</span></Link>
         </div>
 
         <aside className="destination-sheet" aria-live="polite">
@@ -44,14 +46,14 @@ export function HeroShowcase() {
           <div className="destination-sheet__footer">
             <span className="destination-sheet__rating"><b>★ {active.rating}</b><small>{active.reviews}</small></span>
             <div className="destination-sheet__arrows">
-              <button type="button" onClick={() => changeDestination(-1)} aria-label="Предыдущее направление">←</button>
-              <button type="button" onClick={() => changeDestination(1)} aria-label="Следующее направление">→</button>
+              <button type="button" onClick={() => changeDestination(-1)} aria-label={t('showcase.previous')}>←</button>
+              <button type="button" onClick={() => changeDestination(1)} aria-label={t('showcase.next')}>→</button>
             </div>
           </div>
         </aside>
       </div>
       <TripPlanner />
-      <p className="hero__note">Цены ориентировочные · визовые правила проверяйте перед поездкой</p>
+      <p className="hero__note">{t('showcase.note')}</p>
     </section>
   );
 }

@@ -6,19 +6,21 @@ import { SupabaseSetupMessage } from './SupabaseSetupMessage';
 import { MAX_USERNAME_LENGTH, validateUsername } from '../lib/username';
 import { GoogleAuthButton } from './GoogleAuthButton';
 import { hasPendingTrip } from '../lib/savedPlans';
+import { useI18n } from '../i18n/I18nProvider';
 
 type FieldErrors = Partial<Record<'name' | 'email' | 'password', string>>;
 
-function validate(name: string, email: string, password: string): FieldErrors {
+function validate(name: string, email: string, password: string, emailError: string, passwordError: string): FieldErrors {
   const errors: FieldErrors = {};
   const usernameError = validateUsername(name);
   if (usernameError) errors.name = usernameError;
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = 'Введите корректный email, например name@example.com.';
-  if (password.length < 8) errors.password = 'Пароль должен содержать минимум 8 символов.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = emailError;
+  if (password.length < 8) errors.password = passwordError;
   return errors;
 }
 
 export function RegistrationForm() {
+  const { t } = useI18n();
   const [, navigate] = useLocation();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,7 +35,7 @@ export function RegistrationForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const fieldErrors = validate(name, email, password);
+    const fieldErrors = validate(name, email, password, t('auth.emailInvalid'), t('auth.passwordMin'));
     setErrors(fieldErrors);
     setFormError('');
     if (Object.keys(fieldErrors).length > 0) return;
@@ -56,38 +58,38 @@ export function RegistrationForm() {
     return (
       <section className="registration-success" role="status">
         <span className="registration-success__mark">✓</span>
-        <p className="auth-eyebrow">Аккаунт создан</p>
-        <h1>{needsConfirmation ? 'Остался один шаг' : `Добро пожаловать, ${name.trim()}!`}</h1>
-        <p>{needsConfirmation ? `Мы отправили письмо на ${result.email}. Перейдите по ссылке, чтобы подтвердить email и завершить регистрацию.` : 'Вы уже вошли в аккаунт и можете начинать планировать путешествие.'}</p>
-        <Link href={needsConfirmation ? '/' : '/planner'}>{needsConfirmation ? 'Вернуться на главную' : 'Перейти к планированию'} <span>→</span></Link>
+        <p className="auth-eyebrow">{t('signup.created')}</p>
+        <h1>{needsConfirmation ? t('signup.oneStep') : t('signup.welcome', { name: name.trim() })}</h1>
+        <p>{needsConfirmation ? t('signup.emailSent', { email: result.email }) : t('signup.signedIn')}</p>
+        <Link href={needsConfirmation ? '/' : '/planner'}>{needsConfirmation ? t('signup.home') : t('signup.plan')} <span>→</span></Link>
       </section>
     );
   }
 
   return (
     <section className="registration-card">
-      <p className="auth-eyebrow">Новый аккаунт</p>
-      <h1>Путешествия начинаются здесь</h1>
-      <p className="registration-card__intro">Сохраняйте идеи и собирайте поездки в одном спокойном пространстве.</p>
+      <p className="auth-eyebrow">{t('signup.eyebrow')}</p>
+      <h1>{t('signup.title')}</h1>
+      <p className="registration-card__intro">{t('signup.intro')}</p>
       <form onSubmit={handleSubmit} noValidate>
-        <label className={errors.name ? 'has-error' : ''}><span>Ваше имя</span>
-          <input autoComplete="name" maxLength={MAX_USERNAME_LENGTH} value={name} onChange={(event) => { setName(event.target.value); setErrors({ ...errors, name: undefined }); }} placeholder="Как к вам обращаться?" aria-invalid={Boolean(errors.name)} />
+        <label className={errors.name ? 'has-error' : ''}><span>{t('signup.name')}</span>
+          <input autoComplete="name" maxLength={MAX_USERNAME_LENGTH} value={name} onChange={(event) => { setName(event.target.value); setErrors({ ...errors, name: undefined }); }} placeholder={t('signup.namePlaceholder')} aria-invalid={Boolean(errors.name)} />
           {errors.name && <small>{errors.name}</small>}
         </label>
         <label className={errors.email ? 'has-error' : ''}><span>Email</span>
           <input type="email" autoComplete="email" value={email} onChange={(event) => { setEmail(event.target.value); setErrors({ ...errors, email: undefined }); }} placeholder="name@example.com" aria-invalid={Boolean(errors.email)} />
           {errors.email && <small>{errors.email}</small>}
         </label>
-        <label className={errors.password ? 'has-error' : ''}><span>Пароль</span>
-          <div className="password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(event) => { setPassword(event.target.value); setErrors({ ...errors, password: undefined }); }} placeholder="Минимум 8 символов" aria-invalid={Boolean(errors.password)} /><button type="button" onClick={() => setShowPassword((value) => !value)}>{showPassword ? 'Скрыть' : 'Показать'}</button></div>
-          {errors.password ? <small>{errors.password}</small> : <small className="field-hint">Используйте 8 или больше символов.</small>}
+        <label className={errors.password ? 'has-error' : ''}><span>{t('auth.password')}</span>
+          <div className="password-field"><input type={showPassword ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(event) => { setPassword(event.target.value); setErrors({ ...errors, password: undefined }); }} placeholder={t('signup.passwordPlaceholder')} aria-invalid={Boolean(errors.password)} /><button type="button" onClick={() => setShowPassword((value) => !value)}>{showPassword ? t('auth.hide') : t('auth.show')}</button></div>
+          {errors.password ? <small>{errors.password}</small> : <small className="field-hint">{t('signup.passwordHint')}</small>}
         </label>
         {formError && <p className="registration-error" role="alert">{formError}</p>}
-        <button className="registration-submit" type="submit" disabled={busy}>{busy ? 'Создаём аккаунт…' : 'Создать аккаунт'} <span>→</span></button>
+        <button className="registration-submit" type="submit" disabled={busy}>{busy ? t('signup.creating') : t('signup.button')} <span>→</span></button>
       </form>
       <GoogleAuthButton />
-      <p className="auth-switch">Уже есть аккаунт? <Link href="/login">Войти</Link></p>
-      <p className="registration-terms">Создавая аккаунт, вы соглашаетесь с правилами сервиса и политикой конфиденциальности.</p>
+      <p className="auth-switch">{t('signup.haveAccount')} <Link href="/login">{t('login.button')}</Link></p>
+      <p className="registration-terms">{t('signup.terms')}</p>
     </section>
   );
 }

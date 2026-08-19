@@ -10,6 +10,7 @@ import { TripDayCard } from './TripDayCard';
 import './TripPlanResult.css';
 import './SavedPlanWorkspace.css';
 import './SavedPlanSections.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 type SavedPlanWorkspaceProps = {
   trip: GeneratedTrip;
@@ -17,23 +18,18 @@ type SavedPlanWorkspaceProps = {
   onTripUpdated?: (trip: GeneratedTrip) => void;
 };
 
-const sectionCopy: Record<SavedPlanSectionId, { eyebrow: string; description: string }> = {
-  overview: { eyebrow: 'Отправная точка', description: '' },
-  itinerary: { eyebrow: 'День за днём', description: 'Полное расписание поездки с длительностью активностей, переездами и ориентировочными расходами.' },
-  map: { eyebrow: 'География маршрута', description: 'Точки из сохранённого плана на интерактивной карте в порядке посещения.' },
-  weather: { eyebrow: 'Условия поездки', description: 'Сезонный контекст и актуальный прогноз, когда даты уже достаточно близко.' },
-  budget: { eyebrow: 'Финансовый ориентир', description: 'Разбивка сохранённой оценки расходов с указанием степени точности.' },
-  accommodations: { eyebrow: 'Где остановиться', description: 'Подобранные варианты жилья, районы и ориентировочная стоимость ночи.' },
-  food: { eyebrow: 'Вкус направления', description: 'Рестораны и гастрономические рекомендации из вашего плана.' },
-  activities: { eyebrow: 'Чем заняться', description: 'Общий обзор впечатлений, которые распределены внутри маршрута.' },
-  useful: { eyebrow: 'Перед дорогой', description: 'Документы, страховка, деньги и другие важные ориентиры подготовки.' },
-  checklist: { eyebrow: 'Ничего не забыть', description: 'Персональный список действий перед этой поездкой.' },
-};
-
 export function SavedPlanWorkspace({ trip, onEdit, onTripUpdated }: SavedPlanWorkspaceProps) {
+  const { t } = useI18n();
   const [active, setActive] = useState<SavedPlanSectionId>('overview');
   const content = useRef<HTMLDivElement>(null);
   const currentSection = savedPlanSections.find((section) => section.id === active) ?? savedPlanSections[0];
+  const sectionCopy: Record<SavedPlanSectionId, { eyebrow: ReturnType<typeof t>; description: ReturnType<typeof t> | '' }> = {
+    overview: { eyebrow: t('workspace.overviewEyebrow'), description: '' }, itinerary: { eyebrow: t('workspace.itineraryEyebrow'), description: t('workspace.itineraryDescription') },
+    map: { eyebrow: t('workspace.mapEyebrow'), description: t('workspace.mapDescription') }, weather: { eyebrow: t('workspace.weatherEyebrow'), description: t('workspace.weatherDescription') },
+    budget: { eyebrow: t('workspace.budgetEyebrow'), description: t('workspace.budgetDescription') }, accommodations: { eyebrow: t('workspace.staysEyebrow'), description: t('workspace.staysDescription') },
+    food: { eyebrow: t('workspace.foodEyebrow'), description: t('workspace.foodDescription') }, activities: { eyebrow: t('workspace.activitiesEyebrow'), description: t('workspace.activitiesDescription') },
+    useful: { eyebrow: t('workspace.usefulEyebrow'), description: t('workspace.usefulDescription') }, checklist: { eyebrow: t('workspace.checklistEyebrow'), description: t('workspace.checklistDescription') },
+  };
 
   function selectSection(section: SavedPlanSectionId) {
     setActive(section);
@@ -59,7 +55,7 @@ export function SavedPlanWorkspace({ trip, onEdit, onTripUpdated }: SavedPlanWor
   return (
     <div className="saved-workspace">
       <div className="saved-workspace__content" ref={content}>
-        {active !== 'overview' && <header className="saved-workspace__heading"><span>{sectionCopy[active].eyebrow}</span><div><h1>{currentSection.label}</h1><p>{sectionCopy[active].description}</p></div></header>}
+        {active !== 'overview' && <header className="saved-workspace__heading"><span>{sectionCopy[active].eyebrow}</span><div><h1>{t(currentSection.labelKey)}</h1><p>{sectionCopy[active].description}</p></div></header>}
         <div className="saved-workspace__view" key={active}>{renderContent()}</div>
       </div>
       <SavedPlanSidebar active={active} onSelect={selectSection} />

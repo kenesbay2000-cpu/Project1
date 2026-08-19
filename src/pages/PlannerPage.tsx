@@ -7,10 +7,12 @@ import type { GeneratedTrip } from '../lib/aiPlanner';
 import { destinations } from '../lib/destinations';
 import { hasGuestCompletedPlan, recordGuestCompletedPlan } from '../lib/guestPlannerLimit';
 import { clearPendingTrip, getPendingTrip } from '../lib/savedPlans';
+import { useI18n } from '../i18n/I18nProvider';
 import './PlannerPage.css';
 
 export function PlannerPage() {
   const { user, isLoading } = useAuth();
+  const { t } = useI18n();
   const [trip, setTrip] = useState<GeneratedTrip | null>(() => getPendingTrip());
   const [showGuestLimit, setShowGuestLimit] = useState(false);
 
@@ -43,12 +45,12 @@ export function PlannerPage() {
     >
       <div hidden={Boolean(trip)}>
         <section className="planner-page__intro">
-          <span className="planner-page__eyebrow"><i /> Roamly · AI Planner</span>
-          <h1>Расскажите о поездке.<em>Мы соберём остальное.</em></h1>
-          <p>Пишите свободно, как близкому человеку. AI превратит ваши идеи в реалистичный маршрут и уточнит только действительно важное.</p>
+          <span className="planner-page__eyebrow"><i /> {t('planner.eyebrow')}</span>
+          <h1>{t('planner.title')}<em>{t('planner.titleAccent')}</em></h1>
+          <p>{t('planner.intro')}</p>
         </section>
         {!isLoading && <PlannerForm onPlanCreated={handlePlanCreated} onBeforeGenerate={canGenerateNewPlan} />}
-        {isLoading && <p className="planner-page__access-loading" role="status">Проверяем сессию…</p>}
+        {isLoading && <p className="planner-page__access-loading" role="status">{t('planner.sessionLoading')}</p>}
       </div>
       {trip && <SavedPlanWorkspace trip={trip} onEdit={editTrip} onTripUpdated={setTrip} />}
       {showGuestLimit && !user && <GuestPlanLimitNotice trip={trip} onClose={() => setShowGuestLimit(false)} />}

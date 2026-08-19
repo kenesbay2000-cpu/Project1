@@ -15,7 +15,7 @@ export const PLANNER_AI_RESULT_SCHEMA = {
     },
     message: {
       type: 'string',
-      description: 'Empty for success; a short Russian explanation for budget_too_low.',
+      description: 'Empty for success; a short explanation in the requested output language for budget_too_low.',
     },
     plan: {
       anyOf: [TRIP_PLAN_SCHEMA, { type: 'null' }],
@@ -45,11 +45,12 @@ export function parsePlannerAIResult(text: string, request: PlannerRequest): Par
   if (value.status === 'budget_too_low' && value.plan === null && typeof value.message === 'string') {
     return { value: { status: 'budget_too_low', message: value.message, plan: null } };
   }
-  const normalizedPlan = limitAdjustedActivities(value.plan);
+  const language = request.responseLanguage === 'en' ? 'en' : 'ru';
+  const normalizedPlan = limitAdjustedActivities(value.plan, language);
   if (value.status === 'success' && typeof value.message === 'string' && isTripPlan(normalizedPlan)) {
     const personalizedPlan = applyPersonalizedPace(normalizedPlan, request);
-    const cautiousPlan = applyRecommendationCautions(personalizedPlan);
-    const scheduledPlan = normalizePlanSchedule(cautiousPlan);
+    const cautiousPlan = applyRecommendationCautions(personalizedPlan, language);
+    const scheduledPlan = normalizePlanSchedule(cautiousPlan, language);
     const realismIssue = getPlanRealismIssue(scheduledPlan, request);
     if (realismIssue) return { error: `Plan realism check failed: ${realismIssue}` };
     return { value: { status: 'success', message: value.message, plan: scheduledPlan } };

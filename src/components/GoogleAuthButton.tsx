@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getLoginError, signInWithGoogle } from '../lib/auth';
 import { hasPendingTrip } from '../lib/savedPlans';
+import { useI18n } from '../i18n/I18nProvider';
 
 function GoogleIcon() {
   return (
@@ -14,6 +15,7 @@ function GoogleIcon() {
 }
 
 export function GoogleAuthButton() {
+  const { t } = useI18n();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,10 +32,10 @@ export function GoogleAuthButton() {
 
   return (
     <div className="google-auth">
-      <div className="auth-divider"><span>или</span></div>
+      <div className="auth-divider"><span>{t('auth.or')}</span></div>
       <button className="google-auth__button" type="button" onClick={handleGoogleSignIn} disabled={busy}>
         <GoogleIcon />
-        <span>{busy ? 'Открываем Google…' : 'Войти через Google'}</span>
+        <span>{busy ? t('google.opening') : t('google.continue')}</span>
       </button>
       {error && <p className="registration-error" role="alert">{error}</p>}
     </div>

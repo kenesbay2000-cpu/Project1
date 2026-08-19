@@ -3,6 +3,7 @@ import type { PreferenceCandidate, TravelPreference } from './travelPreferences'
 
 export type PlannerRequest = {
   prompt: string;
+  responseLanguage?: 'ru' | 'en';
   originCity?: string;
   dates?: { start: string; end: string };
   travelers?: number;
@@ -161,10 +162,10 @@ export async function extractTravelPreferences(request: PlannerRequest, known: T
   return data?.candidates ?? [];
 }
 
-export async function editTripPlan(trip: GeneratedTrip, command: string): Promise<GeneratedTrip> {
+export async function editTripPlan(trip: GeneratedTrip, command: string, responseLanguage: 'ru' | 'en'): Promise<GeneratedTrip> {
   if (!isSupabaseConfigured) throw new Error('AI Planner пока не настроен. Проверьте настройки Supabase.');
   const { data, error } = await supabase.functions.invoke<EditResponse>('ai', {
-    body: { mode: 'edit', request: trip.request, plan: trip.plan, command },
+    body: { mode: 'edit', request: { ...trip.request, responseLanguage }, plan: trip.plan, command },
     timeout: 155_000,
   });
   if (error) throw new Error(await readFunctionError(error));

@@ -8,6 +8,7 @@ import { useAuth } from './AuthProvider';
 import { PlannerConfirmation } from './PlannerConfirmation';
 import { PlannerConversation } from './PlannerConversation';
 import { PlannerInitialForm } from './PlannerInitialForm';
+import { useI18n } from '../i18n/I18nProvider';
 
 type Props = {
   onPlanCreated: (trip: GeneratedTrip) => void;
@@ -35,6 +36,7 @@ function applySummary(request: PlannerRequest, summary: TripSummary): PlannerReq
 }
 
 export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
+  const { t, language } = useI18n();
   const { user, isLoading: isAuthLoading } = useAuth();
   const [stage, setStage] = useState<Stage>('idle');
   const [draft, setDraft] = useState<PlannerRequest | null>(null);
@@ -63,14 +65,14 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
     setStage('summarizing');
     try {
       const corrections = change ? [...(request.summaryCorrections ?? []), change].slice(-5) : request.summaryCorrections;
-      const updated = { ...request, summaryCorrections: corrections };
+      const updated = { ...request, responseLanguage: language, summaryCorrections: corrections };
       const nextSummary = await summarizeTripRequest(updated, current, change);
       setDraft(applySummary(updated, nextSummary));
       setSummary(nextSummary);
       setCorrection('');
       setStage('idle');
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : 'Не удалось подготовить сводку. Попробуйте ещё раз.');
+      setError(caughtError instanceof Error ? caughtError.message : t('planner.summaryError'));
       setStage('idle');
     }
   };
@@ -79,8 +81,9 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
     setError('');
     setStage('analyzing');
     try {
-      const analysis = await analyzeTripRequest(request);
-      const enriched = analysis.originCity && !request.originCity ? { ...request, originCity: analysis.originCity } : request;
+      const localizedRequest = { ...request, responseLanguage: language };
+      const analysis = await analyzeTripRequest(localizedRequest);
+      const enriched = analysis.originCity && !localizedRequest.originCity ? { ...localizedRequest, originCity: analysis.originCity } : localizedRequest;
       setDraft(enriched);
       if (analysis.status === 'questions' && analysis.questions.length > 0) {
         setQuestions(analysis.questions);
@@ -90,7 +93,7 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
         await showSummary(enriched);
       }
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : 'Не удалось продолжить планирование. Попробуйте ещё раз.');
+      setError(caughtError instanceof Error ? caughtError.message : t('planner.continueError'));
       setStage('idle');
     }
   };
@@ -98,7 +101,7 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
   const start = async (request: PlannerRequest, usePreferences?: boolean) => {
     if (user && usePreferences !== undefined) {
       try { await savePreferenceDefault(user.id, usePreferences); }
-      catch { throw new Error('Не удалось сохранить выбор предпочтений. Проверьте соединение и попробуйте ещё раз.'); }
+      catch { throw new Error(t('planner.preferenceError')); }
     }
     setDraft(request);
     await continuePlanning(request);
@@ -116,7 +119,7 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
   const confirm = async () => {
     if (!draft || !summary) return;
     if (!onBeforeGenerate()) return;
-    const confirmed = { ...applySummary(draft, summary), confirmedSummary: summary };
+    const confirmed = { ...applySummary(draft, summary), responseLanguage: language, confirmedSummary: summary };
     setError(''); setStage('generating');
     try {
       const plan = await generateTripPlan(confirmed);
@@ -127,14 +130,14 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
       }
       onPlanCreated({ id: crypto.randomUUID(), request: confirmed, plan });
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : 'Не удалось создать маршрут. Попробуйте ещё раз.');
+      setError(caughtError instanceof Error ? caughtError.message : t('planner.generateError'));
       setStage('idle');
     }
   };
   const reset = () => { setDraft(null); setQuestions([]); setAnswer(''); setSummary(null); setCorrection(''); setError(''); setStage('idle'); };
 
   if (!draft) {
-    if (!preferenceProfile) return <div className="planner-preferences-loading" role="status"><span />Загружаем настройки AI Planner…</div>;
+    if (!preferenceProfile) return <div className="planner-preferences-loading" role="status"><span />{t('planner.loadingSettings')}</div>;
     return <PlannerInitialForm preferences={preferenceProfile.active.map((item) => item.label)} defaultUsePreferences={preferenceProfile.useByDefault} onContinue={start} />;
   }
   if (summary) return <PlannerConfirmation summary={summary} correction={correction} isBusy={stage !== 'idle'} isGenerating={stage === 'generating'} error={error} onCorrectionChange={setCorrection} onCorrection={submitCorrection} onConfirm={() => void confirm()} onReset={reset} />;

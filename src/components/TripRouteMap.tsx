@@ -5,6 +5,7 @@ import type { TripLocation } from '../lib/tripLocation';
 import { logTripMapRender } from '../lib/tripMapDiagnostics';
 import { getTripDayColor } from '../lib/tripMapColors';
 import type { TripMapPoint } from '../lib/tripMapGeocoding';
+import { useI18n } from '../i18n/I18nProvider';
 
 type Props = {
   center: TripLocation | null;
@@ -12,15 +13,15 @@ type Props = {
   selectedDay: number | null;
 };
 
-function popupContent(point: TripMapPoint) {
+function popupContent(point: TripMapPoint, dayMeta: string, areaLabel: string) {
   const popup = document.createElement('div');
   popup.className = 'saved-map-popup';
   const meta = document.createElement('span');
-  meta.textContent = `День ${point.day} · ${point.time}`;
+  meta.textContent = dayMeta;
   const title = document.createElement('strong');
   title.textContent = point.title;
   const place = document.createElement('small');
-  place.textContent = point.accuracy === 'area' ? `≈ ${point.place} · положение по району` : `⌖ ${point.place}`;
+  place.textContent = point.accuracy === 'area' ? `≈ ${point.place} · ${areaLabel}` : `⌖ ${point.place}`;
   const description = document.createElement('p');
   description.textContent = point.description;
   popup.append(meta, title, place, description);
@@ -60,6 +61,7 @@ function createPointIcon(point: TripMapPoint, isFocusedDay: boolean, visiblePoin
 }
 
 export function TripRouteMap({ center, points, selectedDay }: Props) {
+  const { t } = useI18n();
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
@@ -102,8 +104,8 @@ export function TripRouteMap({ center, points, selectedDay }: Props) {
         riseOnHover: true,
         zIndexOffset: 1_000 + point.order,
         title: `${point.time} — ${point.title}`,
-        alt: `${point.title}, день ${point.day}`,
-      }).bindPopup(popupContent(point), { maxWidth: 290, minWidth: 210, closeButton: true })
+        alt: t('routeMap.alt', { title: point.title, day: point.day }),
+      }).bindPopup(popupContent(point, t('routeMap.dayMeta', { day: point.day, time: point.time }), t('routeMap.area')), { maxWidth: 290, minWidth: 210, closeButton: true })
         .addTo(layer.current as L.LayerGroup);
     });
 
@@ -114,7 +116,7 @@ export function TripRouteMap({ center, points, selectedDay }: Props) {
     if (coordinates.length > 1) map.current.fitBounds(L.latLngBounds(coordinates), { padding: [68, 68], maxZoom: 14, animate: true, duration: .45 });
     else if (coordinates.length === 1) map.current.setView(coordinates[0], 15, { animate: true });
     else if (center) map.current.setView([center.latitude, center.longitude], 11);
-  }, [center, points, selectedDay]);
+  }, [center, points, selectedDay, t]);
 
-  return <div ref={container} className="saved-route-map" aria-label="Интерактивная карта точек маршрута" tabIndex={0} />;
+  return <div ref={container} className="saved-route-map" aria-label={t('routeMap.aria')} tabIndex={0} />;
 }

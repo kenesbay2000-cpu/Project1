@@ -1,12 +1,14 @@
 import type { GuideHighlight } from '../lib/destinationGuides';
+import { useI18n } from '../i18n/I18nProvider';
 
 export function DestinationHighlights({ items }: { items: GuideHighlight[] }) {
+  const { t } = useI18n();
   return (
     <section className="article-section" id="see">
       <div className="article-section__heading">
-        <p className="article-kicker">Главное</p>
-        <h2>Что посмотреть</h2>
-        <p>Не список для галочки, а места, через которые лучше всего чувствуется характер направления.</p>
+        <p className="article-kicker">{t('guide.highlights')}</p>
+        <h2>{t('guide.whatToSee')}</h2>
+        <p>{t('guide.highlightsText')}</p>
       </div>
       <div className="highlight-grid">
         {items.map((item, index) => (

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { Destination } from '../lib/destinations';
+import { useI18n } from '../i18n/I18nProvider';
 
 type Props = {
   destinations: Destination[];
@@ -20,6 +21,7 @@ function createMarker(destination: Destination, isSelected: boolean) {
 }
 
 export function DestinationsMap({ destinations, selectedSlug, onSelect }: Props) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -50,5 +52,5 @@ export function DestinationsMap({ destinations, selectedSlug, onSelect }: Props)
     if (selected) mapRef.current?.flyTo(selected.coordinates, Math.max(mapRef.current.getZoom(), 5), { duration: 1.1 });
   }, [destinations, selectedSlug]);
 
-  return <div className="world-map" ref={containerRef} aria-label="Интерактивная карта направлений" />;
+  return <div className="world-map" ref={containerRef} aria-label={t('map.aria')} />;
 }

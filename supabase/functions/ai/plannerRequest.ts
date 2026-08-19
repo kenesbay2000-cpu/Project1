@@ -3,6 +3,7 @@ import { assessBudget, budgetPromptGuidance } from './budgetPolicy.ts';
 import { buildPersonalizationGuidance } from './personalization.ts';
 import { parsePlannerContext } from './plannerContext.ts';
 import { RECOMMENDATION_SAFETY_GUIDANCE } from './recommendationSafety.ts';
+import { responseLanguageInstruction } from './responseLanguage.ts';
 
 type RequestErrorCode = 'INVALID_REQUEST' | 'INVALID_DATES';
 type ParseResult = { value: PlannerRequest } | { error: { code: RequestErrorCode; message: string } };
@@ -24,6 +25,7 @@ function isIsoDate(value: unknown): value is string {
 export function parsePlannerRequest(value: unknown): ParseResult {
   if (!isRecord(value)) return invalid('Передайте параметры планирования в формате JSON.');
   const prompt = typeof value.prompt === 'string' ? value.prompt.trim() : '';
+  const responseLanguage = value.responseLanguage === 'en' ? 'en' : 'ru';
   if (!prompt) return invalid('Опишите желаемую поездку.');
   if (prompt.length > 4_000) return invalid('Описание поездки не должно превышать 4000 символов.');
 
@@ -80,7 +82,7 @@ export function parsePlannerRequest(value: unknown): ParseResult {
 
   const context = parsePlannerContext(value);
   if ('error' in context) return invalid(context.error);
-  return { value: { prompt, originCity, dates, travelers, travelerAges, priceRange, ...context.value } };
+  return { value: { prompt, responseLanguage, originCity, dates, travelers, travelerAges, priceRange, ...context.value } };
 }
 
 export function buildPlannerPrompt(request: PlannerRequest, isRetry = false, retryReason = '') {
@@ -100,6 +102,7 @@ export function buildPlannerPrompt(request: PlannerRequest, isRetry = false, ret
   const budgetGuidance = budgetPromptGuidance(assessBudget(personalizedRequest));
   const personalization = buildPersonalizationGuidance(personalizedRequest);
   const details = [
+    responseLanguageInstruction(request),
     request.confirmedSummary ? `Подтверждённое понимание поездки (главный источник истины):\n${JSON.stringify(request.confirmedSummary)}` : '',
     correctionText ? `Правки сводки:\n${correctionText}` : '',
     clarificationText ? `Уточнения из диалога:\n${clarificationText}` : 'Уточнения из диалога: нет',

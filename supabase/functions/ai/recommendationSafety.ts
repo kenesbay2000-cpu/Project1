@@ -24,6 +24,7 @@ function addAccommodationCaution(
   option: AccommodationOption,
   typicalPrice: number,
   currency: string,
+  language: 'ru' | 'en',
 ): AccommodationOption {
   if (ALREADY_CAUTIOUS.test(option.description)) return option;
   const text = `${option.name} ${option.type} ${option.description}`;
@@ -34,16 +35,16 @@ function addAccommodationCaution(
     || (floor !== undefined && option.pricePerNight < floor);
   if (!hasExternalSite && (!unusuallyCheap || EXPLAINED_LOW_PRICE.test(text))) return option;
 
-  const warning = hasExternalSite
-    ? 'Перед оплатой перепроверьте площадку, условия бронирования, отзывы и правила возврата через независимые источники.'
-    : 'Цена заметно ниже других вариантов — перед оплатой перепроверьте условия, адрес, отзывы и правила возврата.';
+  const warning = language === 'en'
+    ? hasExternalSite ? 'Before paying, verify the platform, booking terms, reviews, and refund policy through independent sources.' : 'This price is notably lower than the alternatives — verify the terms, address, reviews, and refund policy before paying.'
+    : hasExternalSite ? 'Перед оплатой перепроверьте площадку, условия бронирования, отзывы и правила возврата через независимые источники.' : 'Цена заметно ниже других вариантов — перед оплатой перепроверьте условия, адрес, отзывы и правила возврата.';
   return { ...option, description: `${option.description} ${warning}` };
 }
 
-export function applyRecommendationCautions(plan: TripPlan): TripPlan {
+export function applyRecommendationCautions(plan: TripPlan, language: 'ru' | 'en' = 'ru'): TripPlan {
   const typicalPrice = median(plan.accommodations.map((item) => item.pricePerNight).filter((price) => price > 0));
   const currency = plan.budget.currency.toUpperCase();
-  const accommodations = plan.accommodations.map((item) => addAccommodationCaution(item, typicalPrice, currency));
+  const accommodations = plan.accommodations.map((item) => addAccommodationCaution(item, typicalPrice, currency, language));
   return accommodations.every((item, index) => item === plan.accommodations[index])
     ? plan
     : { ...plan, accommodations };

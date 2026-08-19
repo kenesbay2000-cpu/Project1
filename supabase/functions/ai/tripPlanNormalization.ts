@@ -4,7 +4,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export function limitAdjustedActivities(value: unknown) {
+export function limitAdjustedActivities(value: unknown, language: 'ru' | 'en' = 'ru') {
   if (!isRecord(value) || !isRecord(value.realism) || value.realism.status !== 'adjusted'
     || !Array.isArray(value.days)) return value;
   let wasTrimmed = false;
@@ -19,7 +19,7 @@ export function limitAdjustedActivities(value: unknown) {
   });
   if (!wasTrimmed) return value;
   const adjustments = Array.isArray(value.realism.adjustments) ? value.realism.adjustments : [];
-  const serverAdjustment = 'Количество активностей в перегруженных днях сокращено до физически выполнимого уровня.';
+  const serverAdjustment = language === 'en' ? 'Overloaded days were reduced to a physically achievable number of activities.' : 'Количество активностей в перегруженных днях сокращено до физически выполнимого уровня.';
   return {
     ...value,
     days,
@@ -42,7 +42,7 @@ function formatMinutes(value: number) {
   return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
 }
 
-export function normalizePlanSchedule(plan: TripPlan) {
+export function normalizePlanSchedule(plan: TripPlan, language: 'ru' | 'en' = 'ru') {
   let wasAdjusted = false;
   const days = plan.days.map((day) => {
     const hasLongTransfer = day.activities.some((activity) => activity.travelMinutesFromPrevious > 180);
@@ -66,8 +66,8 @@ export function normalizePlanSchedule(plan: TripPlan) {
     return { ...day, activities };
   });
   if (!wasAdjusted) return plan;
-  const warning = 'Расписание немного скорректировано, чтобы сохранить реальное время на переезды и не перегружать дни.';
-  const adjustment = 'Время начала и количество отдельных активностей согласованы с длительностью переездов.';
+  const warning = language === 'en' ? 'The schedule was adjusted slightly to allow realistic transfer time and keep each day comfortable.' : 'Расписание немного скорректировано, чтобы сохранить реальное время на переезды и не перегружать дни.';
+  const adjustment = language === 'en' ? 'Start times and activity counts were aligned with transfer durations.' : 'Время начала и количество отдельных активностей согласованы с длительностью переездов.';
   return {
     ...plan,
     days,

@@ -1,7 +1,9 @@
 import type { TripPlan } from '../lib/aiPlanner';
+import { useI18n } from '../i18n/I18nProvider';
 
 export function SavedAccommodations({ plan }: { plan: TripPlan }) {
-  return <div className="saved-card-grid saved-card-grid--large">{plan.accommodations.map((item, index) => <article key={`${item.name}-${index}`}><small>{item.type} · {item.area}</small><h3>{item.name}</h3><strong>{item.pricePerNight.toLocaleString('ru-RU')} {plan.budget.currency} / ночь</strong><p>{item.description}</p></article>)}</div>;
+  const { t, language } = useI18n();
+  return <div className="saved-card-grid saved-card-grid--large">{plan.accommodations.map((item, index) => <article key={`${item.name}-${index}`}><small>{item.type} · {item.area}</small><h3>{item.name}</h3><strong>{item.pricePerNight.toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US')} {plan.budget.currency} {t('extras.perNight')}</strong><p>{item.description}</p></article>)}</div>;
 }
 
 export function SavedFood({ plan }: { plan: TripPlan }) {

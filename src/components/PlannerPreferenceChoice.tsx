@@ -5,17 +5,19 @@ type Props = {
 };
 
 export function PlannerPreferenceChoice({ preferences, usePreferences, onChange }: Props) {
+  const { t } = useI18n();
   return (
     <section className="planner-form__section planner-form__section--memory" aria-labelledby="planner-memory-title">
-      <header><span aria-hidden="true">◇</span><div><small>Память AI</small><h2 id="planner-memory-title">Использовать ваши сохранённые предпочтения из прошлых поездок?</h2></div></header>
+      <header><span aria-hidden="true">◇</span><div><small>{t('memory.eyebrow')}</small><h2 id="planner-memory-title">{t('memory.title')}</h2></div></header>
       <div className="planner-memory__preferences">
         {preferences.map((preference) => <span key={preference}>{preference}</span>)}
       </div>
-      <div className="planner-memory__choice" role="radiogroup" aria-label="Использовать сохранённые предпочтения">
-        <button type="button" role="radio" aria-checked={usePreferences} className={usePreferences ? 'is-active' : ''} onClick={() => onChange(true)}><i aria-hidden="true">✓</i><span><strong>Да, учитывай их</strong><small>AI мягко применит их к новому маршруту</small></span></button>
-        <button type="button" role="radio" aria-checked={!usePreferences} className={!usePreferences ? 'is-active' : ''} onClick={() => onChange(false)}><i aria-hidden="true">○</i><span><strong>Нет, в этот раз без них</strong><small>План будет основан только на новом запросе</small></span></button>
+      <div className="planner-memory__choice" role="radiogroup" aria-label={t('memory.aria')}>
+        <button type="button" role="radio" aria-checked={usePreferences} className={usePreferences ? 'is-active' : ''} onClick={() => onChange(true)}><i aria-hidden="true">✓</i><span><strong>{t('memory.yes')}</strong><small>{t('memory.yesHint')}</small></span></button>
+        <button type="button" role="radio" aria-checked={!usePreferences} className={!usePreferences ? 'is-active' : ''} onClick={() => onChange(false)}><i aria-hidden="true">○</i><span><strong>{t('memory.no')}</strong><small>{t('memory.noHint')}</small></span></button>
       </div>
-      <p className="planner-memory__note">Выбор сохранится как удобное значение по умолчанию, но его всегда можно поменять.</p>
+      <p className="planner-memory__note">{t('memory.note')}</p>
     </section>
   );
 }
+import { useI18n } from '../i18n/I18nProvider';

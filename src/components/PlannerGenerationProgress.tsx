@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 import './PlannerGenerationProgress.css';
-
-const generationStages = [
-  { message: 'Анализируем детали поездки…', duration: 5_000 },
-  { message: 'Выстраиваем маршрут по дням…', duration: 6_000 },
-  { message: 'Проверяем логистику и темп…', duration: 6_500 },
-  { message: 'Считаем ориентировочный бюджет…', duration: 7_000 },
-  { message: 'Подбираем жильё, еду и активности…', duration: 8_000 },
-  { message: 'Собираем финальный план…', duration: 0 },
-];
+import { useI18n } from '../i18n/I18nProvider';
 
 export function PlannerGenerationProgress() {
+  const { t } = useI18n();
+  const generationStages = [
+    { message: t('generation.step1'), duration: 5_000 }, { message: t('generation.step2'), duration: 6_000 },
+    { message: t('generation.step3'), duration: 6_500 }, { message: t('generation.step4'), duration: 7_000 },
+    { message: t('generation.step5'), duration: 8_000 }, { message: t('generation.step6'), duration: 0 },
+  ];
   const [activeStage, setActiveStage] = useState(0);
 
   useEffect(() => {
@@ -26,9 +24,9 @@ export function PlannerGenerationProgress() {
     <section className="planner-generation" role="status" aria-live="polite" aria-atomic="true">
       <div className="planner-generation__orb" aria-hidden="true"><span /><i /><i /><i /></div>
       <div className="planner-generation__copy">
-        <small>AI создаёт ваше путешествие</small>
+        <small>{t('generation.eyebrow')}</small>
         <strong key={activeStage}>{generationStages[activeStage].message}</strong>
-        <p>Большой персональный план требует немного времени. Можно оставаться на этой странице.</p>
+        <p>{t('generation.note')}</p>
       </div>
       <div className="planner-generation__steps" aria-hidden="true">
         {generationStages.map((stage, index) => (

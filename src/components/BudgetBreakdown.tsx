@@ -1,34 +1,36 @@
 import type { TripPlan } from '../lib/aiPlanner';
+import { useI18n } from '../i18n/I18nProvider';
 
 type BudgetBreakdownProps = {
   budget: TripPlan['budget'];
 };
 
-function describeEstimate(note: string) {
+function describeEstimate(note: string, typical: string, rough: string, fallback: string) {
   const isTypical = /^\s*\[ТИПИЧНЫЕ ЦЕНЫ\]/i.test(note);
   const cleaned = note.replace(/^\s*\[(?:ТИПИЧНЫЕ ЦЕНЫ|ГРУБАЯ ОЦЕНКА)\]\s*/i, '');
   return {
-    label: isTypical ? 'Расчёт по типичным ценам' : 'Грубая оценка',
+    label: isTypical ? typical : rough,
     kind: isTypical ? 'typical' : 'rough',
-    note: cleaned || 'Стоимость зависит от сезона и доступности.',
+    note: cleaned || fallback,
   };
 }
 
 export function BudgetBreakdown({ budget }: BudgetBreakdownProps) {
-  const formatMoney = (value: number) => `${value.toLocaleString('ru-RU')} ${budget.currency}`;
+  const { t, language } = useI18n();
+  const formatMoney = (value: number) => `${value.toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US')} ${budget.currency}`;
 
   return (
     <section className="trip-budget">
       <div className="trip-budget__summary">
-        <span>Ориентировочный бюджет</span>
+        <span>{t('budget.eyebrow')}</span>
         <strong>{formatMoney(budget.total)}</strong>
-        <p>Сводная оценка, а не цена бронирования. Финальная стоимость зависит от сезона и доступности.</p>
-        <div className="trip-budget__legend"><span>● Типичные цены</span><span>○ Грубая оценка</span></div>
+        <p>{t('budget.note')}</p>
+        <div className="trip-budget__legend"><span>{t('budget.typicalLegend')}</span><span>{t('budget.roughLegend')}</span></div>
       </div>
       <div className="trip-budget__categories">
         {budget.categories.map((item) => {
           const percentage = budget.total > 0 ? Math.min(100, Math.round(item.amount / budget.total * 100)) : 0;
-          const estimate = describeEstimate(item.note);
+          const estimate = describeEstimate(item.note, t('budget.typical'), t('budget.rough'), t('budget.fallback'));
           return (
             <div className="trip-budget__category" key={item.category}>
               <div><strong>{item.category}</strong><span>{formatMoney(item.amount)}</span></div>

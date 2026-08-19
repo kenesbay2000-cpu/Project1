@@ -1,12 +1,14 @@
 import type { DestinationGuide } from '../lib/destinationGuides';
+import { useI18n } from '../i18n/I18nProvider';
 
 export function DestinationCautions({ guide }: { guide: DestinationGuide }) {
+  const { t } = useI18n();
   return (
     <section className="caution-section" id="cautions">
       <div className="caution-section__intro">
-        <p className="article-kicker">Знать заранее</p>
-        <h2>Путешествовать спокойно</h2>
-        <p>Не повод тревожиться — просто несколько деталей, которые помогут избежать неприятных сюрпризов.</p>
+        <p className="article-kicker">{t('guide.knowAhead')}</p>
+        <h2>{t('guide.calmTitle')}</h2>
+        <p>{t('guide.calmText')}</p>
       </div>
       <div className="caution-list">
         {guide.cautions.map((item, index) => (
@@ -14,7 +16,7 @@ export function DestinationCautions({ guide }: { guide: DestinationGuide }) {
         ))}
       </div>
       <aside className="culture-note">
-        <p className="article-kicker">Культурный код</p><h3>К чему быть готовым</h3>
+        <p className="article-kicker">{t('guide.culture')}</p><h3>{t('guide.prepareFor')}</h3>
         {guide.culture.map((text) => <p key={text}>{text}</p>)}
       </aside>
     </section>

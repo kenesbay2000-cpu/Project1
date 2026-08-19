@@ -4,6 +4,7 @@ import { requestGemini } from './gemini.ts';
 import { applyBudgetCommand, type BudgetEdit } from './budgetEdit.ts';
 import type { PlannerRequest, TripPlan } from './types.ts';
 import { RECOMMENDATION_SAFETY_GUIDANCE } from './recommendationSafety.ts';
+import { localizedPlannerText, responseLanguageInstruction } from './responseLanguage.ts';
 
 type EditFailure = { ok: false; code: string; message: string; status: number };
 type EditSuccess = { ok: true; plan: TripPlan; request: PlannerRequest };
@@ -49,7 +50,8 @@ function updateRequest(request: PlannerRequest, plan: TripPlan, command: string)
 
 function editPrompt(request: PlannerRequest, plan: TripPlan, command: string, targetDays: number, budgetEdit?: BudgetEdit | null, retryReason = '') {
   const retry = retryReason ? `\nПредыдущая версия не прошла проверку: ${retryReason}. Исправь эту ошибку.` : '';
-  return `Отредактируй существующий план поездки по короткой команде пользователя.
+  return `${responseLanguageInstruction(request)}
+Отредактируй существующий план поездки по короткой команде пользователя.
 Команда с наивысшим приоритетом: ${command}
 Контекст подтверждённой поездки: ${JSON.stringify(request)}
 Текущий план — основной источник для всего, что пользователь не просил менять: ${JSON.stringify(plan)}
@@ -139,15 +141,15 @@ export async function editExistingPlan(
     }
     const compliance = complianceIssue(plan, parsed.value.plan, command, updated.budgetEdit);
     if (compliance) { lastError = compliance; continue; }
-    return { ok: true, request: updated.value, plan: applyBudgetWarning(parsed.value.plan, budget) };
+    return { ok: true, request: updated.value, plan: applyBudgetWarning(parsed.value.plan, budget, updated.value.responseLanguage) };
   }
   const realism = lastError.replace('Plan realism check failed: ', '');
   return {
     ok: false,
     code: lastError.startsWith('Plan realism check failed:') ? 'UNREALISTIC_AI_PLAN' : 'INVALID_AI_RESPONSE',
     message: lastError.startsWith('Plan realism check failed:')
-      ? `ИИ не смог согласовать изменение с реальным расписанием. ${realism}`
-      : 'ИИ дважды вернул неполный обновлённый план. Попробуйте сформулировать изменение немного точнее.',
+      ? `${localizedPlannerText(request, 'ИИ не смог согласовать изменение с реальным расписанием.', 'AI could not reconcile this change with a realistic schedule.')} ${realism}`
+      : localizedPlannerText(request, 'ИИ дважды вернул неполный обновлённый план. Попробуйте сформулировать изменение немного точнее.', 'AI returned an incomplete updated itinerary twice. Try phrasing the change a little more precisely.'),
     status: 502,
   };
 }

@@ -6,8 +6,10 @@ import { destinations } from '../lib/destinations';
 import { useAuth } from './AuthProvider';
 import { CityAutocomplete } from './CityAutocomplete';
 import './DestinationVote.css';
+import { useI18n } from '../i18n/I18nProvider';
 
 export function DestinationVote() {
+  const { t } = useI18n();
   const { user, isLoading: isAuthLoading } = useAuth();
   const [city, setCity] = useState<CityOption | null>(null);
   const [savedCity, setSavedCity] = useState('');
@@ -38,7 +40,7 @@ export function DestinationVote() {
         const savedOption = options.find((option) => option.name.toLocaleLowerCase('ru') === normalizedName);
         if (isActive && savedOption) setCity(savedOption);
       })
-      .catch(() => { if (isActive) setError('Не удалось загрузить ваш голос.'); })
+      .catch(() => { if (isActive) setError(t('vote.loadError')); })
       .finally(() => { if (isActive) setIsLoading(false); });
     return () => { isActive = false; };
   }, [user]);
@@ -52,7 +54,7 @@ export function DestinationVote() {
       setSavedCity(response.destinationCity); setSuccess(true);
       await refreshStats();
     } catch {
-      setError('Не удалось сохранить голос. Проверьте интернет и попробуйте снова.');
+      setError(t('vote.saveError'));
     } finally {
       setIsSaving(false);
     }
@@ -65,17 +67,17 @@ export function DestinationVote() {
   return (
     <section className={`destination-vote${catalogLeader ? ' has-leader-photo' : ''}`} style={backgroundStyle} aria-labelledby="destination-vote-title">
       <div className="destination-vote__copy">
-        <span className="section-label">Выбор сообщества</span>
-        <h2 id="destination-vote-title">{leader || 'Поделитесь направлением мечты'}</h2>
+        <span className="section-label">{t('vote.eyebrow')}</span>
+        <h2 id="destination-vote-title">{leader || t('vote.shareDream')}</h2>
         <p>{leader
-          ? catalogLeader?.description ?? 'Сейчас это самое желанное направление среди наших путешественников.'
-          : 'Выберите настоящий город из подсказок. Один аккаунт — один актуальный голос.'}</p>
+          ? catalogLeader?.description ?? t('vote.leaderFallback')
+          : t('vote.prompt')}</p>
         <div className="destination-vote__stats" aria-live="polite">
-          <span><strong>{stats?.totalVotes ?? '—'}</strong> всего голосов</span>
+          <span><strong>{stats?.totalVotes ?? '—'}</strong> {t('vote.total')}</span>
         </div>
         {stats && stats.topDestinations.length > 0 && (
           <div className="destination-vote__top">
-            <span>Топ-4 направления</span>
+            <span>{t('vote.top')}</span>
             <ol>
               {stats.topDestinations.map((item) => (
                 <li key={item.destination}>
@@ -85,26 +87,26 @@ export function DestinationVote() {
             </ol>
           </div>
         )}
-        {statsError && <small className="destination-vote__stats-error">Статистика временно недоступна</small>}
+        {statsError && <small className="destination-vote__stats-error">{t('vote.statsUnavailable')}</small>}
       </div>
       <div className="destination-vote__card">
-        {isAuthLoading ? <p className="destination-vote__status">Проверяем аккаунт…</p> : !user ? (
+        {isAuthLoading ? <p className="destination-vote__status">{t('vote.checking')}</p> : !user ? (
           <div className="destination-vote__login">
-            <p>Войдите в аккаунт, чтобы проголосовать.</p>
+            <p>{t('vote.signInPrompt')}</p>
             <div className="destination-vote__actions">
-              <Link href="/login">Войти <span>→</span></Link>
-              <Link className="is-secondary" href="/signup">Регистрация</Link>
+              <Link href="/login">{t('header.login')} <span>→</span></Link>
+              <Link className="is-secondary" href="/signup">{t('header.signup')}</Link>
             </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} noValidate>
-            {savedCity && <p className="destination-vote__current">Ваш текущий выбор: <strong>{savedCity}</strong></p>}
-            <CityAutocomplete label="Куда бы вы хотели поехать?" name="destination-city" value={city}
+            {savedCity && <p className="destination-vote__current">{t('vote.current')} <strong>{savedCity}</strong></p>}
+            <CityAutocomplete label={t('vote.question')} name="destination-city" value={city}
               onChange={(nextCity) => { setCity(nextCity); setError(''); setSuccess(false); }} required disabled={isSaving || isLoading} />
             {error && <p className="destination-vote__error" role="alert">{error}</p>}
-            {success && <p className="destination-vote__success" role="status">Голос сохранён!</p>}
+            {success && <p className="destination-vote__success" role="status">{t('vote.saved')}</p>}
             <button type="submit" disabled={!city || isSaving || isLoading}>
-              {isSaving ? 'Сохраняем…' : savedCity ? 'Изменить голос' : 'Проголосовать'} <span>→</span>
+              {isSaving ? t('vote.saving') : savedCity ? t('vote.change') : t('vote.submit')} <span>→</span>
             </button>
           </form>
         )}

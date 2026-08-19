@@ -4,10 +4,12 @@ import { RecoveryPageLayout } from '../components/RecoveryPageLayout';
 import { SupabaseSetupMessage } from '../components/SupabaseSetupMessage';
 import { getPasswordResetRequestError, requestPasswordReset } from '../lib/passwordRecovery';
 import { isSupabaseConfigured } from '../lib/supabase';
+import { useI18n } from '../i18n/I18nProvider';
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function ForgotPasswordPage() {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [formError, setFormError] = useState('');
@@ -18,7 +20,7 @@ export function ForgotPasswordPage() {
     event.preventDefault();
     const normalizedEmail = email.trim().toLowerCase();
     setEmailError(''); setFormError('');
-    if (!emailPattern.test(normalizedEmail)) { setEmailError('Введите корректный email, например name@example.com.'); return; }
+    if (!emailPattern.test(normalizedEmail)) { setEmailError(t('auth.emailInvalid')); return; }
     setBusy(true);
     try {
       await requestPasswordReset(normalizedEmail);
@@ -33,19 +35,18 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <RecoveryPageLayout storyTitle="Вернём доступ спокойно и безопасно." storyText="Иногда достаточно одного письма, чтобы снова продолжить путь.">
+    <RecoveryPageLayout storyTitle={t('recovery.storyForgot')} storyText={t('recovery.storyForgotText')}>
       {!isSupabaseConfigured ? <SupabaseSetupMessage /> : <section className="registration-card recovery-card">
-        <p className="auth-eyebrow">Восстановление доступа</p>
-        <h1>Забыли пароль?</h1>
-        <p className="registration-card__intro">Укажите email аккаунта — мы отправим защищённую ссылку для создания нового пароля.</p>
+        <p className="auth-eyebrow">{t('recovery.forgotEyebrow')}</p>
+        <h1>{t('recovery.forgotTitle')}</h1>
+        <p className="registration-card__intro">{t('recovery.forgotIntro')}</p>
         {sent ? <>
           <div className="recovery-confirmation" role="status">
-            <strong>Проверьте почту</strong>
-            Если такой email зарегистрирован, мы отправили на него письмо. Ссылка действует ограниченное время.
+            <strong>{t('recovery.sentTitle')}</strong>{t('recovery.sentText')}
           </div>
           <div className="recovery-actions">
-            <Link className="registration-submit" href="/login">Вернуться ко входу <span>→</span></Link>
-            <button className="recovery-card__back" type="button" onClick={() => setSent(false)}>Отправить ещё раз</button>
+            <Link className="registration-submit" href="/login">{t('recovery.back')} <span>→</span></Link>
+            <button className="recovery-card__back" type="button" onClick={() => setSent(false)}>{t('recovery.sendAgain')}</button>
           </div>
         </> : <>
           <form onSubmit={submit} noValidate>
@@ -55,9 +56,9 @@ export function ForgotPasswordPage() {
               {emailError && <small>{emailError}</small>}
             </label>
             {formError && <p className="registration-error" role="alert">{formError}</p>}
-            <button className="registration-submit" type="submit" disabled={busy}>{busy ? 'Отправляем…' : 'Получить ссылку'} <span>→</span></button>
+            <button className="registration-submit" type="submit" disabled={busy}>{busy ? t('recovery.sending') : t('recovery.send')} <span>→</span></button>
           </form>
-          <Link className="recovery-card__back" href="/login">← Вернуться ко входу</Link>
+          <Link className="recovery-card__back" href="/login">← {t('recovery.back')}</Link>
         </>}
       </section>}
     </RecoveryPageLayout>

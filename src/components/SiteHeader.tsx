@@ -1,16 +1,20 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from './AuthProvider';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { useI18n } from '../i18n/I18nProvider';
+import type { TranslationKey } from '../i18n/translations';
 
-const navigation = [
-  { href: '/', label: 'Главная' },
-  { href: '/planner', label: 'AI Planner' },
-  { href: '/blog', label: 'Блог' },
+const navigation: Array<{ href: string; label: TranslationKey }> = [
+  { href: '/', label: 'header.home' },
+  { href: '/planner', label: 'header.planner' },
+  { href: '/blog', label: 'header.blog' },
 ];
 
 export function SiteHeader() {
   const [location] = useLocation();
   const { user, isLoading } = useAuth();
+  const { t } = useI18n();
   const headerRef = useRef<HTMLElement>(null);
   const isHome = location === '/';
   const isDestinationArticle = /^\/destinations\/[^/]+$/.test(location);
@@ -63,27 +67,28 @@ export function SiteHeader() {
 
   return (
     <header ref={headerRef} className={`site-header site-header--${theme}${isAtTop ? ' site-header--top' : ' site-header--scrolled'}`}>
-      <Link className="brand" href="/" aria-label="Roamly — на главную">
+      <Link className="brand" href="/" aria-label={t('header.brandHome')}>
         <span className="brand__mark">R</span>
         <span>Roamly<small>smart travel</small></span>
       </Link>
-      <nav aria-label="Основная навигация">
+      <nav aria-label={t('header.mainNavigation')}>
         {navigation.map((item) => {
           const isActive = item.href === '/' ? isHome : location.startsWith(item.href);
-          return <Link className={isActive ? 'is-active' : ''} href={item.href} key={item.href}>{item.label}</Link>;
+          return <Link className={isActive ? 'is-active' : ''} href={item.href} key={item.href}>{t(item.label)}</Link>;
         })}
         <div className="header-auth" aria-live="polite">
-          {isLoading ? <span className="header-auth__loading" aria-label="Проверяем авторизацию" /> : user ? (
+          {isLoading ? <span className="header-auth__loading" aria-label={t('header.authLoading')} /> : user ? (
             <>
-              <Link className={location === '/profile' || location === '/account' ? 'is-active' : ''} href="/profile">Профиль</Link>
-              <Link className={location.startsWith('/my-plans') ? 'is-active' : ''} href="/my-plans">Мои планы</Link>
+              <Link className={location === '/profile' || location === '/account' ? 'is-active' : ''} href="/profile">{t('header.profile')}</Link>
+              <Link className={location.startsWith('/my-plans') ? 'is-active' : ''} href="/my-plans">{t('header.myPlans')}</Link>
             </>
           ) : (
-            <><Link href="/login">Войти</Link><Link className="header-auth__signup" href="/signup">Регистрация</Link></>
+            <><Link href="/login">{t('header.login')}</Link><Link className="header-auth__signup" href="/signup">{t('header.signup')}</Link></>
           )}
         </div>
       </nav>
-      <Link className="header-action" href="/planner">Начать планировать <span>→</span></Link>
+      <LanguageSwitcher />
+      <Link className="header-action" href="/planner">{t('header.startPlanning')} <span>→</span></Link>
     </header>
   );
 }
