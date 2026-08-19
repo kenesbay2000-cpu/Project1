@@ -55,7 +55,14 @@
 .section-label { color: var(--home-coral-deep); font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
 .ideas h2 { margin-top: 12px; color: var(--home-text); font-family: Georgia, serif; font-size: clamp(38px, 4vw, 58px); font-weight: 400; }
 .ideas__heading p { max-width: 450px; color: var(--home-muted); line-height: 1.7; }
-.ideas__aside a { display: inline-block; margin-top: 12px; color: var(--home-coral-deep); font-size: 13px; font-weight: 800; text-decoration: none; }
+.ideas__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.ideas__action { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 0 17px; border: 1px solid var(--home-coral-deep); border-radius: 999px; color: var(--home-coral-deep); font-size: 12px; font-weight: 800; text-decoration: none; transition: color .22s ease, background-color .22s ease, box-shadow .22s ease, transform .22s ease; }
+.ideas__action--primary { color: #fff; background: var(--home-coral-deep); box-shadow: 0 9px 20px rgba(143,61,47,.18); }
+.ideas__action--secondary { border-color: rgba(39,51,66,.22); color: var(--home-text); background: rgba(255,255,255,.28); }
+.ideas__action span { font-size: 15px; transition: transform .22s ease; }
+.ideas__action:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(23,36,51,.14); }
+.ideas__action--primary:hover span { transform: translateX(3px); }
+.ideas__action--secondary:hover span { transform: rotate(-10deg); }
 @keyframes photo-in { from { opacity: .45; transform: scale(1.025); } to { opacity: 1; transform: scale(1); } }
 @keyframes copy-in { from { opacity: 0; transform: translateY(12px); } }
 
@@ -83,7 +90,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-page :is(.ai-hero__cta, .ai-features__cta a, .planner__submit, .destination-vote__card form > button, .destination-vote__login a, .destination-sheet__arrows button) { transition: none; }
-  .home-page :is(.ai-hero__cta, .ai-features__cta a, .planner__submit, .destination-vote__card form > button, .destination-vote__login a, .destination-sheet__arrows button):is(:hover, :active) { transform: none; }
+  .home-page :is(.ai-hero__cta, .ai-features__cta a, .planner__submit, .destination-vote__card form > button, .destination-vote__login a, .destination-sheet__arrows button, .ideas__action, .ideas__action span) { transition: none; }
+  .home-page :is(.ai-hero__cta, .ai-features__cta a, .planner__submit, .destination-vote__card form > button, .destination-vote__login a, .destination-sheet__arrows button, .ideas__action, .ideas__action span):is(:hover, :active) { transform: none; }
   .hero__backdrop, .hero__content { animation: none; }
 }

@@ -25,12 +25,15 @@ export function HomePage() {
       <section className="ideas" id="ideas" data-header-theme="light">
         <div className="ideas__heading">
           <div>
-            <span className="section-label">Вдохновение для вас</span>
-            <h2>Куда отправимся?</h2>
+            <span className="section-label">Откройте новое</span>
+            <h2>Идеи для вдохновения</h2>
           </div>
           <div className="ideas__aside">
-            <p>Подборки с примерным бюджетом на всю поездку — перелёт, жильё и впечатления.</p>
-            <Link href="/destinations">Смотреть все направления →</Link>
+            <p>Начните с места, которое отзывается: сравните атмосферу и примерный бюджет, а детали поездки доверьте AI Planner.</p>
+            <div className="ideas__actions">
+              <Link className="ideas__action ideas__action--primary" href="/destinations">Смотреть все направления <span>→</span></Link>
+              <Link className="ideas__action ideas__action--secondary" href="/map">Смотреть на карте <span>⌖</span></Link>
+            </div>
           </div>
         </div>
         <DestinationGrid />

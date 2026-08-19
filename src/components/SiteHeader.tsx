@@ -4,8 +4,6 @@ import { useAuth } from './AuthProvider';
 
 const navigation = [
   { href: '/', label: 'Главная' },
-  { href: '/destinations', label: 'Направления' },
-  { href: '/map', label: 'Карта' },
   { href: '/planner', label: 'AI Planner' },
   { href: '/blog', label: 'Блог' },
 ];
