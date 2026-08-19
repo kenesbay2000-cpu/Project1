@@ -1,25 +1,16 @@
-const NOMINATIM_URL = import.meta.env.VITE_NOMINATIM_URL?.trim() || 'https://nominatim.openstreetmap.org';
-const CACHE_KEY = 'roamly.trip-map-geocoding.v1';
+import {
+  searchNominatim, searchPhoton, validCoordinates,
+  type Coordinates, type ProviderResult,
+} from './tripMapProvider';
 
-export type Coordinates = { latitude: number; longitude: number };
+const CACHE_KEY = 'roamly.trip-map-geocoding.v2';
+
+export type { Coordinates } from './tripMapProvider';
 export type GeocodingCache = Record<string, Coordinates>;
-export type GeocodingResult =
-  | { status: 'success'; coordinates: Coordinates }
-  | { status: 'empty' }
-  | { status: 'error'; error: string };
-
-type NominatimResult = { lat: string; lon: string };
+export type GeocodingResult = ProviderResult;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-export function validCoordinates(latitude: unknown, longitude: unknown): Coordinates | undefined {
-  const lat = Number(latitude);
-  const lon = Number(longitude);
-  return Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180
-    ? { latitude: lat, longitude: lon }
-    : undefined;
 }
 
 export function storedActivityCoordinates(activity: unknown) {
@@ -54,21 +45,14 @@ export function saveGeocodingCache(cache: GeocodingCache) {
   try {
     window.localStorage.setItem(CACHE_KEY, JSON.stringify(Object.fromEntries(Object.entries(cache).slice(-250))));
   } catch {
-    // The map remains usable without persistent caching.
+    // Карта остаётся рабочей, даже если браузер запретил локальное хранилище.
   }
 }
 
-export async function geocodeMapQuery(query: string, signal: AbortSignal): Promise<GeocodingResult> {
-  try {
-    const params = new URLSearchParams({ q: query, format: 'jsonv2', limit: '1', 'accept-language': 'ru' });
-    const response = await fetch(`${NOMINATIM_URL}/search?${params}`, { signal });
-    if (!response.ok) return { status: 'error', error: `HTTP ${response.status} ${response.statusText}`.trim() };
-    const [result] = await response.json() as NominatimResult[];
-    if (!result) return { status: 'empty' };
-    const coordinates = validCoordinates(result.lat, result.lon);
-    return coordinates ? { status: 'success', coordinates } : { status: 'error', error: 'Ответ содержит некорректные координаты.' };
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') throw error;
-    return { status: 'error', error: error instanceof Error ? error.message : 'Неизвестная сетевая ошибка.' };
-  }
+export function geocodeMapQuery(query: string, center: Coordinates | null, signal: AbortSignal) {
+  return searchNominatim(query, center, signal);
+}
+
+export function geocodeMapFallback(query: string, center: Coordinates | null, signal: AbortSignal): Promise<ProviderResult> {
+  return center ? searchPhoton(query, center, signal) : Promise.resolve({ status: 'empty' });
 }
