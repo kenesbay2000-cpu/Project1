@@ -1,11 +1,11 @@
 import type { Destination, VisaCategory } from './destinations';
 
 export const PRICE_MIN = 400000;
-export const PRICE_MAX = 1450000;
+export const PRICE_MAX = 2500000;
 export const PRICE_STEP = 50000;
 
-export const regions = ['Евразия', 'Кавказ', 'Европа', 'Восточная Азия', 'Юго-Восточная Азия'];
-export const thematicTags = ['Пляж', 'Культура', 'Приключения', 'Город', 'Природа', 'Гастрономия'];
+export const regions = ['Евразия', 'Кавказ', 'Европа', 'Восточная Азия', 'Юго-Восточная Азия', 'Южная Азия', 'Северная Америка'];
+export const thematicTags = ['Пляж', 'Культура', 'Приключения', 'Город', 'Природа', 'Гастрономия', 'Традиции'];
 
 export const visaOptions: { value: VisaCategory; label: string }[] = [
   { value: 'visa-free', label: 'Без визы' },

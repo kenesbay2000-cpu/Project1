@@ -6,8 +6,8 @@ type Props = { filters: CatalogFilters; activeCount: number; onChange: (filters:
 
 export function CatalogFilterPanel({ filters, activeCount, onChange, onReset }: Props) {
   const { t } = useI18n();
-  const regionLabels = [t('filters.regionEurasia'), t('filters.regionCaucasus'), t('filters.regionEurope'), t('filters.regionEastAsia'), t('filters.regionSoutheastAsia')];
-  const tagLabels = [t('filters.beach'), t('filters.culture'), t('filters.adventure'), t('filters.city'), t('filters.nature'), t('filters.food')];
+  const regionLabels = [t('filters.regionEurasia'), t('filters.regionCaucasus'), t('filters.regionEurope'), t('filters.regionEastAsia'), t('filters.regionSoutheastAsia'), t('filters.regionSouthAsia'), t('filters.regionNorthAmerica')];
+  const tagLabels = [t('filters.beach'), t('filters.culture'), t('filters.adventure'), t('filters.city'), t('filters.nature'), t('filters.food'), t('filters.traditional')];
   const visaLabels = [t('filters.visaFree'), t('filters.visaArrival'), t('filters.visaAdvance')];
   const toggleTag = (tag: string) => onChange({ ...filters, tags: filters.tags.includes(tag) ? filters.tags.filter((item) => item !== tag) : [...filters.tags, tag] });
 

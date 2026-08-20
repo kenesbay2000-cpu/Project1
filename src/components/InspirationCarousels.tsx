@@ -15,6 +15,7 @@ const themes: Theme[] = [
   { id: 'city', titleKey: 'home.themeCity', tags: ['city'] },
   { id: 'culture', titleKey: 'home.themeCulture', tags: ['culture'] },
   { id: 'food', titleKey: 'home.themeFood', tags: ['food'] },
+  { id: 'traditional', titleKey: 'home.themeTraditional', tags: ['traditional'] },
 ];
 
 export function InspirationCarousels() {
@@ -24,7 +25,9 @@ export function InspirationCarousels() {
   return (
     <div className="inspiration-carousels">
       {themes.map((theme, themeIndex) => {
-        const matches = destinations.filter((destination) => theme.tags.some((tag) => destination.themeIds.includes(tag)));
+        const matches = destinations
+          .filter((destination) => theme.tags.some((tag) => destination.themeIds.includes(tag)))
+          .sort((a, b) => b.visualScore - a.visualScore);
         if (matches.length < 3) return null;
         const headingId = `inspiration-${theme.id}`;
         return (

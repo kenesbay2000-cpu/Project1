@@ -1,8 +1,14 @@
 import { baliGuide } from './bali';
+import { banffGuide } from './banff';
+import { cappadociaGuide } from './cappadocia';
 import { hongKongGuide } from './hongKong';
 import { istanbulGuide } from './istanbul';
+import { kyotoGuide } from './kyoto';
+import { lauterbrunnenGuide } from './lauterbrunnen';
+import { maldivesGuide } from './maldives';
 import { nhaTrangGuide } from './nhaTrang';
 import { romeGuide } from './rome';
+import { santoriniGuide } from './santorini';
 import { singaporeGuide } from './singapore';
 import { tbilisiGuide } from './tbilisi';
 import { tokyoGuide } from './tokyo';
@@ -17,6 +23,12 @@ export const destinationGuides: Record<string, DestinationGuide> = {
   'hong-kong': hongKongGuide,
   rome: romeGuide,
   'nha-trang': nhaTrangGuide,
+  kyoto: kyotoGuide,
+  santorini: santoriniGuide,
+  cappadocia: cappadociaGuide,
+  maldives: maldivesGuide,
+  banff: banffGuide,
+  lauterbrunnen: lauterbrunnenGuide,
 };
 
 export type { DestinationGuide, GuideHighlight } from './types';
