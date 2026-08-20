@@ -12,6 +12,7 @@ export type ClarificationResult = {
 
 export type TripSummary = {
   destination: string;
+  destinations?: Array<{ city: string; country: string; days: number }>;
   originCity: string;
   dates: { start: string; end: string };
   durationDays: number;
@@ -53,6 +54,7 @@ export type GenerationProgress = {
 
 export type RecommendationTier = 'budget' | 'comfortable' | 'luxury';
 export type RecommendationPhoto = { url: string; sourceUrl?: string; credit: string };
+export type TravelDataWarning = { section: 'itinerary' | 'accommodations' | 'food' | 'activities'; city: string; message: string };
 export type TripPlan = {
   title: string;
   destination: { city: string; country: string };
@@ -65,6 +67,7 @@ export type TripPlan = {
     }>;
     date: string;
     pace: 'active' | 'balanced' | 'rest';
+    dataWarning?: string;
   }>;
   placeIdeas: Array<{ name: string; type: string; description: string }>;
   budget: { currency: string; total: number; categories: Array<{ category: string; amount: number; note: string }> };
@@ -76,6 +79,7 @@ export type TripPlan = {
   checklist: Array<{ task: string; timing: string; details: string }>;
   realism: { status: 'realistic' | 'adjusted'; warning: string; adjustments: string[] };
   rationale: string;
+  travelDataWarnings?: TravelDataWarning[];
 };
 
 export type GeneratedTrip = { id: string; request: PlannerRequest; plan: TripPlan };

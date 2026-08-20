@@ -2,6 +2,7 @@ import {
   categoryList, diversifyPlaces, finiteNumber, geoapifyPhoto, priceHint, record, specificCategory, textValue,
   type VerifiedPlacePhoto,
 } from './travelPlaceCandidates.ts';
+import { requestTravelJson } from './travelDataRequest.ts';
 
 export type PlaceKind = 'accommodations' | 'food' | 'activities';
 
@@ -40,23 +41,18 @@ const overpassFilters: Record<PlaceKind, string> = {
 };
 const overpassRadius: Record<PlaceKind, number> = { accommodations: 10_000, food: 5_000, activities: 12_000 };
 
-async function requestJson(url: string, timeoutMs = 12_000, headers?: HeadersInit) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url, { signal: controller.signal, headers });
-    if (!response.ok) throw new Error(`Travel data HTTP ${response.status}`);
-    return await response.json() as unknown;
-  } finally { clearTimeout(timeout); }
-}
-
 async function geoapifyLocation(city: string, country: string, apiKey: string) {
   const key = `${city}|${country}`.toLocaleLowerCase();
   const saved = locationCache.get(key);
   if (saved && saved.expiresAt > Date.now()) return saved;
-  const query = encodeURIComponent(`${city}, ${country}`);
-  const geocode = record(await requestJson(`${GEOAPIFY_URL}/v1/geocode/search?text=${query}&format=json&limit=1&apiKey=${encodeURIComponent(apiKey)}`));
-  const location = Array.isArray(geocode?.results) ? record(geocode.results[0]) : null;
+  const query = encodeURIComponent([city, country].filter(Boolean).join(', '));
+  const geocode = record(await requestTravelJson(`${GEOAPIFY_URL}/v1/geocode/search?text=${query}&format=json&type=city&limit=1&apiKey=${encodeURIComponent(apiKey)}`, `Geoapify geocode ${city}`));
+  let location = Array.isArray(geocode?.results) ? record(geocode.results[0]) : null;
+  if (!location && country) {
+    const cityOnly = encodeURIComponent(city);
+    const fallback = record(await requestTravelJson(`${GEOAPIFY_URL}/v1/geocode/search?text=${cityOnly}&format=json&type=city&limit=1&apiKey=${encodeURIComponent(apiKey)}`, `Geoapify geocode fallback ${city}`));
+    location = Array.isArray(fallback?.results) ? record(fallback.results[0]) : null;
+  }
   const latitude = finiteNumber(location?.lat);
   const longitude = finiteNumber(location?.lon);
   if (latitude === null || longitude === null) return null;
@@ -73,7 +69,7 @@ async function geoapifyPlaces(city: string, country: string, kind: PlaceKind, ap
     categories: geoCategories[kind], filter: `circle:${longitude},${latitude},${geoRadius[kind]}`,
     bias: `proximity:${longitude},${latitude}`, limit: '80', apiKey,
   });
-  const response = record(await requestJson(`${GEOAPIFY_URL}/v2/places?${params}`));
+  const response = record(await requestTravelJson(`${GEOAPIFY_URL}/v2/places?${params}`, `Geoapify places ${kind} ${city}`));
   const features = Array.isArray(response?.features) ? response.features : [];
   return diversifyPlaces(features.flatMap((feature) => {
     const properties = record(record(feature)?.properties);
@@ -95,7 +91,7 @@ async function geoapifyPlaces(city: string, country: string, kind: PlaceKind, ap
 
 async function openMeteoLocation(city: string, country: string) {
   const params = new URLSearchParams({ name: city, count: '8', language: 'en', format: 'json' });
-  const response = record(await requestJson(`https://geocoding-api.open-meteo.com/v1/search?${params}`));
+  const response = record(await requestTravelJson(`https://geocoding-api.open-meteo.com/v1/search?${params}`, `Open-Meteo geocode ${city}`));
   const results = Array.isArray(response?.results) ? response.results.map(record).filter(Boolean) as Record<string, unknown>[] : [];
   const countryKey = country.toLocaleLowerCase();
   const location = results.find((item) => String(item.country ?? '').toLocaleLowerCase().includes(countryKey)) ?? results[0];
@@ -106,7 +102,7 @@ async function overpassPlaces(city: string, country: string, kind: PlaceKind) {
   const location = await openMeteoLocation(city, country);
   if (location?.latitude === null || location?.longitude === null || !location) return [];
   const query = `[out:json][timeout:12];nwr(around:${overpassRadius[kind]},${location.latitude},${location.longitude})${overpassFilters[kind]}["name"];out center 45;`;
-  const response = record(await requestJson(`${OVERPASS_URL}?data=${encodeURIComponent(query)}`, 15_000, {
+  const response = record(await requestTravelJson(`${OVERPASS_URL}?data=${encodeURIComponent(query)}`, `Overpass places ${kind} ${city}`, 15_000, {
     Accept: 'application/json', 'User-Agent': 'Roamly travel planner (github.com/kenesbay2000-cpu/Project1)',
   }));
   const elements = Array.isArray(response?.elements) ? response.elements : [];
@@ -133,14 +129,15 @@ export async function loadPlaceCandidates(city: string, country: string, kind: P
   const apiKey = Deno.env.get('GEOAPIFY_API_KEY')?.trim();
   let places: PlaceCandidate[] = [];
   let provider = 'OpenStreetMap';
-  try { if (apiKey) { places = await geoapifyPlaces(city, country, kind, apiKey); provider = 'Geoapify'; } } catch { /* Try OSM fallback. */ }
+  try { if (apiKey) { places = await geoapifyPlaces(city, country, kind, apiKey); provider = 'Geoapify'; } }
+  catch (error) { console.warn(`[TravelData] Geoapify ${kind} failed for ${city}: ${error instanceof Error ? error.message : 'unknown error'}.`); }
   if (places.length < 6) {
     try {
       const geoapifyCount = places.length;
       const fallback = await overpassPlaces(city, country, kind);
       places = diversifyPlaces([...places, ...fallback]);
       provider = geoapifyCount > 0 ? 'Geoapify + OpenStreetMap' : 'OpenStreetMap';
-    } catch { /* Caller handles a short result without inventing places. */ }
+    } catch (error) { console.warn(`[TravelData] Overpass ${kind} failed for ${city}: ${error instanceof Error ? error.message : 'unknown error'}.`); }
   }
   places = diversifyPlaces(places);
   const result = { places, provider, expiresAt: Date.now() + (places.length >= 6 ? CACHE_MS : 15_000) };

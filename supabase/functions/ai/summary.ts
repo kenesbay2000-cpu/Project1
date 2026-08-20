@@ -6,6 +6,14 @@ export const TRIP_SUMMARY_SCHEMA = {
   type: 'object',
   properties: {
     destination: { type: 'string' },
+    destinations: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { city: { type: 'string' }, country: { type: 'string' }, days: { type: 'integer' } },
+        required: ['city', 'country', 'days'],
+      },
+    },
     originCity: { type: 'string' },
     dates: {
       type: 'object',
@@ -38,7 +46,7 @@ export const TRIP_SUMMARY_SCHEMA = {
     constraints: { type: 'array', items: { type: 'string' } },
     otherDetails: { type: 'array', items: { type: 'string' } },
   },
-  required: ['destination', 'originCity', 'dates', 'durationDays', 'travelers', 'budget', 'interests', 'pace', 'lodging', 'transport', 'constraints', 'otherDetails'],
+  required: ['destination', 'destinations', 'originCity', 'dates', 'durationDays', 'travelers', 'budget', 'interests', 'pace', 'lodging', 'transport', 'constraints', 'otherDetails'],
 };
 
 type GeminiFailure = Extract<GeminiResult, { ok: false }>;
@@ -60,12 +68,23 @@ function ages(value: unknown) {
     : [];
 }
 
+function destinations(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!isRecord(item)) return [];
+    const city = text(item.city, 120);
+    if (!city) return [];
+    return [{ city, country: text(item.country, 120), days: Math.round(number(item.days, 365)) }];
+  }).slice(0, 12);
+}
+
 export function parseTripSummary(value: unknown): TripSummary | null {
   if (!isRecord(value) || !isRecord(value.dates) || !isRecord(value.travelers) || !isRecord(value.budget)) return null;
   const budgetMax = number(value.budget.max, 1_000_000_000);
   const budgetMin = Math.min(number(value.budget.min, 1_000_000_000), budgetMax || 1_000_000_000);
   return {
     destination: text(value.destination),
+    destinations: destinations(value.destinations),
     originCity: text(value.originCity, 120),
     dates: { start: text(value.dates.start, 10), end: text(value.dates.end, 10) },
     durationDays: Math.round(number(value.durationDays, 365)),
@@ -99,6 +118,7 @@ ${correction ? `Последняя правка пользователя, име
 - Собери только фактически указанные сведения, не выдумывай предпочтения.
 - При правке сохрани все части текущей сводки, которых правка не касается.
 - destination — желаемые города, регионы или страны одной понятной строкой.
+- destinations — остановки маршрута в порядке посещения. Для каждого отдельного города верни city, country и число дней; сумма days должна равняться durationDays. Для одного города массив всё равно содержит один элемент.
 - Даты верни как YYYY-MM-DD, если они известны; иначе пустые строки. durationDays включает оба крайних дня.
 - Неизвестные строки и массивы оставляй пустыми, неизвестные числа — 0.
 - Бюджет сохраняй в указанной валюте без конвертации.

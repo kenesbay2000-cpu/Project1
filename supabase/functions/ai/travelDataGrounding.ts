@@ -2,7 +2,7 @@ import { loadDestinationFacts } from './destinationFacts.ts';
 import { loadPlaceCandidates, type PlaceCandidate, type PlaceKind } from './travelPlaceData.ts';
 import type { TripDay, TripPlan } from './types.ts';
 
-type Grounding = { prompt: string; names: Set<string>; places: PlaceCandidate[] };
+export type Grounding = { prompt: string; names: Set<string>; places: PlaceCandidate[]; provider: string };
 
 function normalizeName(value: string) {
   return value.normalize('NFKD').toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
@@ -25,7 +25,7 @@ export async function loadPlaceGrounding(
   const places = result.places.length > candidateLimit
     ? [...result.places.slice(offset % result.places.length), ...result.places.slice(0, offset % result.places.length)].slice(0, candidateLimit)
     : result.places;
-  return { places, names: new Set(places.map((place) => normalizeName(place.name))),
+  return { places, names: new Set(places.map((place) => normalizeName(place.name))), provider: result.provider,
     prompt: places.length > 0 ? placePrompt(places, result.provider) : 'API мест не вернул надёжных кандидатов. Не утверждай, что конкретные организации проверены.' };
 }
 

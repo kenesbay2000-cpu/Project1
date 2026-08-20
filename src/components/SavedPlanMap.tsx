@@ -6,6 +6,7 @@ import { loadTripMapData, type TripMapPoint } from '../lib/tripMapGeocoding';
 import { loadTripRoutes, summarizeTripRoutes, type TripDayRoute } from '../lib/tripRouting';
 import { TripRouteMap } from './TripRouteMap';
 import { useI18n } from '../i18n/I18nProvider';
+import { TravelDataWarnings } from './TravelDataWarnings';
 
 const routingText = {
   ru: { distance: 'Пеший путь по дорогам', duration: 'Расчётное время в пути', hour: 'ч', minute: 'мин', progress: (done: number, total: number) => `Построено маршрутов: ${done} из ${total}` },
@@ -62,6 +63,7 @@ export function SavedPlanMap({ plan }: { plan: TripPlan }) {
 
   return (
     <div className="saved-map-section">
+      <TravelDataWarnings warnings={plan.travelDataWarnings?.filter((warning) => warning.section === 'itinerary')} />
       <aside className="saved-map-section__notice" role="note">
         <span aria-hidden="true">i</span>
         <div>

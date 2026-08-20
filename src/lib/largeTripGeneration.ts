@@ -1,11 +1,12 @@
 import { isRetryablePlannerError, largePlanWaitError, readPlannerFunctionError } from './aiPlannerErrors';
 import type { DeferredPlanSection, GeneratedTrip, GenerationProgress, PlannerLanguage, PlannerRequest, TripPlan } from './aiPlannerTypes';
 import { supabase } from './supabase';
+import { buildDestinationChunks } from './tripDestinations';
 
 type TripPlanCore = Omit<TripPlan, 'days'>;
 type CoreResponse = { core?: TripPlanCore; error?: { message?: string } };
-type DaysResponse = { days?: TripPlan['days']; error?: { message?: string } };
-type SectionResponse = { section?: DeferredPlanSection; items?: unknown[]; error?: { message?: string } };
+type DaysResponse = { days?: TripPlan['days']; warnings?: TripPlan['travelDataWarnings']; error?: { message?: string } };
+type SectionResponse = { section?: DeferredPlanSection; items?: unknown[]; warnings?: TripPlan['travelDataWarnings']; error?: { message?: string } };
 
 export const DEFERRED_PLAN_SECTIONS: DeferredPlanSection[] = [
   'itinerary', 'accommodations', 'food', 'activities', 'usefulLinks', 'checklist',
@@ -54,24 +55,36 @@ function completeSection(trip: GeneratedTrip, section: DeferredPlanSection, plan
   };
 }
 
+function mergeWarnings(plan: TripPlan, section: DeferredPlanSection, warnings: TripPlan['travelDataWarnings']) {
+  const warningSection = section === 'itinerary' ? 'itinerary' : section;
+  const kept = (plan.travelDataWarnings ?? []).filter((warning) => warning.section !== warningSection);
+  return { ...plan, travelDataWarnings: [...kept, ...(warnings ?? [])] };
+}
+
 export async function generateDeferredTripSection(trip: GeneratedTrip, section: DeferredPlanSection): Promise<GeneratedTrip> {
   if (!(trip.request.deferredSections ?? []).includes(section)) return trip;
   const language = trip.request.responseLanguage ?? 'ru';
   const travelers = trip.request.travelers ?? trip.request.confirmedSummary?.travelers.count ?? 1;
   if (section === 'itinerary') {
     const days: TripPlan['days'] = [];
+    const warnings: NonNullable<TripPlan['travelDataWarnings']> = [];
     const count = trip.request.expectedDays ?? requestDayCount(trip.request);
-    for (let startDay = 1; startDay <= count; startDay += 4) {
-      const endDay = Math.min(count, startDay + 3);
+    const chunks = buildDestinationChunks(trip.request, trip.plan.destination, count);
+    for (const chunk of chunks) {
+      const { startDay, endDay } = chunk;
       const data = await invokePart<DaysResponse>({
-        mode: 'generate_days', request: trip.request, core: trip.plan, startDay, endDay, previousDay: days[days.length - 1],
+        mode: 'generate_days', request: trip.request, core: trip.plan, startDay, endDay,
+        destination: { city: chunk.city, country: chunk.country, clusterIndex: chunk.clusterIndex, clusterCount: chunk.clusterCount },
+        previousDay: days[days.length - 1],
       }, partClientTimeout(endDay - startDay + 1, travelers), language);
       if (!data.days) throw new Error(data.error?.message ?? largePlanWaitError(language));
       days.push(...data.days);
+      warnings.push(...(data.warnings ?? []));
     }
-    return completeSection(trip, section, { ...trip.plan, days });
+    return completeSection(trip, section, mergeWarnings({ ...trip.plan, days }, section, warnings));
   }
   const data = await invokePart<SectionResponse>({ mode: 'generate_section', request: trip.request, core: trip.plan, section }, 110_000, language);
   if (!data.items) throw new Error(data.error?.message ?? largePlanWaitError(language));
-  return completeSection(trip, section, { ...trip.plan, [section]: data.items } as TripPlan);
+  const plan = { ...trip.plan, [section]: data.items } as TripPlan;
+  return completeSection(trip, section, mergeWarnings(plan, section, data.warnings));
 }

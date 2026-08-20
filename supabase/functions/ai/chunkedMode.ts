@@ -24,6 +24,16 @@ function parsePreviousDay(value: unknown): TripDay | undefined {
   return value as unknown as TripDay;
 }
 
+function parseDestination(value: unknown) {
+  if (!isRecord(value) || typeof value.city !== 'string' || !value.city.trim()
+    || typeof value.country !== 'string' || value.city.length > 120 || value.country.length > 120) return undefined;
+  const clusterIndex = Number(value.clusterIndex);
+  const clusterCount = Number(value.clusterCount);
+  if (!Number.isInteger(clusterIndex) || clusterIndex < 0 || clusterIndex > 3
+    || !Number.isInteger(clusterCount) || clusterCount < 1 || clusterCount > 4 || clusterIndex >= clusterCount) return undefined;
+  return { city: value.city.trim(), country: value.country.trim(), clusterIndex, clusterCount };
+}
+
 export async function handleChunkedMode(body: Record<string, unknown>): Promise<ModeResponse> {
   if (body.mode !== 'generate_core' && body.mode !== 'generate_overview' && body.mode !== 'generate_days'
     && body.mode !== 'generate_section' && body.mode !== 'finalize_plan') return null;
@@ -62,9 +72,10 @@ export async function handleChunkedMode(body: Record<string, unknown>): Promise<
     if (!Number.isInteger(startDay) || !Number.isInteger(endDay) || startDay < 1 || endDay < startDay || endDay - startDay > 4) {
       return failure('INVALID_REQUEST', 'Блок должен содержать от одного до пяти последовательных дней.', 400);
     }
-    const result = await generatePlanDays(parsedRequest.value, rates.rates, core.value, startDay, endDay, parsePreviousDay(body.previousDay));
+    const result = await generatePlanDays(parsedRequest.value, rates.rates, core.value, startDay, endDay,
+      parsePreviousDay(body.previousDay), parseDestination(body.destination));
     return result.ok
-      ? { body: { days: result.value, elapsedMs: result.elapsedMs }, status: 200 }
+      ? { body: { days: result.value, warnings: result.warnings, elapsedMs: result.elapsedMs }, status: 200 }
       : failure(result.code, result.message, result.status);
   }
   const sections: TripPlanExtraSection[] = ['accommodations', 'food', 'activities', 'usefulLinks', 'checklist'];
@@ -72,6 +83,6 @@ export async function handleChunkedMode(body: Record<string, unknown>): Promise<
   if (!section) return failure('INVALID_REQUEST', 'Неизвестная вкладка плана.', 400);
   const result = await generatePlanExtraSection(parsedRequest.value, rates.rates, core.value, section);
   return result.ok
-    ? { body: { section, items: result.value, elapsedMs: result.elapsedMs }, status: 200 }
+    ? { body: { section, items: result.value, warnings: result.warnings, elapsedMs: result.elapsedMs }, status: 200 }
     : failure(result.code, result.message, result.status);
 }

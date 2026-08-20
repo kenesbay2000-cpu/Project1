@@ -6,9 +6,11 @@ import { localizedPlannerText } from './responseLanguage.ts';
 import { parseTripPlanSectionText, tripPlanSectionSchema, type TripPlanCore } from './tripPlanParts.ts';
 import type { TripPlanExtraSection } from './tripPlanExtras.ts';
 import {
-  attachGroundedPhotos, destinationOf, hasGroundedSectionNames, loadDestinationGrounding, loadPlaceGrounding,
+  attachGroundedPhotos, destinationOf, hasGroundedSectionNames, loadDestinationGrounding,
 } from './travelDataGrounding.ts';
 import type { PlannerRequest } from './types.ts';
+import { loadMultiCityGrounding } from './multiCityGrounding.ts';
+import { routeDestinations } from './routeDestinations.ts';
 
 const instructions: Record<TripPlanExtraSection, string> = {
   accommodations: '',
@@ -28,15 +30,21 @@ export async function generatePlanExtraSection(request: PlannerRequest, rates: C
   section: TripPlanExtraSection): Promise<PartResult<TripPlanCore[TripPlanExtraSection]>> {
   const destination = destinationOf(core);
   const placeSection = section === 'accommodations' || section === 'food' || section === 'activities' ? section : null;
+  const totalDays = request.confirmedSummary?.durationDays ?? 7;
+  const destinations = routeDestinations(request, core, totalDays);
   const grounding = placeSection
-    ? await loadPlaceGrounding(destination.city, destination.country, placeSection, 0, 48)
-    : { prompt: await loadDestinationGrounding(destination.city, destination.country), names: new Set<string>() };
-  if (placeSection && grounding.names.size === 0) return {
-    ok: false, code: 'TRAVEL_DATA_UNAVAILABLE', status: 503,
+    ? await loadMultiCityGrounding(destinations.map(({ city, country }) => ({ city, country })), placeSection, 48)
+    : { prompt: await loadDestinationGrounding(destination.city, destination.country), names: new Set<string>(), places: [], missingCities: [], elapsedMs: 0 };
+  const warnings = placeSection ? grounding.missingCities.map((city) => ({
+    section: placeSection,
+    city,
     message: localizedPlannerText(request,
       'Не удалось загрузить реальные места для этой вкладки. Попробуйте ещё раз немного позже.',
       'No real places could be loaded for this section. Please try again shortly.',
       'Бұл бөлім үшін нақты орындар жүктелмеді. Сәл кейінірек қайталап көріңіз.'),
+  })) : [];
+  if (placeSection && grounding.names.size === 0) return {
+    ok: true, value: [] as TripPlanCore[TripPlanExtraSection], elapsedMs: grounding.elapsedMs, warnings,
   };
   const sectionInstruction = placeSection
     ? placeInstructions(placeSection, Math.min(12, grounding.names.size))
@@ -45,7 +53,7 @@ export async function generatePlanExtraSection(request: PlannerRequest, rates: C
 Главный обзор поездки: ${JSON.stringify({ title: core.title, destination: core.destination, budget: core.budget, rationale: core.rationale })}
 ${grounding.prompt}
 ${RECOMMENDATION_SAFETY_GUIDANCE}
-${sectionInstruction} Верни только объект с полем ${section}. Описания должны быть короткими, по одному предложению.`;
+${sectionInstruction} Для мультигородного маршрута сохрани разнообразие между доступными городами. Верни только объект с полем ${section}. Описания должны быть короткими, по одному предложению.`;
   const started = Date.now();
   let lastIssue = '';
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -61,7 +69,7 @@ ${sectionInstruction} Верни только объект с полем ${secti
       const value = placeSection
         ? attachGroundedPhotos(parsed.value as Array<{ name: string }>, grounding.places)
         : parsed.value;
-      return { ok: true, value: value as TripPlanCore[TripPlanExtraSection], elapsedMs: Date.now() - started };
+      return { ok: true, value: value as TripPlanCore[TripPlanExtraSection], elapsedMs: Date.now() - started, warnings };
     }
     lastIssue = parsed.error;
   }

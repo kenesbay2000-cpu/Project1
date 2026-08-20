@@ -8,9 +8,9 @@ import {
   TRIP_DAYS_SCHEMA, TRIP_PLAN_CORE_SCHEMA, TRIP_PLAN_OVERVIEW_SCHEMA, type TripPlanCore,
 } from './tripPlanParts.ts';
 import type { PlannerRequest, TripDay } from './types.ts';
-import {
-  destinationOf, hasGroundedDayPlaces, loadPlaceGrounding,
-} from './travelDataGrounding.ts';
+import { destinationOf, hasGroundedDayPlaces } from './travelDataGrounding.ts';
+import { loadMultiCityGrounding, type GroundingDestination } from './multiCityGrounding.ts';
+import type { TravelDataWarning } from './types.ts';
 
 type Failure = Extract<GeminiResult, { ok: false }> | {
   ok: false;
@@ -18,7 +18,7 @@ type Failure = Extract<GeminiResult, { ok: false }> | {
   message: string;
   status: 502 | 503;
 };
-export type PartResult<T> = Failure | { ok: true; value: T; elapsedMs: number };
+export type PartResult<T> = Failure | { ok: true; value: T; elapsedMs: number; warnings?: TravelDataWarning[] };
 
 export function requestContext(request: PlannerRequest, rates: CurrencyRates) {
   const summary = request.confirmedSummary ? JSON.stringify(request.confirmedSummary) : 'нет';
@@ -50,7 +50,7 @@ ${RECOMMENDATION_SAFETY_GUIDANCE}
   let lastIssue = '';
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const result = await requestGemini(`${prompt}${lastIssue ? `\nИсправь ошибку структуры: ${lastIssue}` : ''}`,
-      partTimeout(0, request.travelers ?? 1, true), { responseSchema: TRIP_PLAN_OVERVIEW_SCHEMA, maxOutputTokens: 4_096 });
+      partTimeout(0, request.travelers ?? 1, true), { responseSchema: TRIP_PLAN_OVERVIEW_SCHEMA, maxOutputTokens: 8_192 });
     if (!result.ok) return result;
     const parsed = parseTripPlanOverviewText(result.text);
     if ('value' in parsed) return { ok: true, value: parsed.value, elapsedMs: Date.now() - started };
@@ -79,23 +79,36 @@ ${RECOMMENDATION_SAFETY_GUIDANCE}
   return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: `Не удалось собрать каркас большого плана: ${lastIssue}`, status: 502 };
 }
 
-export async function generatePlanDays(request: PlannerRequest, rates: CurrencyRates, core: TripPlanCore, startDay: number, endDay: number, previousDay?: TripDay): Promise<PartResult<TripDay[]>> {
+function unavailableDays(request: PlannerRequest, destination: GroundingDestination, startDay: number, endDay: number, message: string): TripDay[] {
+  return Array.from({ length: endDay - startDay + 1 }, (_, index) => {
+    const day = startDay + index;
+    const date = request.dates
+      ? new Date(Date.parse(`${request.dates.start}T00:00:00Z`) + (day - 1) * 86_400_000).toISOString().slice(0, 10)
+      : `День ${day}`;
+    return { day, date, pace: 'rest', title: destination.city, activities: [], dataWarning: message };
+  });
+}
+
+export async function generatePlanDays(request: PlannerRequest, rates: CurrencyRates, core: TripPlanCore, startDay: number, endDay: number,
+  previousDay?: TripDay, destinationOverride?: GroundingDestination): Promise<PartResult<TripDay[]>> {
   const count = endDay - startDay + 1;
   const restDays = Array.from({ length: count }, (_, index) => startDay + index).filter((day) => day % 7 === 0);
-  const destination = destinationOf(core);
-  const grounding = await loadPlaceGrounding(destination.city, destination.country, 'activities', (startDay - 1) * 8);
-  if (grounding.names.size < 6) return {
-    ok: false, code: 'TRAVEL_DATA_UNAVAILABLE', status: 503,
-    message: localizedPlannerText(request,
+  const destination = destinationOverride ?? destinationOf(core);
+  const grounding = await loadMultiCityGrounding([destination], 'activities', 48);
+  if (grounding.names.size < 6) {
+    const message = localizedPlannerText(request,
       'Не удалось загрузить реальные места для маршрута. Попробуйте продолжить генерацию немного позже.',
       'Real places could not be loaded for the itinerary. Please continue generation again shortly.',
-      'Маршрут үшін нақты орындар жүктелмеді. Генерацияны сәл кейінірек қайталап көріңіз.'),
-  };
+      'Маршрут үшін нақты орындар жүктелмеді. Генерацияны сәл кейінірек қайталап көріңіз.');
+    return { ok: true, value: unavailableDays(request, destination, startDay, endDay, message), elapsedMs: grounding.elapsedMs,
+      warnings: [{ section: 'itinerary', city: destination.city, message }] };
+  }
   const prompt = `${requestContext(request, rates)}
 Каркас поездки: ${JSON.stringify({ title: core.title, destination: core.destination, transport: core.transport, rationale: core.rationale, realism: core.realism })}
 ${grounding.prompt}
 ${previousDay ? `Предыдущий готовый день: ${JSON.stringify(previousDay)}` : 'Это первый блок маршрута.'}
 Сформируй только дни ${startDay}–${endDay} включительно. Номера должны начинаться с ${startDay}. ${request.dates ? 'Даты обязаны точно соответствовать общему периоду.' : 'В date используй «День N».'}
+Все дни этого блока относятся к указанному географическому кластеру. Сначала заверши их, и только следующий блок может перейти в другой район или город.
 ${restDays.length ? `Дни ${restDays.join(', ')} обязательно сделай pace rest и не больше двух лёгких активностей.` : ''}
 В обычный день дай 2–4 географически близкие активности, максимум 5. Для большой группы не создавай индивидуальные варианты: estimatedCost указывай для всей группы. Время — HH:MM, durationMinutes 15–720, travelMinutesFromPrevious 0–1440; суммарно не больше 12 часов. Описания короткие.`;
   const started = Date.now();

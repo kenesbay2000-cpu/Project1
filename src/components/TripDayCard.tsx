@@ -24,6 +24,7 @@ export function TripDayCard({ day, currency }: TripDayCardProps) {
         <h3>{day.title}</h3>
         {(day.date || day.pace) && <div className="trip-day__meta">{day.date && <small>{formatDate(day.date, locale)}</small>}{day.pace && <small>{paceLabels[day.pace]}</small>}</div>}
       </header>
+      {day.dataWarning && <p className="trip-day__data-warning" role="status">{day.dataWarning}</p>}
       <ol className="trip-day__timeline">
         {day.activities.map((activity, index) => (
           <li key={`${activity.time}-${activity.title}-${index}`}>

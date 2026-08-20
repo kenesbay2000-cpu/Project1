@@ -54,12 +54,14 @@ function activityCandidates(plan: TripPlan): Candidate[] {
   const country = countryName(plan.destination.country);
   return plan.days.flatMap((day) => day.activities.map((activity, order) => {
     const place = activity.place || activity.title;
-    const queries = buildTripMapQueries(place, activity.area, plan.destination.city, country);
+    const isMultiCity = /[,;\n/→]|\s+(?:и|and|then|затем)\s+/iu.test(plan.destination.city);
+    const queryCity = isMultiCity && activity.area ? activity.area : plan.destination.city;
+    const queries = buildTripMapQueries(place, activity.area, queryCity, country);
     return {
       id: `${day.day}-${order}-${activity.time}-${activity.place}`,
       day: day.day, order, time: activity.time, title: activity.title, place,
       description: activity.description, queries,
-      cacheKey: normalizeMapQuery([place, plan.destination.city, country].join(', ')),
+      cacheKey: normalizeMapQuery([place, queryCity, country].join(', ')),
       coordinates: storedActivityCoordinates(activity),
     };
   })).filter((item) => item.place.trim().length >= 2);

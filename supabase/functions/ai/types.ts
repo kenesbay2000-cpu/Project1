@@ -19,6 +19,7 @@ export type ClarificationQuestion = { id: string; text: string };
 export type ClarificationTurn = { questions: ClarificationQuestion[]; answer: string };
 export type TripSummary = {
   destination: string;
+  destinations?: Array<{ city: string; country: string; days: number }>;
   originCity: string;
   dates: { start: string; end: string };
   durationDays: number;
@@ -49,6 +50,7 @@ export type TripDay = {
   pace: 'active' | 'balanced' | 'rest';
   title: string;
   activities: TripActivity[];
+  dataWarning?: string;
 };
 
 export type PlaceIdea = {
@@ -71,6 +73,7 @@ export type TransportOption = {
 
 export type RecommendationTier = 'budget' | 'comfortable' | 'luxury';
 export type RecommendationPhoto = { url: string; sourceUrl?: string; credit: string };
+export type TravelDataWarning = { section: 'itinerary' | 'accommodations' | 'food' | 'activities'; city: string; message: string };
 
 export type AccommodationOption = {
   name: string;
@@ -114,6 +117,7 @@ export type TripPlan = {
   checklist: ChecklistItem[];
   realism: RealismAssessment;
   rationale: string;
+  travelDataWarnings?: TravelDataWarning[];
 };
 
 export type PlannerAIResult =

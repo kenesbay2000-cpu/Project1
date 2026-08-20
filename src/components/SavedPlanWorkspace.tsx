@@ -17,6 +17,7 @@ import { DeferredPlanSection } from './DeferredPlanSection';
 import { generateDeferredTripSection } from '../lib/largeTripGeneration';
 import type { DeferredPlanSection as DeferredSectionId } from '../lib/aiPlannerTypes';
 import './PlanExport.css';
+import { TravelDataWarnings } from './TravelDataWarnings';
 
 type SavedPlanWorkspaceProps = {
   trip: GeneratedTrip;
@@ -74,7 +75,7 @@ export function SavedPlanWorkspace({ trip, onEdit, onTripUpdated }: SavedPlanWor
       return <DeferredPlanSection isLoading={loadingSection === deferred} error={generationError} onRetry={() => void loadSection(deferred)} />;
     }
     if (active === 'overview') return <SavedPlanOverview trip={trip} onEdit={onEdit} onTripUpdated={onTripUpdated} />;
-    if (active === 'itinerary') return <div className="saved-itinerary">{trip.plan.days.map((day) => <TripDayCard key={day.day} day={day} currency={trip.plan.budget.currency} />)}</div>;
+    if (active === 'itinerary') return <><TravelDataWarnings warnings={trip.plan.travelDataWarnings?.filter((warning) => warning.section === 'itinerary')} /><div className="saved-itinerary">{trip.plan.days.map((day) => <TripDayCard key={day.day} day={day} currency={trip.plan.budget.currency} />)}</div></>;
     if (active === 'map') return <SavedPlanMap plan={trip.plan} />;
     if (active === 'weather') return <SavedPlanWeather trip={trip} />;
     if (active === 'budget') return <BudgetBreakdown budget={trip.plan.budget} />;
