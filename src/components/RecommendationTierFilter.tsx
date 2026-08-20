@@ -1,16 +1,18 @@
 import { useI18n } from '../i18n/I18nProvider';
 import {
   recommendationTiers,
+  type RecommendationTierCounts,
   type RecommendationTierFilterValue,
 } from '../lib/recommendationTiers';
 import './RecommendationTierFilter.css';
 
 type Props = {
   value: RecommendationTierFilterValue;
+  counts: RecommendationTierCounts;
   onChange: (value: RecommendationTierFilterValue) => void;
 };
 
-export function RecommendationTierFilter({ value, onChange }: Props) {
+export function RecommendationTierFilter({ value, counts, onChange }: Props) {
   const { t } = useI18n();
   const options: RecommendationTierFilterValue[] = ['all', ...recommendationTiers];
   return (
@@ -21,9 +23,10 @@ export function RecommendationTierFilter({ value, onChange }: Props) {
           key={option}
           type="button"
           aria-pressed={value === option}
+          disabled={option !== 'all' && counts[option] === 0}
           onClick={() => onChange(option)}
         >
-          {t(`extras.tier.${option}`)}
+          <span>{t(`extras.tier.${option}`)}</span><small>{counts[option]}</small>
         </button>
       ))}
     </div>

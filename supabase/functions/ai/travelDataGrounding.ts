@@ -13,13 +13,19 @@ function placePrompt(places: PlaceCandidate[], provider: string) {
     'Используй только точные name из этого списка. Не придумывай и не переименовывай организации. Адрес, район, категорию и сайт считай более надёжными, чем знания модели.';
 }
 
-export async function loadPlaceGrounding(city: string, country: string, kind: PlaceKind, offset = 0): Promise<Grounding> {
+export async function loadPlaceGrounding(
+  city: string,
+  country: string,
+  kind: PlaceKind,
+  offset = 0,
+  candidateLimit = 30,
+): Promise<Grounding> {
   const result = await loadPlaceCandidates(city, country, kind);
-  const places = result.places.length > 30
-    ? [...result.places.slice(offset % result.places.length), ...result.places.slice(0, offset % result.places.length)].slice(0, 30)
+  const places = result.places.length > candidateLimit
+    ? [...result.places.slice(offset % result.places.length), ...result.places.slice(0, offset % result.places.length)].slice(0, candidateLimit)
     : result.places;
   return { places, names: new Set(places.map((place) => normalizeName(place.name))),
-    prompt: places.length >= 6 ? placePrompt(places, result.provider) : 'API мест не вернул достаточно надёжных кандидатов. Не утверждай, что конкретные организации проверены.' };
+    prompt: places.length > 0 ? placePrompt(places, result.provider) : 'API мест не вернул надёжных кандидатов. Не утверждай, что конкретные организации проверены.' };
 }
 
 export async function loadDestinationGrounding(city: string, country: string) {
@@ -30,7 +36,7 @@ export async function loadDestinationGrounding(city: string, country: string) {
 }
 
 export function hasGroundedSectionNames(items: unknown[], names: Set<string>) {
-  if (names.size < 6) return false;
+  if (names.size === 0) return false;
   return items.every((item) => {
     if (typeof item !== 'object' || item === null || Array.isArray(item)) return false;
     const value = (item as Record<string, unknown>).name;

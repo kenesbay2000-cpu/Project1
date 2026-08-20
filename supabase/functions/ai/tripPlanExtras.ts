@@ -49,31 +49,21 @@ function isTier(value: unknown) {
   return value === 'budget' || value === 'comfortable' || value === 'luxury';
 }
 
-function hasTierCoverage(value: unknown) {
-  if (!Array.isArray(value) || value.length !== 6) return false;
-  return ['budget', 'comfortable', 'luxury'].every((tierName) => (
-    value.filter((item) => isRecord(item) && item.tier === tierName).length === 2
-  ));
-}
-
 function isList(value: unknown, validator: (item: unknown) => boolean, min: number, max: number) {
   return Array.isArray(value) && value.length >= min && value.length <= max && value.every(validator);
 }
 
 export type TripPlanExtraSection = 'accommodations' | 'food' | 'activities' | 'usefulLinks' | 'checklist';
 
-export function getTripPlanExtraSectionIssue(section: TripPlanExtraSection, value: unknown, requireTierCoverage = false) {
+export function getTripPlanExtraSectionIssue(section: TripPlanExtraSection, value: unknown, requireTiers = false) {
   if (section === 'accommodations' && (!isList(value, (item) => isRecord(item) && isText(item.name)
     && isText(item.area) && isText(item.type) && isMoney(item.pricePerNight)
-    && isText(item.description) && (!requireTierCoverage || isTier(item.tier)), 2, 9)
-    || (requireTierCoverage && !hasTierCoverage(value)))) return 'Некорректно заполнены варианты жилья или их уровни.';
+    && isText(item.description) && (!requireTiers || isTier(item.tier)), 1, 15))) return 'Некорректно заполнены варианты жилья или их уровни.';
   if (section === 'food' && (!isList(value, (item) => isRecord(item) && isText(item.name)
     && isText(item.cuisine) && isText(item.priceLevel) && isText(item.description)
-    && (!requireTierCoverage || isTier(item.tier)), 2, 9)
-    || (requireTierCoverage && !hasTierCoverage(value)))) return 'Некорректно заполнены рекомендации по еде или их уровни.';
+    && (!requireTiers || isTier(item.tier)), 1, 15))) return 'Некорректно заполнены рекомендации по еде или их уровни.';
   if (section === 'activities' && (!isList(value, (item) => isRecord(item) && isText(item.name)
-    && isText(item.category) && isText(item.summary) && (!requireTierCoverage || isTier(item.tier)), 3, 12)
-    || (requireTierCoverage && !hasTierCoverage(value)))) return 'Некорректно заполнен обзор активностей или их уровни.';
+    && isText(item.category) && isText(item.summary) && (!requireTiers || isTier(item.tier)), 1, 15))) return 'Некорректно заполнен обзор активностей или их уровни.';
   if (section === 'usefulLinks' && !isList(value, (item) => isRecord(item) && isText(item.title)
     && isText(item.recommendation), 3, 8)) return 'Некорректно заполнены полезные рекомендации.';
   if (section === 'checklist' && !isList(value, (item) => isRecord(item) && isText(item.task)
@@ -81,20 +71,17 @@ export function getTripPlanExtraSectionIssue(section: TripPlanExtraSection, valu
   return null;
 }
 
-export function getTripPlanExtrasIssue(value: Record<string, unknown>, requireTierCoverage = false) {
+export function getTripPlanExtrasIssue(value: Record<string, unknown>, requireTiers = false) {
   if (!isList(value.transport, (item) => isRecord(item) && isText(item.mode)
     && isText(item.route) && isText(item.recommendation), 2, 6)) return 'Некорректно заполнен транспорт.';
   if (!isList(value.accommodations, (item) => isRecord(item) && isText(item.name)
     && isText(item.area) && isText(item.type) && isMoney(item.pricePerNight)
-    && isText(item.description) && (!requireTierCoverage || isTier(item.tier)), 2, 9)
-    || (requireTierCoverage && !hasTierCoverage(value.accommodations))) return 'Некорректно заполнены варианты жилья или их уровни.';
+    && isText(item.description) && (!requireTiers || isTier(item.tier)), 1, 15)) return 'Некорректно заполнены варианты жилья или их уровни.';
   if (!isList(value.food, (item) => isRecord(item) && isText(item.name)
     && isText(item.cuisine) && isText(item.priceLevel) && isText(item.description)
-    && (!requireTierCoverage || isTier(item.tier)), 2, 9)
-    || (requireTierCoverage && !hasTierCoverage(value.food))) return 'Некорректно заполнены рекомендации по еде или их уровни.';
+    && (!requireTiers || isTier(item.tier)), 1, 15)) return 'Некорректно заполнены рекомендации по еде или их уровни.';
   if (!isList(value.activities, (item) => isRecord(item) && isText(item.name)
-    && isText(item.category) && isText(item.summary) && (!requireTierCoverage || isTier(item.tier)), 3, 12)
-    || (requireTierCoverage && !hasTierCoverage(value.activities))) return 'Некорректно заполнен обзор активностей или их уровни.';
+    && isText(item.category) && isText(item.summary) && (!requireTiers || isTier(item.tier)), 1, 15)) return 'Некорректно заполнен обзор активностей или их уровни.';
   if (!isList(value.usefulLinks, (item) => isRecord(item) && isText(item.title)
     && isText(item.recommendation), 3, 8)) return 'Некорректно заполнены полезные рекомендации.';
   if (!isList(value.checklist, (item) => isRecord(item) && isText(item.task)
