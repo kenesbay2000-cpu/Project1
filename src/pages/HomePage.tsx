@@ -1,5 +1,5 @@
 import { DestinationGrid } from '../components/DestinationGrid';
-import { HeroShowcase } from '../components/HeroShowcase';
+import { InspirationCarousels } from '../components/InspirationCarousels';
 import { DestinationVote } from '../components/DestinationVote';
 import { AIPlannerHero } from '../components/AIPlannerHero';
 import { AIPlannerFeatures } from '../components/AIPlannerFeatures';
@@ -20,7 +20,7 @@ export function HomePage() {
           <h2 id="home-discovery-title">{t('home.discoveryTitle')}</h2>
           <p>{t('home.discoveryText')}</p>
         </header>
-        <HeroShowcase />
+        <InspirationCarousels />
         <DestinationVote />
       </section>
 

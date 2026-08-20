@@ -2,6 +2,11 @@ const ru = {
   'home.discoveryEyebrow': 'Продолжите с вдохновения',
   'home.discoveryTitle': 'Присмотритесь к направлениям',
   'home.discoveryText': 'Изучите популярные идеи, сравните ориентир бюджета и узнайте, куда мечтают отправиться другие путешественники.',
+  'home.themeCollection': 'Тематическая подборка',
+  'home.themeSea': 'Море и приключения',
+  'home.themeCity': 'Городские открытия',
+  'home.themeCulture': 'Культура и традиции',
+  'home.themeFood': 'Гастрономические путешествия',
   'home.ideasEyebrow': 'Откройте новое',
   'home.ideasTitle': 'Идеи для вдохновения',
   'home.ideasText': 'Начните с места, которое отзывается: сравните атмосферу и примерный бюджет, а детали поездки доверьте AI Planner.',
@@ -48,6 +53,7 @@ const ru = {
 
 const en: { [K in keyof typeof ru]: string } = {
   'home.discoveryEyebrow': 'Continue with inspiration', 'home.discoveryTitle': 'Discover destinations worth a closer look', 'home.discoveryText': 'Explore popular ideas, compare indicative budgets, and see where other travellers dream of going.',
+  'home.themeCollection': 'Themed collection', 'home.themeSea': 'Coasts and adventure', 'home.themeCity': 'Urban discoveries', 'home.themeCulture': 'Culture and tradition', 'home.themeFood': 'Journeys through flavour',
   'home.ideasEyebrow': 'Discover somewhere new', 'home.ideasTitle': 'Ideas to inspire your next trip', 'home.ideasText': 'Start with a place that speaks to you: compare its atmosphere and indicative budget, then let AI Planner shape the details.', 'home.allDestinations': 'Explore all destinations', 'home.viewMap': 'View on the map',
   'hero.eyebrow': 'Your personal AI travel guide', 'hero.title': 'Describe your trip.', 'hero.titleAccent': 'AI will build every detail.', 'hero.leadStart': 'A short conversation becomes a', 'hero.leadStrong': 'realistic itinerary', 'hero.leadEnd': 'with stays, transport, restaurants, a budget, and practical preparation — tailored to you.', 'hero.worldStrong': 'From Istanbul to Nha Trang — and anywhere beyond.', 'hero.worldText': 'These scenes are only a beginning: Roamly can plan a trip to any city or destination in the world.', 'hero.cta': 'Create my trip', 'hero.nowShowing': 'Now showing', 'hero.photosLabel': 'Destination photos', 'hero.showDestination': 'Show destination: {city}', 'hero.quickStart': 'Quick start', 'hero.quickStartHint': 'Tell us what your ideal trip feels like', 'hero.startDescription': 'Start describing',
   'features.eyebrow': 'A new generation of planning', 'features.title': 'It does more than answer.', 'features.titleAccent': 'It thinks through the whole trip.', 'features.intro': 'AI Planner holds a conversation, notices constraints, and turns your wishes into one coherent plan you can actually use.',

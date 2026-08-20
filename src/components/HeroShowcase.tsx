@@ -1,60 +1,97 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'wouter';
-import { getDestinations } from '../lib/content';
-import { TripPlanner } from './TripPlanner';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { Destination } from '../lib/destinations';
 import { useI18n } from '../i18n/I18nProvider';
+import { TripPlanner } from './TripPlanner';
+import { ThemedDestinationSlide } from './ThemedDestinationSlide';
+import './HeroShowcase.css';
 
-export function HeroShowcase() {
-  const { t, language } = useI18n();
-  const destinations = getDestinations(language);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const active = destinations[activeIndex];
+type Props = { destinations: Destination[]; showPlanner?: boolean };
 
+function wrapIndex(index: number, length: number) {
+  return (index % length + length) % length;
+}
+
+export function HeroShowcase({ destinations, showPlanner = false }: Props) {
+  const { t } = useI18n();
+  const count = destinations.length;
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const pointerStart = useRef(0);
+  const [trackIndex, setTrackIndex] = useState(count);
+  const [offset, setOffset] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isJumping, setIsJumping] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const [hasFocus, setHasFocus] = useState(false);
+  const repeated = [...destinations, ...destinations, ...destinations];
+  const activeIndex = wrapIndex(trackIndex, count);
+
+  const measure = () => {
+    const viewport = viewportRef.current;
+    const card = trackRef.current?.children.item(trackIndex) as HTMLElement | null;
+    if (viewport && card) setOffset(viewport.clientWidth / 2 - card.offsetLeft - card.offsetWidth / 2);
+  };
+
+  useLayoutEffect(measure, [trackIndex, destinations]);
   useEffect(() => {
-    const nextImage = new Image();
-    nextImage.src = destinations[(activeIndex + 1) % destinations.length].image;
-  }, [activeIndex, language]);
+    const frame = window.requestAnimationFrame(() => setIsJumping(false));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return undefined;
+    const observer = new ResizeObserver(measure);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [trackIndex]);
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion || isHovered || hasFocus || isDragging) return undefined;
+    const timer = window.setInterval(() => setTrackIndex((current) => current + 1), 6_500);
+    return () => window.clearInterval(timer);
+  }, [hasFocus, isDragging, isHovered]);
 
-  const changeDestination = (step: number) => {
-    setActiveIndex((current) => (current + step + destinations.length) % destinations.length);
+  const move = (step: number) => {
+    setIsJumping(false);
+    setTrackIndex((current) => current + step);
+  };
+  const finishMove = () => {
+    let normalized = trackIndex;
+    if (trackIndex < count) normalized += count;
+    if (trackIndex >= count * 2) normalized -= count;
+    if (normalized === trackIndex) return;
+    setIsJumping(true);
+    setTrackIndex(normalized);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => setIsJumping(false)));
+  };
+  const startDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if ((event.target as HTMLElement).closest('a, button')) return;
+    pointerStart.current = event.clientX;
+    setIsDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const drag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (isDragging) setDragOffset(event.clientX - pointerStart.current);
+  };
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    const distance = event.clientX - pointerStart.current;
+    setIsDragging(false);
+    setDragOffset(0);
+    if (Math.abs(distance) > 48) move(distance < 0 ? 1 : -1);
   };
 
   return (
-    <section className="hero" data-header-theme="dark" style={{ '--hero-photo': `url(${active.image})` } as React.CSSProperties}>
-      <div className="hero__backdrop" key={active.image} />
-      <div className="hero__layout">
-        <div className="hero__content" key={active.city}>
-          <div className="hero__eyebrow"><span /> {t('showcase.eyebrow')}</div>
-          <p className="hero__country">{active.country}</p>
-          <h2>{active.city}</h2>
-          <p className="hero__description">{active.description}</p>
-          <div className="hero__facts">
-            <span><small>{t('showcase.visa')}</small>{active.visa}</span>
-            <span><small>{t('showcase.bestTime')}</small>{active.season}</span>
-          </div>
-          <Link className="hero__details" href={`/destinations/${active.slug}`}>{t('showcase.details')} <span>↗</span></Link>
+    <div className="themed-slider">
+      <div className="themed-slider__viewport" ref={viewportRef} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={endDrag} onPointerCancel={endDrag} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} onFocus={() => setHasFocus(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setHasFocus(false); }}>
+        <div className={`themed-slider__track${isDragging || isJumping ? ' is-direct' : ''}`} ref={trackRef} style={{ transform: `translate3d(${offset + dragOffset}px, 0, 0)` }} onTransitionEnd={(event) => { if (event.target === event.currentTarget) finishMove(); }}>
+          {repeated.map((destination, index) => <ThemedDestinationSlide destination={destination} isActive={index === trackIndex} position={activeIndex + 1} total={count} onMove={move} key={`${Math.floor(index / count)}-${destination.slug}`} />)}
         </div>
-
-        <aside className="destination-sheet" aria-live="polite">
-          <div className="destination-sheet__top">
-            <span>{active.badge}</span>
-            <span>{String(activeIndex + 1).padStart(2, '0')} / {String(destinations.length).padStart(2, '0')}</span>
-          </div>
-          <div className="destination-sheet__price">
-            <small>{active.duration}</small>
-            <strong>{active.price}</strong>
-          </div>
-          <div className="destination-sheet__footer">
-            <span className="destination-sheet__rating"><b>★ {active.rating}</b><small>{active.reviews}</small></span>
-            <div className="destination-sheet__arrows">
-              <button type="button" onClick={() => changeDestination(-1)} aria-label={t('showcase.previous')}>←</button>
-              <button type="button" onClick={() => changeDestination(1)} aria-label={t('showcase.next')}>→</button>
-            </div>
-          </div>
-        </aside>
       </div>
-      <TripPlanner />
-      <p className="hero__note">{t('showcase.note')}</p>
-    </section>
+      {showPlanner && <div className="themed-slider__planner"><TripPlanner /></div>}
+      <p className="themed-slider__note">{t('showcase.note')}</p>
+    </div>
   );
 }
