@@ -1,20 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
 import { getDestinations } from '../lib/content';
 import { HeroDestinationCard } from './HeroDestinationCard';
 import './AIPlannerHero.css';
 import { useI18n } from '../i18n/I18nProvider';
+import { destinationHeroSrcSet, optimizedDestinationImage } from '../lib/destinationImages';
 
 export function AIPlannerHero() {
   const { t, language } = useI18n();
-  const destinations = getDestinations(language);
+  const destinations = useMemo(() => getDestinations(language), [language]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(0);
 
   useEffect(() => {
     const nextIndex = (activeIndex + 1) % destinations.length;
     const preload = new Image();
-    preload.src = destinations[nextIndex].image;
+    preload.src = optimizedDestinationImage(destinations[nextIndex].image, 1600, 82);
     void preload.decode().catch(() => undefined);
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -24,7 +25,7 @@ export function AIPlannerHero() {
       setActiveIndex(nextIndex);
     }, 6_500);
     return () => window.clearTimeout(timer);
-  }, [activeIndex, language]);
+  }, [activeIndex, destinations]);
 
   const showDestination = (index: number) => {
     const normalizedIndex = (index + destinations.length) % destinations.length;
@@ -39,8 +40,8 @@ export function AIPlannerHero() {
   return (
     <section className="ai-hero" data-header-theme="dark" aria-labelledby="ai-hero-title">
       <div className="ai-hero__photos" aria-hidden="true">
-        <img className="ai-hero__photo ai-hero__photo--previous" src={previousDestination.image} alt="" />
-        <img className="ai-hero__photo ai-hero__photo--active" src={currentDestination.image} alt="" key={currentDestination.image} />
+        <img className="ai-hero__photo ai-hero__photo--previous" src={optimizedDestinationImage(previousDestination.image, 1600, 82)} srcSet={destinationHeroSrcSet(previousDestination.image)} sizes="100vw" alt="" decoding="async" />
+        <img className="ai-hero__photo ai-hero__photo--active" src={optimizedDestinationImage(currentDestination.image, 1600, 82)} srcSet={destinationHeroSrcSet(currentDestination.image)} sizes="100vw" alt="" decoding="async" key={currentDestination.image} />
       </div>
       <div className="ai-hero__shade" aria-hidden="true" />
 

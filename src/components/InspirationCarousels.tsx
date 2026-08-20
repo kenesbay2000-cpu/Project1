@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useI18n } from '../i18n/I18nProvider';
 import { getDestinations } from '../lib/content';
 import { destinations as canonicalDestinations } from '../lib/destinations';
@@ -6,9 +7,13 @@ import { InspirationCarouselLayer } from './InspirationCarouselLayer';
 
 export function InspirationCarousels() {
   const { language, t } = useI18n();
-  const localizedDestinations = getDestinations(language);
-  const themeGroups = createThemeGroups(localizedDestinations);
-  const regionGroups = createRegionGroups(localizedDestinations, canonicalDestinations);
+  const { themeGroups, regionGroups } = useMemo(() => {
+    const localizedDestinations = getDestinations(language);
+    return {
+      themeGroups: createThemeGroups(localizedDestinations),
+      regionGroups: createRegionGroups(localizedDestinations, canonicalDestinations),
+    };
+  }, [language]);
 
   return (
     <div className="inspiration-carousels">

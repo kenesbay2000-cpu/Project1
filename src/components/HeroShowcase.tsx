@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Destination } from '../lib/destinations';
 import { useI18n } from '../i18n/I18nProvider';
 import { TripPlanner } from './TripPlanner';
@@ -6,6 +6,7 @@ import { ThemedDestinationSlide } from './ThemedDestinationSlide';
 import './HeroShowcase.css';
 
 type Props = { destinations: Destination[]; showPlanner?: boolean };
+const WINDOW_OFFSETS = [-2, -1, 0, 1, 2] as const;
 
 function wrapIndex(index: number, length: number) {
   return (index % length + length) % length;
@@ -17,56 +18,73 @@ export function HeroShowcase({ destinations, showPlanner = false }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const pointerStart = useRef(0);
-  const [trackIndex, setTrackIndex] = useState(count);
-  const [offset, setOffset] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [movement, setMovement] = useState<-1 | 0 | 1>(0);
+  const [baseOffset, setBaseOffset] = useState(0);
+  const [slideStep, setSlideStep] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isJumping, setIsJumping] = useState(true);
-  const [isHovered, setIsHovered] = useState(false);
-  const [hasFocus, setHasFocus] = useState(false);
-  const repeated = [...destinations, ...destinations, ...destinations];
-  const activeIndex = wrapIndex(trackIndex, count);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isNearViewport, setIsNearViewport] = useState(false);
+  const displayedIndex = wrapIndex(activeIndex + movement, count);
 
-  const measure = () => {
+  const measure = useCallback(() => {
     const viewport = viewportRef.current;
-    const card = trackRef.current?.children.item(trackIndex) as HTMLElement | null;
-    if (viewport && card) setOffset(viewport.clientWidth / 2 - card.offsetLeft - card.offsetWidth / 2);
-  };
-
-  useLayoutEffect(measure, [trackIndex, destinations]);
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setIsJumping(false));
-    return () => window.cancelAnimationFrame(frame);
+    const track = trackRef.current;
+    const center = track?.children.item(2) as HTMLElement | null;
+    const next = track?.children.item(3) as HTMLElement | null;
+    if (!viewport || !center) return;
+    setBaseOffset(viewport.clientWidth / 2 - center.offsetLeft - center.offsetWidth / 2);
+    setSlideStep(next ? next.offsetLeft - center.offsetLeft : center.offsetWidth);
   }, []);
+
+  useLayoutEffect(measure, [measure]);
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return undefined;
     const observer = new ResizeObserver(measure);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [trackIndex]);
+  }, [measure]);
   useEffect(() => {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reducedMotion || isHovered || hasFocus || isDragging) return undefined;
-    const timer = window.setInterval(() => setTrackIndex((current) => current + 1), 6_500);
+    const viewport = viewportRef.current;
+    if (!viewport || !('IntersectionObserver' in window)) {
+      setIsNearViewport(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(([entry]) => setIsNearViewport(entry.isIntersecting), { rootMargin: '250px 0px' });
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setIsJumping(false));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !isNearViewport || isPaused || movement) return undefined;
+    const timer = window.setInterval(() => setMovement(1), 6_500);
     return () => window.clearInterval(timer);
-  }, [hasFocus, isDragging, isHovered]);
+  }, [isNearViewport, isPaused, movement]);
 
-  const move = (step: number) => {
+  const move = useCallback((step: number) => {
+    if (movement || count < 2) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setActiveIndex((current) => wrapIndex(current + (step < 0 ? -1 : 1), count));
+      return;
+    }
     setIsJumping(false);
-    setTrackIndex((current) => current + step);
-  };
+    setMovement(step < 0 ? -1 : 1);
+  }, [count, movement]);
   const finishMove = () => {
-    let normalized = trackIndex;
-    if (trackIndex < count) normalized += count;
-    if (trackIndex >= count * 2) normalized -= count;
-    if (normalized === trackIndex) return;
+    if (!movement) return;
     setIsJumping(true);
-    setTrackIndex(normalized);
+    setActiveIndex((current) => wrapIndex(current + movement, count));
+    setMovement(0);
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => setIsJumping(false)));
   };
   const startDrag = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if ((event.pointerType === 'mouse' && event.button !== 0) || movement) return;
     if ((event.target as HTMLElement).closest('a, button')) return;
     pointerStart.current = event.clientX;
     setIsDragging(true);
@@ -85,9 +103,13 @@ export function HeroShowcase({ destinations, showPlanner = false }: Props) {
 
   return (
     <div className="themed-slider">
-      <div className="themed-slider__viewport" ref={viewportRef} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={endDrag} onPointerCancel={endDrag} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} onFocus={() => setHasFocus(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setHasFocus(false); }}>
-        <div className={`themed-slider__track${isDragging || isJumping ? ' is-direct' : ''}`} ref={trackRef} style={{ transform: `translate3d(${offset + dragOffset}px, 0, 0)` }} onTransitionEnd={(event) => { if (event.target === event.currentTarget) finishMove(); }}>
-          {repeated.map((destination, index) => <ThemedDestinationSlide destination={destination} isActive={index === trackIndex} position={activeIndex + 1} total={count} onMove={move} key={`${Math.floor(index / count)}-${destination.slug}`} />)}
+      <div className="themed-slider__viewport" ref={viewportRef} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={endDrag} onPointerCancel={endDrag} onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)} onFocus={() => setIsPaused(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setIsPaused(false); }}>
+        <div className={`themed-slider__track${isDragging || isJumping ? ' is-direct' : ''}`} ref={trackRef} style={{ transform: `translate3d(${baseOffset + dragOffset - movement * slideStep}px, 0, 0)` }} onTransitionEnd={(event) => { if (event.target === event.currentTarget) finishMove(); }}>
+          {WINDOW_OFFSETS.map((relativeOffset) => {
+            const destination = destinations[wrapIndex(activeIndex + relativeOffset, count)];
+            const isIncoming = movement === 1 ? relativeOffset === 2 : movement === -1 && relativeOffset === -2;
+            return <ThemedDestinationSlide destination={destination} isActive={relativeOffset === movement} position={displayedIndex + 1} total={count} shouldLoadPhoto={Math.abs(relativeOffset) <= 1 || isIncoming} onMove={move} key={relativeOffset} />;
+          })}
         </div>
       </div>
       {showPlanner && <div className="themed-slider__planner"><TripPlanner /></div>}

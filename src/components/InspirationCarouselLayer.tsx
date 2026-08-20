@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useI18n } from '../i18n/I18nProvider';
 import type { InspirationGroup } from '../lib/inspirationGroups';
-import { HeroShowcase } from './HeroShowcase';
+import { DeferredHeroShowcase } from './DeferredHeroShowcase';
 
 type Props = {
   groups: InspirationGroup[];
@@ -34,7 +34,7 @@ export function InspirationCarouselLayer({ groups, id, eyebrow, title, initialCo
                 <span>{t('home.themeCollection')} · {String(group.destinations.length).padStart(2, '0')}</span>
                 <h4 id={headingId}>{t(group.titleKey)}</h4>
               </header>
-              <HeroShowcase destinations={group.destinations} showPlanner={showPlannerOnFirst && index === 0} />
+              <DeferredHeroShowcase destinations={group.destinations} showPlanner={showPlannerOnFirst && index === 0} />
             </section>
           );
         })}

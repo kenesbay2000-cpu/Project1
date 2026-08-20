@@ -1,20 +1,24 @@
 import { Link } from 'wouter';
 import { useI18n } from '../i18n/I18nProvider';
 import type { Destination } from '../lib/destinations';
+import { destinationPreviewSrcSet, optimizedDestinationImage } from '../lib/destinationImages';
 
 type Props = {
   destination: Destination;
   isActive: boolean;
   position: number;
   total: number;
+  shouldLoadPhoto: boolean;
   onMove: (step: number) => void;
 };
 
-export function ThemedDestinationSlide({ destination, isActive, position, total, onMove }: Props) {
+export function ThemedDestinationSlide({ destination, isActive, position, total, shouldLoadPhoto, onMove }: Props) {
   const { t } = useI18n();
   return (
-    <article className={`themed-slide${isActive ? ' is-active' : ''}`} style={{ '--slide-photo': `url(${destination.image})` } as React.CSSProperties} aria-hidden={!isActive}>
-      <div className="themed-slide__photo" />
+    <article className={`themed-slide${isActive ? ' is-active' : ''}`} aria-hidden={!isActive}>
+      <div className="themed-slide__photo">
+        {shouldLoadPhoto && <img src={optimizedDestinationImage(destination.image, 960)} srcSet={destinationPreviewSrcSet(destination.image)} sizes="(min-width: 1370px) 1040px, (max-width: 820px) 88vw, 76vw" alt="" loading={isActive ? 'eager' : 'lazy'} decoding="async" />}
+      </div>
       {isActive ? (
         <div className="themed-slide__layout">
           <div className="themed-slide__content">
