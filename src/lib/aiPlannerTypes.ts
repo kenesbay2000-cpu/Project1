@@ -52,6 +52,7 @@ export type GenerationProgress = {
 };
 
 export type RecommendationTier = 'budget' | 'comfortable' | 'luxury';
+export type RecommendationPhoto = { url: string; sourceUrl?: string; credit: string };
 export type TripPlan = {
   title: string;
   destination: { city: string; country: string };
@@ -68,9 +69,9 @@ export type TripPlan = {
   placeIdeas: Array<{ name: string; type: string; description: string }>;
   budget: { currency: string; total: number; categories: Array<{ category: string; amount: number; note: string }> };
   transport: Array<{ mode: string; route: string; recommendation: string }>;
-  accommodations: Array<{ name: string; area: string; type: string; pricePerNight: number; description: string; tier?: RecommendationTier }>;
-  food: Array<{ name: string; cuisine: string; priceLevel: string; description: string; tier?: RecommendationTier }>;
-  activities: Array<{ name: string; category: string; summary: string; tier?: RecommendationTier }>;
+  accommodations: Array<{ name: string; area: string; type: string; pricePerNight: number; description: string; tier?: RecommendationTier; photo?: RecommendationPhoto }>;
+  food: Array<{ name: string; cuisine: string; priceLevel: string; description: string; tier?: RecommendationTier; photo?: RecommendationPhoto }>;
+  activities: Array<{ name: string; category: string; summary: string; tier?: RecommendationTier; photo?: RecommendationPhoto }>;
   usefulLinks: Array<{ title: string; recommendation: string }>;
   checklist: Array<{ task: string; timing: string; details: string }>;
   realism: { status: 'realistic' | 'adjusted'; warning: string; adjustments: string[] };

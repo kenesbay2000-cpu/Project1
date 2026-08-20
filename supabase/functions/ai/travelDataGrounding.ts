@@ -9,7 +9,8 @@ function normalizeName(value: string) {
 }
 
 function placePrompt(places: PlaceCandidate[], provider: string) {
-  return `ПРОВЕРЕННЫЕ МЕСТА ИЗ ${provider.toUpperCase()} API:\n${JSON.stringify(places)}\n`+
+  const promptPlaces = places.map(({ photo, ...place }) => ({ ...place, photoAvailable: Boolean(photo) }));
+  return `ПРОВЕРЕННЫЕ МЕСТА ИЗ ${provider.toUpperCase()} API:\n${JSON.stringify(promptPlaces)}\n`+
     'Используй только точные name из этого списка. Не придумывай и не переименовывай организации. Адрес, район, категорию и сайт считай более надёжными, чем знания модели.';
 }
 
@@ -41,6 +42,14 @@ export function hasGroundedSectionNames(items: unknown[], names: Set<string>) {
     if (typeof item !== 'object' || item === null || Array.isArray(item)) return false;
     const value = (item as Record<string, unknown>).name;
     return typeof value === 'string' && names.has(normalizeName(value));
+  });
+}
+
+export function attachGroundedPhotos<T extends { name: string }>(items: T[], places: PlaceCandidate[]) {
+  const candidates = new Map(places.map((place) => [normalizeName(place.name), place]));
+  return items.map((item) => {
+    const photo = candidates.get(normalizeName(item.name))?.photo;
+    return photo ? { ...item, photo } : item;
   });
 }
 

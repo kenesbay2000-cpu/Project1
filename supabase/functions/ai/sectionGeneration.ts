@@ -6,7 +6,7 @@ import { localizedPlannerText } from './responseLanguage.ts';
 import { parseTripPlanSectionText, tripPlanSectionSchema, type TripPlanCore } from './tripPlanParts.ts';
 import type { TripPlanExtraSection } from './tripPlanExtras.ts';
 import {
-  destinationOf, hasGroundedSectionNames, loadDestinationGrounding, loadPlaceGrounding,
+  attachGroundedPhotos, destinationOf, hasGroundedSectionNames, loadDestinationGrounding, loadPlaceGrounding,
 } from './travelDataGrounding.ts';
 import type { PlannerRequest } from './types.ts';
 
@@ -21,7 +21,7 @@ const instructions: Record<TripPlanExtraSection, string> = {
 function placeInstructions(section: 'accommodations' | 'food' | 'activities', count: number) {
   const subject = section === 'accommodations' ? 'вариантов жилья'
     : section === 'food' ? 'вариантов еды' : 'активностей';
-  return `Выбери ${count} наиболее полезных и разнообразных ${subject} из списка API. Не повторяй места и не дополняй список выдуманными вариантами. У каждого варианта обязательно укажи tier: budget, comfortable или luxury. Определи уровень относительно обычных цен именно в этом направлении: сначала используй priceHint и stars, если они есть; иначе разумно оцени тип, категории и характер места. Не используй одинаковые фиксированные суммы для разных стран. Не выравнивай число вариантов каждого уровня искусственно: если подтверждённых мест какого-то уровня нет, просто не добавляй его.`;
+  return `Выбери ${count} наиболее полезных и разнообразных ${subject} из списка API. При одинаковой полезности предпочитай кандидата с photoAvailable=true, но не жертвуй точностью и разнообразием только ради фото. Не повторяй места и не дополняй список выдуманными вариантами. У каждого варианта обязательно укажи tier: budget, comfortable или luxury. Определи уровень относительно обычных цен именно в этом направлении: сначала используй priceHint и stars, если они есть; иначе разумно оцени тип, категории и характер места. Не используй одинаковые фиксированные суммы для разных стран. Не выравнивай число вариантов каждого уровня искусственно: если подтверждённых мест какого-то уровня нет, просто не добавляй его.`;
 }
 
 export async function generatePlanExtraSection(request: PlannerRequest, rates: CurrencyRates, core: TripPlanCore,
@@ -58,7 +58,10 @@ ${sectionInstruction} Верни только объект с полем ${secti
         lastIssue = 'Названия мест должны точно совпадать с кандидатами API; нельзя добавлять организации из памяти модели.';
         continue;
       }
-      return { ok: true, value: parsed.value, elapsedMs: Date.now() - started };
+      const value = placeSection
+        ? attachGroundedPhotos(parsed.value as Array<{ name: string }>, grounding.places)
+        : parsed.value;
+      return { ok: true, value: value as TripPlanCore[TripPlanExtraSection], elapsedMs: Date.now() - started };
     }
     lastIssue = parsed.error;
   }

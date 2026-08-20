@@ -1,5 +1,6 @@
 import {
-  categoryList, diversifyPlaces, finiteNumber, priceHint, record, specificCategory, textValue,
+  categoryList, diversifyPlaces, finiteNumber, geoapifyPhoto, priceHint, record, specificCategory, textValue,
+  type VerifiedPlacePhoto,
 } from './travelPlaceCandidates.ts';
 
 export type PlaceKind = 'accommodations' | 'food' | 'activities';
@@ -13,9 +14,8 @@ export type PlaceCandidate = {
   latitude: number;
   longitude: number;
   website?: string;
-  stars?: number;
-  rating?: number;
-  priceHint?: string;
+  stars?: number; rating?: number;
+  priceHint?: string; photo?: VerifiedPlacePhoto;
 };
 
 type CacheEntry = { expiresAt: number; places: PlaceCandidate[]; provider: string };
@@ -89,7 +89,7 @@ async function geoapifyPlaces(city: string, country: string, kind: PlaceKind, ap
       categories, category: specificCategory(categories, kind), website: textValue(properties?.website),
       stars: finiteNumber(properties?.stars ?? raw?.stars) ?? undefined,
       rating: finiteNumber(properties?.rating ?? raw?.rating) ?? undefined,
-      priceHint: priceHint(properties) ?? priceHint(raw) }];
+      priceHint: priceHint(properties) ?? priceHint(raw), photo: geoapifyPhoto(properties ?? {}) }];
   }));
 }
 

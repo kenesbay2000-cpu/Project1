@@ -1,5 +1,7 @@
 import type { PlaceCandidate } from './travelPlaceData.ts';
 
+export type VerifiedPlacePhoto = { url: string; sourceUrl?: string; credit: string };
+
 export function record(value: unknown): Record<string, unknown> | null {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
     ? value as Record<string, unknown>
@@ -14,6 +16,34 @@ export function finiteNumber(value: unknown) {
 
 export function textValue(value: unknown) {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function httpsUrl(value: unknown) {
+  const candidate = textValue(value)?.split(';')[0]?.trim();
+  if (!candidate) return undefined;
+  try { return new URL(candidate).protocol === 'https:' ? candidate : undefined; }
+  catch { return undefined; }
+}
+
+function mediaSource(media: Record<string, unknown> | null, imageUrl: string) {
+  const commons = textValue(media?.wikimedia_commons);
+  if (commons) {
+    if (httpsUrl(commons)) return commons;
+    return `https://commons.wikimedia.org/wiki/${encodeURIComponent(commons.replace(/ /g, '_'))}`;
+  }
+  const wikipedia = textValue(media?.wikipedia);
+  if (wikipedia) {
+    if (httpsUrl(wikipedia)) return wikipedia;
+    const match = /^([a-z-]{2,12}):(.+)$/i.exec(wikipedia);
+    if (match) return `https://${match[1]}.wikipedia.org/wiki/${encodeURIComponent(match[2].replace(/ /g, '_'))}`;
+  }
+  return imageUrl;
+}
+
+export function geoapifyPhoto(properties: Record<string, unknown>) {
+  const media = record(properties.wiki_and_media);
+  const url = httpsUrl(media?.image);
+  return url ? { url, sourceUrl: mediaSource(media, url), credit: 'Geoapify Places' } satisfies VerifiedPlacePhoto : undefined;
 }
 
 export function priceHint(source: Record<string, unknown> | null) {

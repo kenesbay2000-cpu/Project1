@@ -1,25 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useI18n } from '../i18n/I18nProvider';
-import type { RecommendationPhotoState } from '../lib/useRecommendationPhotos';
+import type { RecommendationPhoto as Photo } from '../lib/aiPlannerTypes';
 import './RecommendationPhoto.css';
 
-type Props = { name: string; state?: RecommendationPhotoState };
+type Props = { name: string; photo?: Photo };
 
-export function RecommendationPhoto({ name, state }: Props) {
+export function RecommendationPhoto({ name, photo }: Props) {
   const { t } = useI18n();
-  const [failedUrl, setFailedUrl] = useState('');
-  const photo = state?.photo ?? null;
-  useEffect(() => setFailedUrl(''), [photo?.url]);
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'failed'>('loading');
+  useEffect(() => setStatus('loading'), [photo?.url]);
 
-  if (!state || state.loading) return <div className="recommendation-photo recommendation-photo--loading" aria-label={t('extras.photoLoading')} />;
-  if (!photo || failedUrl === photo.url) return null;
+  if (!photo || status === 'failed') return null;
   return (
-    <figure className="recommendation-photo">
-      <img src={photo.url} alt={t('extras.photoExactAlt', { name })} loading="lazy" decoding="async" onError={() => setFailedUrl(photo.url)} />
-      <figcaption>
+    <figure className={`recommendation-photo recommendation-photo--${status}`} aria-busy={status === 'loading'}>
+      <img src={photo.url} alt={t('extras.photoExactAlt', { name })} loading="lazy" decoding="async"
+        onLoad={() => setStatus('loaded')} onError={() => setStatus('failed')} />
+      {status === 'loaded' && <figcaption>
         <span>{t('extras.photoExact')}</span>
-        <a href={photo.sourceUrl} target="_blank" rel="noreferrer" title={photo.credit}>{photo.credit}</a>
-      </figcaption>
+        {photo.sourceUrl
+          ? <a href={photo.sourceUrl} target="_blank" rel="noreferrer" title={photo.credit}>{photo.credit}</a>
+          : <span>{photo.credit}</span>}
+      </figcaption>}
+      {status === 'loading' && <span className="recommendation-photo__loading">{t('extras.photoLoading')}</span>}
     </figure>
   );
 }
