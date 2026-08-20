@@ -103,7 +103,7 @@ export function PlannerInitialForm({ preferences, defaultUsePreferences, onConti
   return (
     <form className="planner-form" onSubmit={submit}>
       <section className="planner-form__section planner-form__section--prompt">
-        <header><span aria-hidden="true">✦</span><div><small>{t('planner.dreamEyebrow')}</small><h2>{t('planner.dreamTitle')}</h2></div></header>
+        <header><h1>{t('planner.dreamTitle')}</h1></header>
         <label className={`planner-prompt${prompt ? ' is-filled' : ''}`}>
           <textarea aria-label={t('planner.describeAria')} required maxLength={4000} rows={6} value={prompt} onChange={(event) => setPrompt(event.target.value)} />
           {!prompt && <span className="planner-prompt__example" key={placeholderIndex}>{translatedExamples[placeholderIndex]}</span>}
