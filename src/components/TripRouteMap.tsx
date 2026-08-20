@@ -5,12 +5,14 @@ import type { TripLocation } from '../lib/tripLocation';
 import { logTripMapRender } from '../lib/tripMapDiagnostics';
 import { getTripDayColor } from '../lib/tripMapColors';
 import type { TripMapPoint } from '../lib/tripMapGeocoding';
+import type { TripDayRoute } from '../lib/tripRouting';
 import { useI18n } from '../i18n/I18nProvider';
 
 type Props = {
   center: TripLocation | null;
   points: TripMapPoint[];
   selectedDay: number | null;
+  routes: TripDayRoute[];
 };
 
 function popupContent(point: TripMapPoint, dayMeta: string, areaLabel: string) {
@@ -60,7 +62,7 @@ function createPointIcon(point: TripMapPoint, isFocusedDay: boolean, visiblePoin
   });
 }
 
-export function TripRouteMap({ center, points, selectedDay }: Props) {
+export function TripRouteMap({ center, points, selectedDay, routes }: Props) {
   const { t } = useI18n();
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -87,7 +89,8 @@ export function TripRouteMap({ center, points, selectedDay }: Props) {
     layer.current.clearLayers();
     const groups = groupByDay(points);
     groups.forEach((dayPoints, day) => {
-      const coordinates = dayPoints.map((point) => [point.latitude, point.longitude] as L.LatLngTuple);
+      const routedCoordinates = routes.find((route) => route.day === day)?.coordinates;
+      const coordinates = routedCoordinates ?? dayPoints.map((point) => [point.latitude, point.longitude] as L.LatLngTuple);
       if (coordinates.length > 1) {
         L.polyline(coordinates, {
           color: getTripDayColor(day),
@@ -116,7 +119,7 @@ export function TripRouteMap({ center, points, selectedDay }: Props) {
     if (coordinates.length > 1) map.current.fitBounds(L.latLngBounds(coordinates), { padding: [68, 68], maxZoom: 14, animate: true, duration: .45 });
     else if (coordinates.length === 1) map.current.setView(coordinates[0], 15, { animate: true });
     else if (center) map.current.setView([center.latitude, center.longitude], 11);
-  }, [center, points, selectedDay, t]);
+  }, [center, points, routes, selectedDay, t]);
 
   return <div ref={container} className="saved-route-map" aria-label={t('routeMap.aria')} tabIndex={0} />;
 }
