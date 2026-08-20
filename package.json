@@ -11,6 +11,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test:clustering": "node --test tests/geographicClustering.test.ts tests/tripDestinations.test.ts",
+    "test:planner-safety": "node --test tests/placeNameMatching.test.ts tests/aiPlannerErrors.test.ts",
     "db:login": "supabase login",
     "db:link": "supabase link",
     "db:new": "supabase migration new",

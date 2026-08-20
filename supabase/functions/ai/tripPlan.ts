@@ -25,6 +25,7 @@ export const TRIP_PLAN_SCHEMA = {
           title: text,
           activities: {
             type: 'array',
+            maxItems: 5,
             items: {
               type: 'object',
               properties: {
@@ -110,6 +111,7 @@ function getDayIssue(value: unknown) {
   if (!isText(value.date) || !isText(value.title)) return 'не заполнены дата или название дня';
   if (value.pace !== 'active' && value.pace !== 'balanced' && value.pace !== 'rest') return 'не указан темп дня';
   if (!Array.isArray(value.activities)) return 'нет массива активностей';
+  if (value.activities.length > 5) return 'больше пяти активностей';
   if (value.activities.length === 0) return isText(value.dataWarning) ? null : 'нет активностей';
   const invalidActivity = value.activities.findIndex((activity) => getActivityIssue(activity));
   if (invalidActivity >= 0) return `активность ${invalidActivity + 1}: ${getActivityIssue(value.activities[invalidActivity])}`;

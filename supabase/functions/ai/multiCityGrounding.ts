@@ -1,6 +1,7 @@
 import { loadPlaceGrounding } from './travelDataGrounding.ts';
 import type { PlaceCandidate, PlaceKind } from './travelPlaceData.ts';
 import { clusterPlacesByCoordinates, type GeographicPlaceCluster } from './geographicClustering.ts';
+import { normalizePlaceName } from './placeNameMatching.ts';
 
 export type GroundingDestination = {
   city: string;
@@ -55,7 +56,7 @@ export async function loadMultiCityGrounding(destinations: GroundingDestination[
         clusters.push(cluster);
         prompts.push(clusterPrompt(destination, cluster, grounding.provider));
         cluster.places.forEach((place) => {
-          names.add(place.name.normalize('NFKD').toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, ''));
+          names.add(normalizePlaceName(place.name).compact);
           places.set(key(place), place);
         });
       });

@@ -5,10 +5,10 @@ import { RECOMMENDATION_SAFETY_GUIDANCE } from './recommendationSafety.ts';
 import { localizedPlannerText, responseLanguageInstruction } from './responseLanguage.ts';
 import {
   parseTripDaysText, parseTripPlanCoreText, parseTripPlanOverviewText,
-  TRIP_DAYS_SCHEMA, TRIP_PLAN_CORE_SCHEMA, TRIP_PLAN_OVERVIEW_SCHEMA, type TripPlanCore,
+  tripDaysSchema, TRIP_PLAN_CORE_SCHEMA, TRIP_PLAN_OVERVIEW_SCHEMA, type TripPlanCore,
 } from './tripPlanParts.ts';
 import type { PlannerRequest, TripDay } from './types.ts';
-import { destinationOf, hasGroundedDayPlaces } from './travelDataGrounding.ts';
+import { canonicalizeGroundedDayPlaces, destinationOf } from './travelDataGrounding.ts';
 import { loadMultiCityGrounding, type GroundingDestination } from './multiCityGrounding.ts';
 import type { TravelDataWarning } from './types.ts';
 
@@ -56,7 +56,11 @@ ${RECOMMENDATION_SAFETY_GUIDANCE}
     if ('value' in parsed) return { ok: true, value: parsed.value, elapsedMs: Date.now() - started };
     lastIssue = parsed.error;
   }
-  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: `Не удалось собрать обзор плана: ${lastIssue}`, status: 502 };
+  console.error('[AI validation] Overview remained invalid after retry:', lastIssue);
+  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: localizedPlannerText(request,
+    'Не удалось подготовить обзор поездки. Попробуйте ещё раз.',
+    'The trip overview could not be prepared. Please try again.',
+    'Сапар шолуын дайындай алмадық. Қайталап көріңіз.'), status: 502 };
 }
 
 export async function generatePlanCore(request: PlannerRequest, rates: CurrencyRates): Promise<PartResult<TripPlanCore>> {
@@ -76,7 +80,11 @@ ${RECOMMENDATION_SAFETY_GUIDANCE}
     if ('value' in parsed) return { ok: true, value: parsed.value, elapsedMs: Date.now() - started };
     lastIssue = parsed.error;
   }
-  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: `Не удалось собрать каркас большого плана: ${lastIssue}`, status: 502 };
+  console.error('[AI validation] Plan core remained invalid after retry:', lastIssue);
+  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: localizedPlannerText(request,
+    'Не удалось подготовить основу поездки. Попробуйте ещё раз.',
+    'The trip outline could not be prepared. Please try again.',
+    'Сапар негізін дайындай алмадық. Қайталап көріңіз.'), status: 502 };
 }
 
 function unavailableDays(request: PlannerRequest, destination: GroundingDestination, startDay: number, endDay: number, message: string): TripDay[] {
@@ -114,17 +122,24 @@ ${restDays.length ? `Дни ${restDays.join(', ')} обязательно сде
   const started = Date.now();
   let lastIssue = '';
   for (let attempt = 0; attempt < 2; attempt += 1) {
-    const result = await requestGemini(`${prompt}${lastIssue ? `\nИсправь ошибку предыдущего блока: ${lastIssue}` : ''}`, partTimeout(count, request.travelers ?? 1, false), { responseSchema: TRIP_DAYS_SCHEMA, maxOutputTokens: 8_192 });
+    const result = await requestGemini(`${prompt}${lastIssue ? `\nИсправь ошибку предыдущего блока: ${lastIssue}` : ''}`, partTimeout(count, request.travelers ?? 1, false), {
+      responseSchema: tripDaysSchema(grounding.places.map((place) => place.name)), maxOutputTokens: 8_192,
+    });
     if (!result.ok) return result;
     const parsed = parseTripDaysText(result.text, core, startDay, endDay);
     if ('value' in parsed) {
-      if (!hasGroundedDayPlaces(parsed.value, grounding.names)) {
-        lastIssue = 'Каждое activity.place должно точно совпадать с name из списка API; не добавляй выдуманные места.';
+      const groundedDays = canonicalizeGroundedDayPlaces(parsed.value, grounding.places);
+      if (!groundedDays) {
+        lastIssue = 'Каждое activity.place должно соответствовать одному подтверждённому месту из списка API.';
         continue;
       }
-      return { ok: true, value: parsed.value, elapsedMs: Date.now() - started };
+      return { ok: true, value: groundedDays, elapsedMs: Date.now() - started };
     }
     lastIssue = parsed.error;
   }
-  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: `Не удалось собрать дни ${startDay}–${endDay}: ${lastIssue}`, status: 502 };
+  console.error(`[AI validation] Days ${startDay}-${endDay} remained invalid after retry:`, lastIssue);
+  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: localizedPlannerText(request,
+    'Не удалось собрать часть маршрута. Попробуйте ещё раз.',
+    'Part of the itinerary could not be prepared. Please try again.',
+    'Маршруттың бір бөлігін дайындай алмадық. Қайталап көріңіз.'), status: 502 };
 }

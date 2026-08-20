@@ -20,8 +20,13 @@ export const TRIP_PLAN_OVERVIEW_SCHEMA = {
   required: overviewKeys,
 };
 
-export function tripPlanSectionSchema(section: TripPlanExtraSection) {
-  return { type: 'object', properties: { [section]: TRIP_PLAN_EXTRA_PROPERTIES[section] }, required: [section] };
+export function tripPlanSectionSchema(section: TripPlanExtraSection, allowedNames: string[] = []) {
+  const property = structuredClone(TRIP_PLAN_EXTRA_PROPERTIES[section]);
+  if (allowedNames.length && (section === 'accommodations' || section === 'food' || section === 'activities')) {
+    const item = property.items as { properties: Record<string, unknown> };
+    item.properties.name = { type: 'string', enum: allowedNames };
+  }
+  return { type: 'object', properties: { [section]: property }, required: [section] };
 }
 
 export const TRIP_DAYS_SCHEMA = {
@@ -29,6 +34,13 @@ export const TRIP_DAYS_SCHEMA = {
   properties: { days: planProperties.days },
   required: ['days'],
 };
+
+export function tripDaysSchema(allowedNames: string[]) {
+  const schema = structuredClone(TRIP_DAYS_SCHEMA);
+  const activityProperties = schema.properties.days.items.properties.activities.items.properties as Record<string, unknown>;
+  activityProperties.place = { type: 'string', enum: allowedNames };
+  return schema;
+}
 
 const validationDay: TripDay = {
   day: 1,

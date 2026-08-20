@@ -78,6 +78,11 @@ if (scenario === 'single') {
     { city: 'Киото', country: 'Япония', days: 10 },
     { city: 'Осака', country: 'Япония', days: 10 },
   ]));
+} else if (scenario === 'cambodia') {
+  await verify('cambodia', plannerRequest('Камбоджа на 7 дней', '2026-11-01', '2026-11-07', [
+    { city: 'Сиемреап', country: 'Камбоджа', days: 4 },
+    { city: 'Сиануквиль', country: 'Камбоджа', days: 3 },
+  ]));
 } else {
-  throw new Error('Use "single" or "multi".');
+  throw new Error('Use "single", "multi", or "cambodia".');
 }

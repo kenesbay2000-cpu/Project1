@@ -141,18 +141,19 @@ Deno.serve(async (request) => {
 
   const realismPrefix = 'Plan realism check failed: ';
   if (lastParseError.startsWith(realismPrefix)) {
-    const reason = lastParseError.slice(realismPrefix.length);
+    console.error('[AI validation] Full plan failed realism checks:', lastParseError);
     return failure(
       'UNREALISTIC_AI_PLAN',
-      `${localizedPlannerText(parsedRequest.value, 'ИИ не смог собрать физически выполнимое расписание даже после повторной проверки.', 'AI could not create a physically achievable schedule after a second check.', 'AI қайталап тексергеннен кейін де орындалатын кесте құра алмады.')} ${reason} ${localizedPlannerText(parsedRequest.value, 'Измените сроки или сократите число мест.', 'Adjust the dates or reduce the number of places.', 'Күндерді өзгертіңіз немесе орындар санын азайтыңыз.')}`,
+      localizedPlannerText(parsedRequest.value, 'Не удалось собрать реалистичный маршрут. Измените сроки или сократите число мест и попробуйте ещё раз.', 'A realistic itinerary could not be prepared. Adjust the dates or reduce the number of places and try again.', 'Шынайы маршрут құра алмадық. Күндерді өзгертіңіз немесе орындар санын азайтып, қайталап көріңіз.'),
       502,
     );
   }
   const schemaPrefix = 'Plan schema check failed: ';
   if (lastParseError.startsWith(schemaPrefix)) {
+    console.error('[AI validation] Full plan failed schema checks:', lastParseError);
     return failure(
       'INCOMPLETE_AI_PLAN',
-      `${localizedPlannerText(parsedRequest.value, 'ИИ дважды вернул неполный план.', 'AI returned an incomplete itinerary twice.', 'AI екі рет толық емес жоспар қайтарды.')} ${lastParseError.slice(schemaPrefix.length)} ${localizedPlannerText(parsedRequest.value, 'Попробуйте ещё раз или немного упростите запрос.', 'Try again or simplify the request slightly.', 'Қайталап көріңіз немесе сұрауды сәл жеңілдетіңіз.')}`,
+      localizedPlannerText(parsedRequest.value, 'Не удалось подготовить маршрут. Попробуйте ещё раз или немного упростите запрос.', 'The itinerary could not be prepared. Try again or simplify the request slightly.', 'Маршрутты дайындай алмадық. Қайталап көріңіз немесе сұрауды сәл жеңілдетіңіз.'),
       502,
     );
   }

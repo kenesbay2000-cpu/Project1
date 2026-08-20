@@ -1,12 +1,9 @@
 import { loadDestinationFacts } from './destinationFacts.ts';
 import { loadPlaceCandidates, type PlaceCandidate, type PlaceKind } from './travelPlaceData.ts';
 import type { TripDay, TripPlan } from './types.ts';
+import { findPlaceNameMatch, normalizePlaceName } from './placeNameMatching.ts';
 
 export type Grounding = { prompt: string; names: Set<string>; places: PlaceCandidate[]; provider: string };
-
-function normalizeName(value: string) {
-  return value.normalize('NFKD').toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
-}
 
 function placePrompt(places: PlaceCandidate[], provider: string) {
   const promptPlaces = places.map(({ photo, ...place }) => ({ ...place, photoAvailable: Boolean(photo) }));
@@ -25,7 +22,7 @@ export async function loadPlaceGrounding(
   const places = result.places.length > candidateLimit
     ? [...result.places.slice(offset % result.places.length), ...result.places.slice(0, offset % result.places.length)].slice(0, candidateLimit)
     : result.places;
-  return { places, names: new Set(places.map((place) => normalizeName(place.name))), provider: result.provider,
+  return { places, names: new Set(places.map((place) => normalizePlaceName(place.name).compact)), provider: result.provider,
     prompt: places.length > 0 ? placePrompt(places, result.provider) : 'API мест не вернул надёжных кандидатов. Не утверждай, что конкретные организации проверены.' };
 }
 
@@ -36,27 +33,33 @@ export async function loadDestinationGrounding(city: string, country: string) {
     : 'API направления временно недоступен. Не выдумывай официальные требования, телефоны и документы; советуй проверить их в официальных источниках.';
 }
 
-export function hasGroundedSectionNames(items: unknown[], names: Set<string>) {
-  if (names.size === 0) return false;
-  return items.every((item) => {
-    if (typeof item !== 'object' || item === null || Array.isArray(item)) return false;
-    const value = (item as Record<string, unknown>).name;
-    return typeof value === 'string' && names.has(normalizeName(value));
-  });
+export function canonicalizeGroundedSectionNames<T extends { name: string }>(items: T[], places: PlaceCandidate[]) {
+  if (places.length === 0) return null;
+  const matched = items.map((item) => ({ item, place: findPlaceNameMatch(item.name, places) }));
+  if (matched.some(({ place }) => !place)) return null;
+  return matched.map(({ item, place }) => ({ ...item, name: place!.name }));
 }
 
 export function attachGroundedPhotos<T extends { name: string }>(items: T[], places: PlaceCandidate[]) {
-  const candidates = new Map(places.map((place) => [normalizeName(place.name), place]));
+  const candidates = new Map(places.map((place) => [normalizePlaceName(place.name).compact, place]));
   return items.map((item) => {
-    const photo = candidates.get(normalizeName(item.name))?.photo;
+    const photo = candidates.get(normalizePlaceName(item.name).compact)?.photo;
     return photo ? { ...item, photo } : item;
   });
 }
 
-export function hasGroundedDayPlaces(days: TripDay[], names: Set<string>) {
-  if (names.size < 6) return false;
-  const activities = days.flatMap((day) => day.activities);
-  return activities.length > 0 && activities.every((activity) => names.has(normalizeName(activity.place)));
+export function canonicalizeGroundedDayPlaces(days: TripDay[], places: PlaceCandidate[]) {
+  if (places.length < 6 || days.every((day) => day.activities.length === 0)) return null;
+  const result: TripDay[] = [];
+  for (const day of days) {
+    const activities = day.activities.map((activity) => {
+      const place = findPlaceNameMatch(activity.place, places);
+      return place ? { ...activity, place: place.name } : null;
+    });
+    if (activities.some((activity) => activity === null)) return null;
+    result.push({ ...day, activities: activities as TripDay['activities'] });
+  }
+  return result;
 }
 
 export function destinationOf(core: Pick<TripPlan, 'destination'>) {

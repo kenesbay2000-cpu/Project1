@@ -1,15 +1,15 @@
 import { isSupabaseConfigured, supabase } from './supabase';
 import type { PreferenceCandidate, TravelPreference } from './travelPreferences';
-import { plannerConfigError, readPlannerFunctionError } from './aiPlannerErrors';
+import { plannerConfigError, readPlannerFunctionError, safePlannerError, type PlannerErrorBody } from './aiPlannerErrors';
 import { generateChunkedTripPlan } from './largeTripGeneration';
 import type { ClarificationResult, GeneratedTrip, GenerationProgress, PlannerLanguage, PlannerRequest, TripPlan, TripSummary } from './aiPlannerTypes';
 
 export type { ClarificationQuestion, ClarificationResult, ClarificationTurn, GeneratedTrip, GenerationProgress, PlannerLanguage, PlannerRequest, RecommendationTier, TripPlan, TripSummary } from './aiPlannerTypes';
 
-type ClarificationResponse = { clarification?: ClarificationResult; error?: { message?: string } };
-type SummaryResponse = { summary?: TripSummary; error?: { message?: string } };
-type EditResponse = { plan?: TripPlan; request?: PlannerRequest; error?: { message?: string } };
-type PreferenceResponse = { candidates?: PreferenceCandidate[]; error?: { message?: string } };
+type ClarificationResponse = { clarification?: ClarificationResult; error?: PlannerErrorBody };
+type SummaryResponse = { summary?: TripSummary; error?: PlannerErrorBody };
+type EditResponse = { plan?: TripPlan; request?: PlannerRequest; error?: PlannerErrorBody };
+type PreferenceResponse = { candidates?: PreferenceCandidate[]; error?: PlannerErrorBody };
 export async function generateTripPlan(request: PlannerRequest, onProgress?: (progress: GenerationProgress) => void) {
   const language = request.responseLanguage ?? 'ru';
   if (!isSupabaseConfigured) {
@@ -28,7 +28,7 @@ export async function analyzeTripRequest(request: PlannerRequest) {
     timeout: 45_000,
   });
   if (error) throw new Error(await readPlannerFunctionError(error, language));
-  if (!data?.clarification) throw new Error(data?.error?.message ?? await readPlannerFunctionError(null, language));
+  if (!data?.clarification) throw new Error(safePlannerError(data?.error, language));
   return data.clarification;
 }
 
@@ -41,7 +41,7 @@ export async function summarizeTripRequest(request: PlannerRequest, currentSumma
     timeout: 45_000,
   });
   if (error) throw new Error(await readPlannerFunctionError(error, language));
-  if (!data?.summary) throw new Error(data?.error?.message ?? await readPlannerFunctionError(null, language));
+  if (!data?.summary) throw new Error(safePlannerError(data?.error, language));
   return data.summary;
 }
 
@@ -66,6 +66,6 @@ export async function editTripPlan(trip: GeneratedTrip, command: string, respons
     timeout: 155_000,
   });
   if (error) throw new Error(await readPlannerFunctionError(error, responseLanguage));
-  if (!data?.plan || !data.request) throw new Error(data?.error?.message ?? await readPlannerFunctionError(null, responseLanguage));
+  if (!data?.plan || !data.request) throw new Error(safePlannerError(data?.error, responseLanguage));
   return { ...trip, request: data.request, plan: data.plan };
 }

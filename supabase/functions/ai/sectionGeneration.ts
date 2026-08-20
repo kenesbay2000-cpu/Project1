@@ -6,7 +6,7 @@ import { localizedPlannerText } from './responseLanguage.ts';
 import { parseTripPlanSectionText, tripPlanSectionSchema, type TripPlanCore } from './tripPlanParts.ts';
 import type { TripPlanExtraSection } from './tripPlanExtras.ts';
 import {
-  attachGroundedPhotos, destinationOf, hasGroundedSectionNames, loadDestinationGrounding,
+  attachGroundedPhotos, canonicalizeGroundedSectionNames, destinationOf, loadDestinationGrounding,
 } from './travelDataGrounding.ts';
 import type { PlannerRequest } from './types.ts';
 import { loadMultiCityGrounding } from './multiCityGrounding.ts';
@@ -58,20 +58,25 @@ ${sectionInstruction} Для мультигородного маршрута с�
   let lastIssue = '';
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const result = await requestGemini(`${prompt}${lastIssue ? `\nИсправь ошибку структуры: ${lastIssue}` : ''}`,
-      45_000, { responseSchema: tripPlanSectionSchema(section), maxOutputTokens: 4_096 });
+      45_000, { responseSchema: tripPlanSectionSchema(section, grounding.places.map((place) => place.name)), maxOutputTokens: 4_096 });
     if (!result.ok) return result;
     const parsed = parseTripPlanSectionText(result.text, section);
     if ('value' in parsed) {
-      if (placeSection && !hasGroundedSectionNames(parsed.value as unknown[], grounding.names)) {
-        lastIssue = 'Названия мест должны точно совпадать с кандидатами API; нельзя добавлять организации из памяти модели.';
+      const canonicalItems = placeSection
+        ? canonicalizeGroundedSectionNames(parsed.value as Array<{ name: string }>, grounding.places)
+        : parsed.value;
+      if (!canonicalItems) {
+        lastIssue = 'Каждое название должно соответствовать одному подтверждённому месту из списка API.';
         continue;
       }
-      const value = placeSection
-        ? attachGroundedPhotos(parsed.value as Array<{ name: string }>, grounding.places)
-        : parsed.value;
+      const value = placeSection ? attachGroundedPhotos(canonicalItems, grounding.places) : canonicalItems;
       return { ok: true, value: value as TripPlanCore[TripPlanExtraSection], elapsedMs: Date.now() - started, warnings };
     }
     lastIssue = parsed.error;
   }
-  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: `Не удалось собрать вкладку ${section}: ${lastIssue}`, status: 502 };
+  console.error(`[AI validation] Section ${section} remained invalid after retry:`, lastIssue);
+  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: localizedPlannerText(request,
+    'Не удалось подготовить этот раздел. Попробуйте ещё раз.',
+    'This section could not be prepared. Please try again.',
+    'Бұл бөлімді дайындай алмадық. Қайталап көріңіз.'), status: 502 };
 }
