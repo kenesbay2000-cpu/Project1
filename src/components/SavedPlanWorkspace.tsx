@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GeneratedTrip } from '../lib/aiPlanner';
 import { BudgetBreakdown } from './BudgetBreakdown';
 import { SavedPlanOverview } from './SavedPlanOverview';
@@ -13,6 +13,9 @@ import './SavedPlanSections.css';
 import { useI18n } from '../i18n/I18nProvider';
 import { PlanExportControls } from './PlanExportControls';
 import { PrintableTripPlan } from './PrintableTripPlan';
+import { DeferredPlanSection } from './DeferredPlanSection';
+import { generateDeferredTripSection } from '../lib/largeTripGeneration';
+import type { DeferredPlanSection as DeferredSectionId } from '../lib/aiPlannerTypes';
 import './PlanExport.css';
 
 type SavedPlanWorkspaceProps = {
@@ -24,6 +27,9 @@ type SavedPlanWorkspaceProps = {
 export function SavedPlanWorkspace({ trip, onEdit, onTripUpdated }: SavedPlanWorkspaceProps) {
   const { t } = useI18n();
   const [active, setActive] = useState<SavedPlanSectionId>('overview');
+  const [loadingSection, setLoadingSection] = useState<DeferredSectionId | null>(null);
+  const [failedSection, setFailedSection] = useState<DeferredSectionId | null>(null);
+  const [generationError, setGenerationError] = useState('');
   const content = useRef<HTMLDivElement>(null);
   const currentSection = savedPlanSections.find((section) => section.id === active) ?? savedPlanSections[0];
   const sectionCopy: Record<SavedPlanSectionId, { eyebrow: ReturnType<typeof t>; description: ReturnType<typeof t> | '' }> = {
@@ -34,6 +40,26 @@ export function SavedPlanWorkspace({ trip, onEdit, onTripUpdated }: SavedPlanWor
     useful: { eyebrow: t('workspace.usefulEyebrow'), description: t('workspace.usefulDescription') }, checklist: { eyebrow: t('workspace.checklistEyebrow'), description: t('workspace.checklistDescription') },
   };
 
+  function deferredSection(section: SavedPlanSectionId): DeferredSectionId | null {
+    if (section === 'itinerary' || section === 'map') return 'itinerary';
+    if (section === 'accommodations' || section === 'food' || section === 'activities' || section === 'checklist') return section;
+    return section === 'useful' ? 'usefulLinks' : null;
+  }
+
+  async function loadSection(section: DeferredSectionId) {
+    if (loadingSection || !(trip.request.deferredSections ?? []).includes(section) || !onTripUpdated) return;
+    setLoadingSection(section); setFailedSection(null); setGenerationError('');
+    try { onTripUpdated(await generateDeferredTripSection(trip, section)); }
+    catch (error) { setFailedSection(section); setGenerationError(error instanceof Error ? error.message : t('workspace.lazyError')); }
+    finally { setLoadingSection(null); }
+  }
+
+  useEffect(() => {
+    const deferred = deferredSection(active);
+    if (deferred && failedSection !== deferred && !loadingSection
+      && (trip.request.deferredSections ?? []).includes(deferred)) void loadSection(deferred);
+  }, [active, failedSection, loadingSection, trip.request.deferredSections]);
+
   function selectSection(section: SavedPlanSectionId) {
     setActive(section);
     window.requestAnimationFrame(() => {
@@ -43,6 +69,10 @@ export function SavedPlanWorkspace({ trip, onEdit, onTripUpdated }: SavedPlanWor
   }
 
   function renderContent() {
+    const deferred = deferredSection(active);
+    if (deferred && (loadingSection === deferred || failedSection === deferred)) {
+      return <DeferredPlanSection isLoading={loadingSection === deferred} error={generationError} onRetry={() => void loadSection(deferred)} />;
+    }
     if (active === 'overview') return <SavedPlanOverview trip={trip} onEdit={onEdit} onTripUpdated={onTripUpdated} />;
     if (active === 'itinerary') return <div className="saved-itinerary">{trip.plan.days.map((day) => <TripDayCard key={day.day} day={day} currency={trip.plan.budget.currency} />)}</div>;
     if (active === 'map') return <SavedPlanMap plan={trip.plan} />;
@@ -57,13 +87,13 @@ export function SavedPlanWorkspace({ trip, onEdit, onTripUpdated }: SavedPlanWor
 
   return (
     <div className="saved-workspace">
-      <PlanExportControls trip={trip} />
+      {!(trip.request.deferredSections?.length) && <PlanExportControls trip={trip} />}
       <div className="saved-workspace__content" ref={content}>
         {active !== 'overview' && <header className="saved-workspace__heading"><span>{sectionCopy[active].eyebrow}</span><div><h1>{t(currentSection.labelKey)}</h1><p>{sectionCopy[active].description}</p></div></header>}
         <div className="saved-workspace__view" key={active}>{renderContent()}</div>
       </div>
       <SavedPlanSidebar active={active} onSelect={selectSection} />
-      <PrintableTripPlan trip={trip} />
+      {!(trip.request.deferredSections?.length) && <PrintableTripPlan trip={trip} />}
     </div>
   );
 }

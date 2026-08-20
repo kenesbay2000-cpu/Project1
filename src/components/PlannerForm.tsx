@@ -9,6 +9,7 @@ import { PlannerConfirmation } from './PlannerConfirmation';
 import { PlannerConversation } from './PlannerConversation';
 import { PlannerInitialForm } from './PlannerInitialForm';
 import { useI18n } from '../i18n/I18nProvider';
+import { DEFERRED_PLAN_SECTIONS, requestDayCount } from '../lib/largeTripGeneration';
 
 type Props = {
   onPlanCreated: (trip: GeneratedTrip) => void;
@@ -129,7 +130,11 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
           .then((candidates) => recordPreferenceCandidates(user.id, preferenceProfile.signals, candidates))
           .catch(() => undefined);
       }
-      onPlanCreated({ id: crypto.randomUUID(), request: confirmed, plan });
+      onPlanCreated({
+        id: crypto.randomUUID(),
+        request: { ...confirmed, expectedDays: requestDayCount(confirmed), deferredSections: [...DEFERRED_PLAN_SECTIONS] },
+        plan,
+      });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : t('planner.generateError'));
       setStage('idle');

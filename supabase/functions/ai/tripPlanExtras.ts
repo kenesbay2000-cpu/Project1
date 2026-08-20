@@ -60,6 +60,27 @@ function isList(value: unknown, validator: (item: unknown) => boolean, min: numb
   return Array.isArray(value) && value.length >= min && value.length <= max && value.every(validator);
 }
 
+export type TripPlanExtraSection = 'accommodations' | 'food' | 'activities' | 'usefulLinks' | 'checklist';
+
+export function getTripPlanExtraSectionIssue(section: TripPlanExtraSection, value: unknown, requireTierCoverage = false) {
+  if (section === 'accommodations' && (!isList(value, (item) => isRecord(item) && isText(item.name)
+    && isText(item.area) && isText(item.type) && isMoney(item.pricePerNight)
+    && isText(item.description) && (!requireTierCoverage || isTier(item.tier)), 2, 9)
+    || (requireTierCoverage && !hasTierCoverage(value)))) return 'Некорректно заполнены варианты жилья или их уровни.';
+  if (section === 'food' && (!isList(value, (item) => isRecord(item) && isText(item.name)
+    && isText(item.cuisine) && isText(item.priceLevel) && isText(item.description)
+    && (!requireTierCoverage || isTier(item.tier)), 2, 9)
+    || (requireTierCoverage && !hasTierCoverage(value)))) return 'Некорректно заполнены рекомендации по еде или их уровни.';
+  if (section === 'activities' && (!isList(value, (item) => isRecord(item) && isText(item.name)
+    && isText(item.category) && isText(item.summary) && (!requireTierCoverage || isTier(item.tier)), 3, 12)
+    || (requireTierCoverage && !hasTierCoverage(value)))) return 'Некорректно заполнен обзор активностей или их уровни.';
+  if (section === 'usefulLinks' && !isList(value, (item) => isRecord(item) && isText(item.title)
+    && isText(item.recommendation), 3, 8)) return 'Некорректно заполнены полезные рекомендации.';
+  if (section === 'checklist' && !isList(value, (item) => isRecord(item) && isText(item.task)
+    && isText(item.timing) && isText(item.details), 3, 10)) return 'Некорректно заполнен чек-лист.';
+  return null;
+}
+
 export function getTripPlanExtrasIssue(value: Record<string, unknown>, requireTierCoverage = false) {
   if (!isList(value.transport, (item) => isRecord(item) && isText(item.mode)
     && isText(item.route) && isText(item.recommendation), 2, 6)) return 'Некорректно заполнен транспорт.';

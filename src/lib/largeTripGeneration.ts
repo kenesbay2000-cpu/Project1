@@ -1,22 +1,20 @@
 import { isRetryablePlannerError, largePlanWaitError, readPlannerFunctionError } from './aiPlannerErrors';
-import type { GenerationProgress, PlannerLanguage, PlannerRequest, TripPlan } from './aiPlannerTypes';
+import type { DeferredPlanSection, GeneratedTrip, GenerationProgress, PlannerLanguage, PlannerRequest, TripPlan } from './aiPlannerTypes';
 import { supabase } from './supabase';
 
 type TripPlanCore = Omit<TripPlan, 'days'>;
 type CoreResponse = { core?: TripPlanCore; error?: { message?: string } };
 type DaysResponse = { days?: TripPlan['days']; error?: { message?: string } };
-type PlanResponse = { plan?: TripPlan; error?: { message?: string } };
+type SectionResponse = { section?: DeferredPlanSection; items?: unknown[]; error?: { message?: string } };
 
-function requestDayCount(request: PlannerRequest) {
+export const DEFERRED_PLAN_SECTIONS: DeferredPlanSection[] = [
+  'itinerary', 'accommodations', 'food', 'activities', 'usefulLinks', 'checklist',
+];
+
+export function requestDayCount(request: PlannerRequest) {
   if (request.confirmedSummary?.durationDays) return request.confirmedSummary.durationDays;
   if (!request.dates) return 7;
   return Math.round((Date.parse(`${request.dates.end}T00:00:00Z`) - Date.parse(`${request.dates.start}T00:00:00Z`)) / 86_400_000) + 1;
-}
-
-export function shouldChunkTripPlan(request: PlannerRequest) {
-  const days = requestDayCount(request);
-  const travelers = request.travelers ?? request.confirmedSummary?.travelers.count ?? 1;
-  return days >= 10 || travelers >= 8 || days * Math.max(1, Math.ceil(travelers / 4)) >= 28;
 }
 
 function partClientTimeout(dayCount: number, travelers: number, isCore = false) {
@@ -37,27 +35,39 @@ async function invokePart<T>(body: object, timeout: number, language: PlannerLan
 
 export async function generateChunkedTripPlan(request: PlannerRequest, onProgress?: (progress: GenerationProgress) => void) {
   const language = request.responseLanguage ?? 'ru';
-  const dayCount = requestDayCount(request);
   const travelers = request.travelers ?? request.confirmedSummary?.travelers.count ?? 1;
-  const chunkSize = 4;
-  const total = Math.ceil(dayCount / chunkSize) + 2;
-  onProgress?.({ mode: 'chunked', phase: 'preparing', completed: 0, total });
-  const coreData = await invokePart<CoreResponse>({ mode: 'generate_core', request }, partClientTimeout(0, travelers, true), language);
+  onProgress?.({ mode: 'chunked', phase: 'preparing', completed: 0, total: 1 });
+  const coreData = await invokePart<CoreResponse>({ mode: 'generate_core', overviewOnly: true, request }, partClientTimeout(0, travelers, true), language);
   if (!coreData.core) throw new Error(coreData.error?.message ?? largePlanWaitError(language));
+  return { ...coreData.core, days: [] };
+}
 
-  const days: TripPlan['days'] = [];
-  for (let startDay = 1; startDay <= dayCount; startDay += chunkSize) {
-    const endDay = Math.min(dayCount, startDay + chunkSize - 1);
-    onProgress?.({ mode: 'chunked', phase: 'days', completed: 1 + days.length / chunkSize, total, startDay, endDay });
-    const dayData = await invokePart<DaysResponse>({
-      mode: 'generate_days', request, core: coreData.core, startDay, endDay, previousDay: days[days.length - 1],
-    }, partClientTimeout(endDay - startDay + 1, travelers), language);
-    if (!dayData.days) throw new Error(dayData.error?.message ?? largePlanWaitError(language));
-    days.push(...dayData.days);
+function completeSection(trip: GeneratedTrip, section: DeferredPlanSection, plan: TripPlan): GeneratedTrip {
+  return {
+    ...trip,
+    plan,
+    request: { ...trip.request, deferredSections: (trip.request.deferredSections ?? []).filter((item) => item !== section) },
+  };
+}
+
+export async function generateDeferredTripSection(trip: GeneratedTrip, section: DeferredPlanSection): Promise<GeneratedTrip> {
+  if (!(trip.request.deferredSections ?? []).includes(section)) return trip;
+  const language = trip.request.responseLanguage ?? 'ru';
+  const travelers = trip.request.travelers ?? trip.request.confirmedSummary?.travelers.count ?? 1;
+  if (section === 'itinerary') {
+    const days: TripPlan['days'] = [];
+    const count = trip.request.expectedDays ?? requestDayCount(trip.request);
+    for (let startDay = 1; startDay <= count; startDay += 4) {
+      const endDay = Math.min(count, startDay + 3);
+      const data = await invokePart<DaysResponse>({
+        mode: 'generate_days', request: trip.request, core: trip.plan, startDay, endDay, previousDay: days[days.length - 1],
+      }, partClientTimeout(endDay - startDay + 1, travelers), language);
+      if (!data.days) throw new Error(data.error?.message ?? largePlanWaitError(language));
+      days.push(...data.days);
+    }
+    return completeSection(trip, section, { ...trip.plan, days });
   }
-
-  onProgress?.({ mode: 'chunked', phase: 'finalizing', completed: total - 1, total });
-  const finalized = await invokePart<PlanResponse>({ mode: 'finalize_plan', request, core: coreData.core, days }, 45_000, language);
-  if (!finalized.plan) throw new Error(finalized.error?.message ?? largePlanWaitError(language));
-  return finalized.plan;
+  const data = await invokePart<SectionResponse>({ mode: 'generate_section', request: trip.request, core: trip.plan, section }, 70_000, language);
+  if (!data.items) throw new Error(data.error?.message ?? largePlanWaitError(language));
+  return completeSection(trip, section, { ...trip.plan, [section]: data.items } as TripPlan);
 }

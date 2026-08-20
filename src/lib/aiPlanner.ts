@@ -1,12 +1,11 @@
 import { isSupabaseConfigured, supabase } from './supabase';
 import type { PreferenceCandidate, TravelPreference } from './travelPreferences';
 import { plannerConfigError, readPlannerFunctionError } from './aiPlannerErrors';
-import { generateChunkedTripPlan, shouldChunkTripPlan } from './largeTripGeneration';
+import { generateChunkedTripPlan } from './largeTripGeneration';
 import type { ClarificationResult, GeneratedTrip, GenerationProgress, PlannerLanguage, PlannerRequest, TripPlan, TripSummary } from './aiPlannerTypes';
 
 export type { ClarificationQuestion, ClarificationResult, ClarificationTurn, GeneratedTrip, GenerationProgress, PlannerLanguage, PlannerRequest, RecommendationTier, TripPlan, TripSummary } from './aiPlannerTypes';
 
-type PlannerResponse = { plan?: TripPlan; error?: { message?: string } };
 type ClarificationResponse = { clarification?: ClarificationResult; error?: { message?: string } };
 type SummaryResponse = { summary?: TripSummary; error?: { message?: string } };
 type EditResponse = { plan?: TripPlan; request?: PlannerRequest; error?: { message?: string } };
@@ -17,16 +16,7 @@ export async function generateTripPlan(request: PlannerRequest, onProgress?: (pr
     throw new Error(plannerConfigError(language));
   }
 
-  if (shouldChunkTripPlan(request)) return generateChunkedTripPlan(request, onProgress);
-  onProgress?.({ mode: 'standard', phase: 'preparing', completed: 0, total: 6 });
-  const { data, error } = await supabase.functions.invoke<PlannerResponse>('ai', {
-    body: request,
-    timeout: 155_000,
-  });
-
-  if (error) throw new Error(await readPlannerFunctionError(error, language));
-  if (!data?.plan) throw new Error(data?.error?.message ?? await readPlannerFunctionError(null, language));
-  return data.plan;
+  return generateChunkedTripPlan(request, onProgress);
 }
 
 export async function analyzeTripRequest(request: PlannerRequest) {

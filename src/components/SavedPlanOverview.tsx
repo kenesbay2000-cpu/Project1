@@ -31,7 +31,7 @@ export function SavedPlanOverview({ trip, onEdit, onTripUpdated }: SavedPlanOver
         <h1>{plan.title}</h1>
         <p>⌖ {plan.destination.city}, {plan.destination.country}</p>
         <div>
-          <strong><b>{plan.days.length}</b> {t('overview.days')}</strong>
+          <strong><b>{request.expectedDays ?? plan.days.length}</b> {t('overview.days')}</strong>
           <strong><b>{request.travelers ?? '—'}</b> {t('overview.travelers')}</strong>
           <strong><b>{plan.budget.total.toLocaleString(locale)}</b> {plan.budget.currency}</strong>
         </div>
@@ -39,7 +39,7 @@ export function SavedPlanOverview({ trip, onEdit, onTripUpdated }: SavedPlanOver
       <div className="saved-overview__dates"><span>{t('overview.period')}</span><strong>{formatDates(trip, locale, t('overview.datesFallback'))}</strong></div>
       {onEdit && <SavePlanButton key={`${trip.id}-${trip.request.routeEdits?.length ?? 0}`} trip={trip} />}
       <TripRealismNotice assessment={plan.realism} />
-      {onTripUpdated && <TripPlanEditor trip={trip} onUpdated={onTripUpdated} />}
+      {onTripUpdated && !(request.deferredSections?.length) && <TripPlanEditor trip={trip} onUpdated={onTripUpdated} />}
       <section className="saved-overview__rationale"><span>{t('overview.logic')}</span><h2>{t('overview.why')}</h2><p>{plan.rationale}</p></section>
       <section className="saved-overview__group">
         <header><span>↗</span><div><p>{t('overview.transportEyebrow')}</p><h2>{t('overview.transport')}</h2></div></header>

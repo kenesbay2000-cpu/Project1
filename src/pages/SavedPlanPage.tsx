@@ -5,6 +5,7 @@ import { SavedPlanWorkspace } from '../components/SavedPlanWorkspace';
 import { useAuth } from '../components/AuthProvider';
 import type { GeneratedTrip } from '../lib/aiPlanner';
 import { getPlansError, loadSavedPlan } from '../lib/savedPlanQueries';
+import { saveTripPlan } from '../lib/savedPlans';
 import './ProfilePage.css';
 import './SavedPlanPage.css';
 import { useI18n } from '../i18n/I18nProvider';
@@ -34,7 +35,7 @@ export function SavedPlanPage() {
         <Link className="saved-plan-page__back" href="/my-plans">← {t('savedPlan.back')}</Link>
         {isLoading && <div className="saved-plan-page__state" role="status">{t('savedPlan.loading')}</div>}
         {error && <div className="saved-plan-page__state" role="alert"><p>{error}</p><Link href="/my-plans">{t('savedPlan.return')}</Link></div>}
-        {trip && <SavedPlanWorkspace trip={trip} />}
+        {trip && <SavedPlanWorkspace trip={trip} onTripUpdated={(updated) => { setTrip(updated); void saveTripPlan(updated); }} />}
       </main>
     </ProtectedPage>
   );

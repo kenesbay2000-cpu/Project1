@@ -39,6 +39,11 @@ export function SavePlanButton({ trip }: SavePlanButtonProps) {
     void save();
   }, [user, trip.id]);
 
+  useEffect(() => {
+    if (!user || status !== 'saved') return;
+    void saveTripPlan(trip).catch((saveError) => setError(getSavePlanError(saveError, t)));
+  }, [user, status, trip.request.deferredSections?.length]);
+
   function prepareAuth(event: MouseEvent<HTMLAnchorElement>) {
     try { storePendingTrip(trip); }
     catch {

@@ -3,7 +3,11 @@ import type { CurrencyRates } from './exchangeRates.ts';
 import { requestGemini, type GeminiResult } from './gemini.ts';
 import { RECOMMENDATION_SAFETY_GUIDANCE } from './recommendationSafety.ts';
 import { responseLanguageInstruction } from './responseLanguage.ts';
-import { parseTripDaysText, parseTripPlanCoreText, TRIP_DAYS_SCHEMA, TRIP_PLAN_CORE_SCHEMA, type TripPlanCore } from './tripPlanParts.ts';
+import {
+  parseTripDaysText, parseTripPlanCoreText, parseTripPlanOverviewText, parseTripPlanSectionText,
+  tripPlanSectionSchema, TRIP_DAYS_SCHEMA, TRIP_PLAN_CORE_SCHEMA, TRIP_PLAN_OVERVIEW_SCHEMA, type TripPlanCore,
+} from './tripPlanParts.ts';
+import type { TripPlanExtraSection } from './tripPlanExtras.ts';
 import type { PlannerRequest, TripDay } from './types.ts';
 
 type Failure = Extract<GeminiResult, { ok: false }> | { ok: false; code: 'INCOMPLETE_AI_PLAN'; message: string; status: 502 };
@@ -27,6 +31,52 @@ function requestContext(request: PlannerRequest, rates: CurrencyRates) {
 function partTimeout(dayCount: number, travelers: number, isCore: boolean) {
   const groupExtra = travelers >= 8 ? 10_000 : travelers >= 4 ? 5_000 : 0;
   return Math.min(90_000, (isCore ? 55_000 : 38_000 + dayCount * 6_000) + groupExtra);
+}
+
+export async function generatePlanOverview(request: PlannerRequest, rates: CurrencyRates): Promise<PartResult<TripPlanCore>> {
+  const prompt = `${requestContext(request, rates)}
+${RECOMMENDATION_SAFETY_GUIDANCE}
+Создай только главный обзор поездки: title, destination, rationale, placeIdeas, общий budget, realism и 2–3 варианта transport.
+Не создавай расписание по дням, жильё, еду, активности, полезные рекомендации или чек-лист — они будут сгенерированы отдельно при открытии вкладок.
+Все суммы относятся ко всей группе. Пиши компактно: каждое описание — одно предложение.`;
+  const started = Date.now();
+  let lastIssue = '';
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const result = await requestGemini(`${prompt}${lastIssue ? `\nИсправь ошибку структуры: ${lastIssue}` : ''}`,
+      partTimeout(0, request.travelers ?? 1, true), { responseSchema: TRIP_PLAN_OVERVIEW_SCHEMA, maxOutputTokens: 4_096 });
+    if (!result.ok) return result;
+    const parsed = parseTripPlanOverviewText(result.text);
+    if ('value' in parsed) return { ok: true, value: parsed.value, elapsedMs: Date.now() - started };
+    lastIssue = parsed.error;
+  }
+  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: `Не удалось собрать обзор плана: ${lastIssue}`, status: 502 };
+}
+
+const sectionInstructions: Record<TripPlanExtraSection, string> = {
+  accommodations: 'Создай ровно 6 вариантов жилья: по 2 уровня budget, comfortable и luxury.',
+  food: 'Создай ровно 6 рекомендаций по еде: по 2 уровня budget, comfortable и luxury.',
+  activities: 'Создай ровно 6 обзорных активностей: по 2 уровня budget, comfortable и luxury.',
+  usefulLinks: 'Создай 4 полезные рекомендации перед поездкой. Не выдумывай URL: поле recommendation должно объяснять, что и где проверить.',
+  checklist: 'Создай 5 персональных пунктов подготовки к этой поездке.',
+};
+
+export async function generatePlanExtraSection(request: PlannerRequest, rates: CurrencyRates, core: TripPlanCore,
+  section: TripPlanExtraSection): Promise<PartResult<TripPlanCore[TripPlanExtraSection]>> {
+  const prompt = `${requestContext(request, rates)}
+Главный обзор поездки: ${JSON.stringify({ title: core.title, destination: core.destination, budget: core.budget, rationale: core.rationale })}
+${RECOMMENDATION_SAFETY_GUIDANCE}
+${sectionInstructions[section]} Верни только объект с полем ${section}. Описания должны быть короткими.`;
+  const started = Date.now();
+  let lastIssue = '';
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const result = await requestGemini(`${prompt}${lastIssue ? `\nИсправь ошибку структуры: ${lastIssue}` : ''}`,
+      45_000, { responseSchema: tripPlanSectionSchema(section), maxOutputTokens: 4_096 });
+    if (!result.ok) return result;
+    const parsed = parseTripPlanSectionText(result.text, section);
+    if ('value' in parsed) return { ok: true, value: parsed.value, elapsedMs: Date.now() - started };
+    lastIssue = parsed.error;
+  }
+  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: `Не удалось собрать вкладку ${section}: ${lastIssue}`, status: 502 };
 }
 
 export async function generatePlanCore(request: PlannerRequest, rates: CurrencyRates): Promise<PartResult<TripPlanCore>> {

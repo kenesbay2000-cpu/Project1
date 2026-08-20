@@ -1,4 +1,5 @@
-import { getTripPlanValidationIssue, TRIP_PLAN_SCHEMA } from './tripPlan.ts';
+import { getTripDaysIssue, getTripPlanOverviewIssue, getTripPlanValidationIssue, TRIP_PLAN_SCHEMA } from './tripPlan.ts';
+import { getTripPlanExtraSectionIssue, TRIP_PLAN_EXTRA_PROPERTIES, type TripPlanExtraSection } from './tripPlanExtras.ts';
 import type { TripDay, TripPlan } from './types.ts';
 
 export type TripPlanCore = Omit<TripPlan, 'days'>;
@@ -11,6 +12,17 @@ export const TRIP_PLAN_CORE_SCHEMA = {
   properties: coreProperties,
   required: TRIP_PLAN_SCHEMA.required.filter((key) => key !== 'days'),
 };
+
+const overviewKeys = ['title', 'destination', 'placeIdeas', 'budget', 'transport', 'realism', 'rationale'];
+export const TRIP_PLAN_OVERVIEW_SCHEMA = {
+  type: 'object',
+  properties: Object.fromEntries(Object.entries(planProperties).filter(([key]) => overviewKeys.includes(key))),
+  required: overviewKeys,
+};
+
+export function tripPlanSectionSchema(section: TripPlanExtraSection) {
+  return { type: 'object', properties: { [section]: TRIP_PLAN_EXTRA_PROPERTIES[section] }, required: [section] };
+}
 
 export const TRIP_DAYS_SCHEMA = {
   type: 'object',
@@ -47,12 +59,37 @@ export function parseTripPlanCoreText(text: string) {
   return parseTripPlanCore(parseJson(text));
 }
 
-export function parseTripDaysText(text: string, core: TripPlanCore, startDay: number, endDay: number) {
+export function parseTripPlanOverview(value: unknown): { value: TripPlanCore } | { error: string } {
+  const issue = getTripPlanOverviewIssue(value);
+  if (issue || typeof value !== 'object' || value === null || Array.isArray(value)) return { error: issue ?? 'Некорректный обзор.' };
+  return {
+    value: {
+      ...(value as Omit<TripPlanCore, 'accommodations' | 'food' | 'activities' | 'usefulLinks' | 'checklist'>),
+      accommodations: [], food: [], activities: [], usefulLinks: [], checklist: [],
+    } satisfies TripPlanCore,
+  };
+}
+
+export function parseTripPlanOverviewText(text: string) {
+  return parseTripPlanOverview(parseJson(text));
+}
+
+export function parseTripPlanSectionText(text: string, section: TripPlanExtraSection):
+  { value: TripPlanCore[TripPlanExtraSection] } | { error: string } {
+  const parsed = parseJson(text);
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return { error: 'Блок не является объектом.' };
+  const value = (parsed as Record<string, unknown>)[section];
+  const issue = getTripPlanExtraSectionIssue(section, value, true);
+  return issue ? { error: issue } : { value: value as TripPlanCore[TripPlanExtraSection] };
+}
+
+export function parseTripDaysText(text: string, core: TripPlanCore, startDay: number, endDay: number):
+  { value: TripDay[] } | { error: string } {
   const parsed = parseJson(text);
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return { error: 'Блок дней не является объектом.' };
   const days = (parsed as Record<string, unknown>).days;
   if (!Array.isArray(days) || days.length !== endDay - startDay + 1) return { error: 'Блок содержит неверное количество дней.' };
-  const issue = getTripPlanValidationIssue({ ...core, days }, true);
+  const issue = getTripDaysIssue(days);
   if (issue) return { error: issue };
   const typedDays = days as TripDay[];
   if (typedDays.some((day, index) => day.day !== startDay + index)) return { error: 'Номера дней блока идут непоследовательно.' };

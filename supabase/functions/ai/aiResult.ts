@@ -1,7 +1,7 @@
 import { getTripPlanValidationIssue, isTripPlan, TRIP_PLAN_SCHEMA } from './tripPlan.ts';
 import { getPlanRealismIssue } from './tripPlanRealism.ts';
 import { limitAdjustedActivities, normalizePlanSchedule } from './tripPlanNormalization.ts';
-import type { PlannerAIResult, PlannerRequest } from './types.ts';
+import type { PlannerAIResult, PlannerRequest, TripPlan } from './types.ts';
 import { applyPersonalizedPace } from './personalization.ts';
 import { applyRecommendationCautions } from './recommendationSafety.ts';
 

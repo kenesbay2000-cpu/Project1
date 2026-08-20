@@ -56,8 +56,9 @@ type SavedRow = { id: string; user_id: string; client_id: string };
 
 function validateTripForSave(trip: GeneratedTrip) {
   const { request, plan } = trip;
+  const savedDayCount = request.expectedDays ?? plan.days.length;
   if (!isGeneratedTrip(trip) || !plan.destination?.city.trim() || !plan.destination.country.trim()
-    || plan.days.length < 1 || plan.days.length > 90 || !Number.isFinite(plan.budget.total)
+    || savedDayCount < 1 || savedDayCount > 90 || !Number.isFinite(plan.budget.total)
     || plan.budget.total < 0 || !plan.budget.currency.trim()) {
     throw new Error('SAVE_INVALID_PLAN');
   }
@@ -73,7 +74,7 @@ export async function saveTripPlan(trip: GeneratedTrip) {
   if (authError || !authData.user) throw new Error('SAVE_AUTH_REQUIRED');
 
   const { request, plan } = trip;
-  const days = plan.days.length;
+  const days = request.expectedDays ?? plan.days.length;
   const destination = [plan.destination.city, plan.destination.country].filter(Boolean).join(', ');
   const { data, error } = await supabase.from('travel_plans').upsert({
     client_id: trip.id,

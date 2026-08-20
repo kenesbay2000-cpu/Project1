@@ -120,7 +120,7 @@ export async function editExistingPlan(
   rates: CurrencyRates,
 ): Promise<EditFailure | EditSuccess> {
   const updated = updateRequest(request, plan, command, rates);
-  if ('error' in updated) return { ok: false, code: 'INVALID_EDIT', message: updated.error, status: 400 };
+  if ('error' in updated) return { ok: false, code: 'INVALID_EDIT', message: updated.error ?? 'Некорректное изменение плана.', status: 400 };
   const budget = assessBudget(updated.value, rates);
   if (budget.level === 'absurdly_low') {
     return { ok: false, code: 'BUDGET_TOO_LOW', message: 'После изменения верхняя граница бюджета стала нереалистично низкой для поездки.', status: 422 };

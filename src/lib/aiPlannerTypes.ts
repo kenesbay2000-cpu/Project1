@@ -1,4 +1,5 @@
 export type PlannerLanguage = 'ru' | 'en' | 'kk';
+export type DeferredPlanSection = 'itinerary' | 'accommodations' | 'food' | 'activities' | 'usefulLinks' | 'checklist';
 
 export type ClarificationQuestion = { id: string; text: string };
 export type ClarificationTurn = { questions: ClarificationQuestion[]; answer: string };
@@ -37,6 +38,8 @@ export type PlannerRequest = {
   confirmedSummary?: TripSummary;
   routeEdits?: string[];
   savedPreferences?: string[];
+  deferredSections?: DeferredPlanSection[];
+  expectedDays?: number;
 };
 
 export type GenerationProgress = {

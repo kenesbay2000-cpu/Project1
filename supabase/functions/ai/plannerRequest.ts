@@ -26,10 +26,15 @@ function isIsoDate(value: unknown): value is string {
 
 export function parsePlannerRequest(value: unknown): ParseResult {
   if (!isRecord(value)) return invalid('Передайте параметры планирования в формате JSON.');
-  const prompt = typeof value.prompt === 'string' ? value.prompt.trim() : '';
+  const context = parsePlannerContext(value);
+  if ('error' in context) return invalid(context.error);
+  const rawPrompt = typeof value.prompt === 'string' ? value.prompt.trim() : '';
+  const summary = context.value.confirmedSummary;
+  const hasUsableSummary = Boolean(summary?.destination && summary.durationDays > 0 && summary.travelers.count > 0);
+  const prompt = rawPrompt || (hasUsableSummary ? `Подтверждённая сводка поездки: ${JSON.stringify(summary)}` : '');
   const responseLanguage = value.responseLanguage === 'en' || value.responseLanguage === 'kk' ? value.responseLanguage : 'ru';
   if (!prompt) return invalid('Опишите желаемую поездку.');
-  if (prompt.length > 4_000) return invalid('Описание поездки не должно превышать 4000 символов.');
+  if (rawPrompt.length > 4_000) return invalid('Описание поездки не должно превышать 4000 символов.');
 
   let originCity: string | undefined;
   if (value.originCity !== undefined) {
@@ -82,8 +87,6 @@ export function parsePlannerRequest(value: unknown): ParseResult {
     priceRange = { min, max, currency };
   }
 
-  const context = parsePlannerContext(value);
-  if ('error' in context) return invalid(context.error);
   return { value: { prompt, responseLanguage, originCity, dates, travelers, travelerAges, priceRange, ...context.value } };
 }
 

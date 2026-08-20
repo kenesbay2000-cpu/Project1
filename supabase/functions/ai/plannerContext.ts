@@ -38,7 +38,8 @@ export function parsePlannerContext(value: Record<string, unknown>): ContextResu
     summaryCorrections = value.summaryCorrections.map((item) => String(item).trim());
   }
 
-  const confirmedSummary = value.confirmedSummary === undefined ? undefined : parseTripSummary(value.confirmedSummary);
+  const parsedConfirmedSummary = value.confirmedSummary === undefined ? undefined : parseTripSummary(value.confirmedSummary);
+  const confirmedSummary = parsedConfirmedSummary ?? undefined;
   if (value.confirmedSummary !== undefined && !confirmedSummary) return { error: 'Подтверждённая сводка заполнена некорректно.' };
   let routeEdits: string[] | undefined;
   if (value.routeEdits !== undefined) {

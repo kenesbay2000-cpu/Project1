@@ -115,6 +115,12 @@ function getDayIssue(value: unknown) {
   return null;
 }
 
+export function getTripDaysIssue(value: unknown) {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 90) return 'Некорректное количество дней.';
+  const invalidDay = value.findIndex((day) => getDayIssue(day));
+  return invalidDay < 0 ? null : `День ${invalidDay + 1}: ${getDayIssue(value[invalidDay])}.`;
+}
+
 function isPlace(value: unknown) {
   return isRecord(value) && isText(value.name) && isText(value.type) && isText(value.description);
 }
@@ -142,6 +148,25 @@ export function getTripPlanValidationIssue(value: unknown, requireTierCoverage =
     || !budget.categories.every(isBudgetCategory)) return 'Не заполнен бюджет.';
   const extrasIssue = getTripPlanExtrasIssue(value, requireTierCoverage);
   if (extrasIssue) return extrasIssue;
+  if (!isRealismAssessment(value.realism)) return 'Не заполнена оценка реалистичности.';
+  return null;
+}
+
+export function getTripPlanOverviewIssue(value: unknown) {
+  if (!isRecord(value)) return 'Обзор плана не является объектом.';
+  if (!isText(value.title) || !isText(value.rationale)) return 'Не заполнены название или логика маршрута.';
+  if (!isRecord(value.destination) || !isText(value.destination.city) || !isText(value.destination.country)) {
+    return 'Не заполнено направление поездки.';
+  }
+  if (!Array.isArray(value.placeIdeas) || value.placeIdeas.length === 0 || !value.placeIdeas.every(isPlace)) {
+    return 'Не заполнены идеи мест.';
+  }
+  if (!isRecord(value.budget) || !isText(value.budget.currency) || !isMoney(value.budget.total)
+    || !Array.isArray(value.budget.categories) || value.budget.categories.length === 0
+    || !value.budget.categories.every(isBudgetCategory)) return 'Не заполнен бюджет.';
+  if (!Array.isArray(value.transport) || value.transport.length < 2 || value.transport.length > 6
+    || value.transport.some((item) => !isRecord(item) || !isText(item.mode)
+      || !isText(item.route) || !isText(item.recommendation))) return 'Некорректно заполнен транспорт.';
   if (!isRealismAssessment(value.realism)) return 'Не заполнена оценка реалистичности.';
   return null;
 }

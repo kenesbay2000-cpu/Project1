@@ -64,7 +64,8 @@ Deno.serve(async (request) => {
   if (isRecord(requestBody) && requestBody.mode === 'summarize') {
     const summaryRequest = parsePlannerRequest(requestBody.request);
     if ('error' in summaryRequest) return failure(summaryRequest.error.code, summaryRequest.error.message, 400);
-    const currentSummary = requestBody.currentSummary === undefined ? undefined : parseTripSummary(requestBody.currentSummary);
+    const parsedCurrentSummary = requestBody.currentSummary === undefined ? undefined : parseTripSummary(requestBody.currentSummary);
+    const currentSummary = parsedCurrentSummary ?? undefined;
     if (requestBody.currentSummary !== undefined && !currentSummary) {
       return failure('INVALID_REQUEST', 'Текущая сводка заполнена некорректно.', 400);
     }
