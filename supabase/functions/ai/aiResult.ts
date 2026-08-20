@@ -26,6 +26,7 @@ export const PLANNER_AI_RESULT_SCHEMA = {
 };
 
 type ParseResult = { value: PlannerAIResult } | { error: string };
+type PlanParseResult = { value: TripPlan } | { error: string };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -45,19 +46,26 @@ export function parsePlannerAIResult(text: string, request: PlannerRequest): Par
   if (value.status === 'budget_too_low' && value.plan === null && typeof value.message === 'string') {
     return { value: { status: 'budget_too_low', message: value.message, plan: null } };
   }
+  if (value.status === 'success' && typeof value.message === 'string') {
+    const planResult = finalizeGeneratedPlan(value.plan, request);
+    return 'value' in planResult
+      ? { value: { status: 'success', message: value.message, plan: planResult.value } }
+      : planResult;
+  }
+  return { error: 'Response does not match the planner result schema' };
+}
+
+export function finalizeGeneratedPlan(plan: unknown, request: PlannerRequest): PlanParseResult {
   const language = request.responseLanguage === 'en' || request.responseLanguage === 'kk' ? request.responseLanguage : 'ru';
-  const normalizedPlan = limitAdjustedActivities(value.plan, language);
+  const normalizedPlan = limitAdjustedActivities(plan, language);
   const schemaIssue = getTripPlanValidationIssue(normalizedPlan, true);
-  if (value.status === 'success' && typeof value.message === 'string' && !schemaIssue && isTripPlan(normalizedPlan)) {
+  if (!schemaIssue && isTripPlan(normalizedPlan)) {
     const personalizedPlan = applyPersonalizedPace(normalizedPlan, request);
     const cautiousPlan = applyRecommendationCautions(personalizedPlan, language);
     const scheduledPlan = normalizePlanSchedule(cautiousPlan, language);
     const realismIssue = getPlanRealismIssue(scheduledPlan, request);
     if (realismIssue) return { error: `Plan realism check failed: ${realismIssue}` };
-    return { value: { status: 'success', message: value.message, plan: scheduledPlan } };
+    return { value: scheduledPlan };
   }
-  if (value.status === 'success' && typeof value.message === 'string') {
-    return { error: `Plan schema check failed: ${schemaIssue ?? 'неизвестная ошибка схемы.'}` };
-  }
-  return { error: 'Response does not match the planner result schema' };
+  return { error: `Plan schema check failed: ${schemaIssue ?? 'неизвестная ошибка схемы.'}` };
 }

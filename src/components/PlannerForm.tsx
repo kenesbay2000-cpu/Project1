@@ -1,7 +1,7 @@
 import { type FormEvent, useEffect, useState } from 'react';
 import {
   analyzeTripRequest, extractTravelPreferences, generateTripPlan, summarizeTripRequest,
-  type ClarificationQuestion, type GeneratedTrip, type PlannerRequest, type TripSummary,
+  type ClarificationQuestion, type GeneratedTrip, type GenerationProgress, type PlannerRequest, type TripSummary,
 } from '../lib/aiPlanner';
 import { loadPreferenceProfile, recordPreferenceCandidates, savePreferenceDefault, type PreferenceProfile } from '../lib/travelPreferences';
 import { useAuth } from './AuthProvider';
@@ -46,6 +46,7 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
   const [correction, setCorrection] = useState('');
   const [error, setError] = useState('');
   const [preferenceProfile, setPreferenceProfile] = useState<PreferenceProfile | null>(null);
+  const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -122,7 +123,7 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
     const confirmed = { ...applySummary(draft, summary), responseLanguage: language, confirmedSummary: summary };
     setError(''); setStage('generating');
     try {
-      const plan = await generateTripPlan(confirmed);
+      const plan = await generateTripPlan(confirmed, setGenerationProgress);
       if (user && preferenceProfile) {
         void extractTravelPreferences(confirmed, preferenceProfile.signals)
           .then((candidates) => recordPreferenceCandidates(user.id, preferenceProfile.signals, candidates))
@@ -132,14 +133,16 @@ export function PlannerForm({ onPlanCreated, onBeforeGenerate }: Props) {
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : t('planner.generateError'));
       setStage('idle');
+    } finally {
+      setGenerationProgress(null);
     }
   };
-  const reset = () => { setDraft(null); setQuestions([]); setAnswer(''); setSummary(null); setCorrection(''); setError(''); setStage('idle'); };
+  const reset = () => { setDraft(null); setQuestions([]); setAnswer(''); setSummary(null); setCorrection(''); setError(''); setGenerationProgress(null); setStage('idle'); };
 
   if (!draft) {
     if (!preferenceProfile) return <div className="planner-preferences-loading" role="status"><span />{t('planner.loadingSettings')}</div>;
     return <PlannerInitialForm preferences={preferenceProfile.active.map((item) => item.label)} defaultUsePreferences={preferenceProfile.useByDefault} onContinue={start} />;
   }
-  if (summary) return <PlannerConfirmation summary={summary} correction={correction} isBusy={stage !== 'idle'} isGenerating={stage === 'generating'} error={error} onCorrectionChange={setCorrection} onCorrection={submitCorrection} onConfirm={() => void confirm()} onReset={reset} />;
+  if (summary) return <PlannerConfirmation summary={summary} correction={correction} generationProgress={generationProgress} isBusy={stage !== 'idle'} isGenerating={stage === 'generating'} error={error} onCorrectionChange={setCorrection} onCorrection={submitCorrection} onConfirm={() => void confirm()} onReset={reset} />;
   return <PlannerConversation request={draft} questions={questions} answer={answer} stage={stage} error={error} onAnswerChange={setAnswer} onAnswer={submitAnswer} onReset={reset} onRetry={() => void continuePlanning(draft)} />;
 }

@@ -1,5 +1,5 @@
 import type { FormEvent } from 'react';
-import type { TripSummary } from '../lib/aiPlanner';
+import type { GenerationProgress, TripSummary } from '../lib/aiPlanner';
 import { PlannerGenerationProgress } from './PlannerGenerationProgress';
 import { useI18n } from '../i18n/I18nProvider';
 import { languageLocale } from '../i18n/locale';
@@ -9,6 +9,7 @@ type Props = {
   correction: string;
   isBusy: boolean;
   isGenerating: boolean;
+  generationProgress: GenerationProgress | null;
   error: string;
   onCorrectionChange: (value: string) => void;
   onCorrection: (event: FormEvent<HTMLFormElement>) => void;
@@ -19,7 +20,7 @@ export function PlannerConfirmation(props: Props) {
   const { t, language } = useI18n();
   const show = (value: string) => value || t('confirm.unspecified');
   const list = (values: string[]) => values.length ? values.join(' · ') : t('confirm.unspecified');
-  const { summary, correction, isBusy, isGenerating, error, onCorrectionChange, onCorrection, onConfirm, onReset } = props;
+  const { summary, correction, generationProgress, isBusy, isGenerating, error, onCorrectionChange, onCorrection, onConfirm, onReset } = props;
   const dates = summary.dates.start && summary.dates.end ? `${summary.dates.start} — ${summary.dates.end}` : t('confirm.datesUnspecified');
   const travelers = summary.travelers.count
     ? `${summary.travelers.count}; ${summary.travelers.ages.length ? `${t('confirm.age')}: ${summary.travelers.ages.join(', ')}` : show(summary.travelers.description)}`
@@ -42,7 +43,7 @@ export function PlannerConfirmation(props: Props) {
         <dl><dt>{t('confirm.stayTransport')}</dt><dd>{show(summary.lodging)} · {show(summary.transport)}</dd></dl>
         {(summary.constraints.length > 0 || summary.otherDetails.length > 0) && <dl><dt>{t('confirm.details')}</dt><dd>{list([...summary.constraints, ...summary.otherDetails])}</dd></dl>}
       </div>
-      {isGenerating && <PlannerGenerationProgress />}
+      {isGenerating && <PlannerGenerationProgress progress={generationProgress} />}
       {error && <div className="planner-form__error" role="alert">{error}</div>}
       <div className="planner-confirmation__actions">
         <button className="planner-confirmation__confirm" type="button" disabled={isBusy} onClick={onConfirm}>{isGenerating ? t('confirm.creating') : isBusy ? t('confirm.wait') : t('confirm.create')}</button>

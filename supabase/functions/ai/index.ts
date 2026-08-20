@@ -10,6 +10,7 @@ import { PROTECTED_INFORMATION_MESSAGE, shouldRefuseProtectedInformation } from 
 import { learnTravelPreferences, parseKnownPreferences } from './preferenceLearning.ts';
 import { localizedPlannerText } from './responseLanguage.ts';
 import { loadExchangeRates } from './exchangeRates.ts';
+import { handleChunkedMode } from './chunkedMode.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -43,6 +44,11 @@ Deno.serve(async (request) => {
   }
   if (shouldRefuseProtectedInformation(requestBody)) {
     return failure('PROTECTED_INFORMATION', PROTECTED_INFORMATION_MESSAGE, 400);
+  }
+
+  if (isRecord(requestBody)) {
+    const chunked = await handleChunkedMode(requestBody);
+    if (chunked) return json(chunked.body, chunked.status);
   }
 
   if (isRecord(requestBody) && requestBody.mode === 'clarify') {
