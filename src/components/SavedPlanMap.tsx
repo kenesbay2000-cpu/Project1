@@ -34,6 +34,13 @@ export function SavedPlanMap({ plan }: { plan: TripPlan }) {
 
   return (
     <div className="saved-map-section">
+      <aside className="saved-map-section__notice" role="note">
+        <span aria-hidden="true">i</span>
+        <div>
+          <strong>{t('route.noticeTitle')}</strong>
+          <p>{t('route.noticeText')}</p>
+        </div>
+      </aside>
       <nav className="saved-map-days" aria-label={t('route.filterAria')}>
         <button type="button" className={selectedDay === null ? 'is-active' : ''} aria-pressed={selectedDay === null} onClick={() => setSelectedDay(null)}><span>{t('route.all')}</span><strong>{t('route.entireTrip')}</strong></button>
         {plan.days.map((day) => <button type="button" key={day.day} className={selectedDay === day.day ? 'is-active' : ''} aria-pressed={selectedDay === day.day} onClick={() => setSelectedDay(day.day)}><span style={{ background: getTripDayColor(day.day) }} /><strong>{t('route.day', { day: day.day })}</strong><small>{day.title}</small></button>)}
