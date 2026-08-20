@@ -12,6 +12,7 @@ import { santoriniGuide } from './santorini';
 import { singaporeGuide } from './singapore';
 import { tbilisiGuide } from './tbilisi';
 import { tokyoGuide } from './tokyo';
+import { visualBatchTwoGuides } from './visualBatchTwo';
 import type { DestinationGuide } from './types';
 
 export const destinationGuides: Record<string, DestinationGuide> = {
@@ -29,6 +30,7 @@ export const destinationGuides: Record<string, DestinationGuide> = {
   maldives: maldivesGuide,
   banff: banffGuide,
   lauterbrunnen: lauterbrunnenGuide,
+  ...visualBatchTwoGuides,
 };
 
 export type { DestinationGuide, GuideHighlight } from './types';
