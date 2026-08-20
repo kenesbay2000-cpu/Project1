@@ -3,10 +3,13 @@ import { destinationGuides } from '../destinationGuides';
 import { destinations, type Destination } from '../destinations';
 import { englishDestinations } from './en/destinations';
 import { englishGuides } from './en/guides';
+import { kazakhDestinations } from './kk/destinations';
+import { kazakhGuides } from './kk/guides';
 import type { DestinationContent } from './types';
 
 const translatedContent: Partial<Record<Language, DestinationContent>> = {
   en: { destinations: englishDestinations, guides: englishGuides },
+  kk: { destinations: kazakhDestinations, guides: kazakhGuides },
 };
 
 export function getDestinations(language: Language): Destination[] {
