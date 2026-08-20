@@ -28,6 +28,7 @@ try {
 
 const apiKey = readValue(source, 'GEMINI_API_KEY');
 if (!apiKey) fail('GEMINI_API_KEY is missing in .env');
+const geoapifyApiKey = readValue(source, 'GEOAPIFY_API_KEY');
 
 const tempDirectory = await mkdtemp(join(tmpdir(), 'nfact-ai-secret-'));
 const secretFile = join(tempDirectory, 'gemini.env');
@@ -37,7 +38,9 @@ const supabaseCli = fileURLToPath(
 
 let uploadError = '';
 try {
-  await writeFile(secretFile, `GEMINI_API_KEY=${apiKey}\n`, { mode: 0o600 });
+  const secrets = [`GEMINI_API_KEY=${apiKey}`];
+  if (geoapifyApiKey) secrets.push(`GEOAPIFY_API_KEY=${geoapifyApiKey}`);
+  await writeFile(secretFile, `${secrets.join('\n')}\n`, { mode: 0o600 });
   const result = spawnSync(process.execPath, [supabaseCli, 'secrets', 'set', '--env-file', secretFile], {
     stdio: 'inherit',
   });
@@ -50,4 +53,4 @@ try {
 }
 
 if (uploadError) fail(uploadError);
-console.log('GEMINI_API_KEY uploaded to Supabase.');
+console.log(`AI secrets uploaded to Supabase.${geoapifyApiKey ? ' Geoapify Places enabled.' : ' Geoapify key not found; OpenStreetMap fallback will be used.'}`);

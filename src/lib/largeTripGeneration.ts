@@ -27,7 +27,11 @@ async function invokePart<T>(body: object, timeout: number, language: PlannerLan
     const { data, error } = await supabase.functions.invoke<T>('ai', { body, timeout });
     if (!error && data) return data;
     if (attempt === 0 && isRetryablePlannerError(error)) continue;
-    if (isRetryablePlannerError(error)) throw new Error(largePlanWaitError(language));
+    if (isRetryablePlannerError(error)) {
+      const hasServerResponse = typeof error === 'object' && error !== null
+        && 'context' in error && error.context instanceof Response;
+      throw new Error(hasServerResponse ? await readPlannerFunctionError(error, language) : largePlanWaitError(language));
+    }
     throw new Error(await readPlannerFunctionError(error, language));
   }
   throw new Error(largePlanWaitError(language));
@@ -67,7 +71,7 @@ export async function generateDeferredTripSection(trip: GeneratedTrip, section: 
     }
     return completeSection(trip, section, { ...trip.plan, days });
   }
-  const data = await invokePart<SectionResponse>({ mode: 'generate_section', request: trip.request, core: trip.plan, section }, 70_000, language);
+  const data = await invokePart<SectionResponse>({ mode: 'generate_section', request: trip.request, core: trip.plan, section }, 110_000, language);
   if (!data.items) throw new Error(data.error?.message ?? largePlanWaitError(language));
   return completeSection(trip, section, { ...trip.plan, [section]: data.items } as TripPlan);
 }

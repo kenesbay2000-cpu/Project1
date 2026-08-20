@@ -2,18 +2,25 @@ import { budgetPromptGuidance, assessBudget } from './budgetPolicy.ts';
 import type { CurrencyRates } from './exchangeRates.ts';
 import { requestGemini, type GeminiResult } from './gemini.ts';
 import { RECOMMENDATION_SAFETY_GUIDANCE } from './recommendationSafety.ts';
-import { responseLanguageInstruction } from './responseLanguage.ts';
+import { localizedPlannerText, responseLanguageInstruction } from './responseLanguage.ts';
 import {
-  parseTripDaysText, parseTripPlanCoreText, parseTripPlanOverviewText, parseTripPlanSectionText,
-  tripPlanSectionSchema, TRIP_DAYS_SCHEMA, TRIP_PLAN_CORE_SCHEMA, TRIP_PLAN_OVERVIEW_SCHEMA, type TripPlanCore,
+  parseTripDaysText, parseTripPlanCoreText, parseTripPlanOverviewText,
+  TRIP_DAYS_SCHEMA, TRIP_PLAN_CORE_SCHEMA, TRIP_PLAN_OVERVIEW_SCHEMA, type TripPlanCore,
 } from './tripPlanParts.ts';
-import type { TripPlanExtraSection } from './tripPlanExtras.ts';
 import type { PlannerRequest, TripDay } from './types.ts';
+import {
+  destinationOf, hasGroundedDayPlaces, loadPlaceGrounding,
+} from './travelDataGrounding.ts';
 
-type Failure = Extract<GeminiResult, { ok: false }> | { ok: false; code: 'INCOMPLETE_AI_PLAN'; message: string; status: 502 };
-type PartResult<T> = Failure | { ok: true; value: T; elapsedMs: number };
+type Failure = Extract<GeminiResult, { ok: false }> | {
+  ok: false;
+  code: 'INCOMPLETE_AI_PLAN' | 'TRAVEL_DATA_UNAVAILABLE';
+  message: string;
+  status: 502 | 503;
+};
+export type PartResult<T> = Failure | { ok: true; value: T; elapsedMs: number };
 
-function requestContext(request: PlannerRequest, rates: CurrencyRates) {
+export function requestContext(request: PlannerRequest, rates: CurrencyRates) {
   const summary = request.confirmedSummary ? JSON.stringify(request.confirmedSummary) : 'нет';
   const preferences = request.savedPreferences?.length ? request.savedPreferences.join('; ') : 'нет';
   return `${responseLanguageInstruction(request)}
@@ -52,33 +59,6 @@ ${RECOMMENDATION_SAFETY_GUIDANCE}
   return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: `Не удалось собрать обзор плана: ${lastIssue}`, status: 502 };
 }
 
-const sectionInstructions: Record<TripPlanExtraSection, string> = {
-  accommodations: 'Создай ровно 6 вариантов жилья: по 2 уровня budget, comfortable и luxury.',
-  food: 'Создай ровно 6 рекомендаций по еде: по 2 уровня budget, comfortable и luxury.',
-  activities: 'Создай ровно 6 обзорных активностей: по 2 уровня budget, comfortable и luxury.',
-  usefulLinks: 'Создай 4 полезные рекомендации перед поездкой. Не выдумывай URL: поле recommendation должно объяснять, что и где проверить.',
-  checklist: 'Создай 5 персональных пунктов подготовки к этой поездке.',
-};
-
-export async function generatePlanExtraSection(request: PlannerRequest, rates: CurrencyRates, core: TripPlanCore,
-  section: TripPlanExtraSection): Promise<PartResult<TripPlanCore[TripPlanExtraSection]>> {
-  const prompt = `${requestContext(request, rates)}
-Главный обзор поездки: ${JSON.stringify({ title: core.title, destination: core.destination, budget: core.budget, rationale: core.rationale })}
-${RECOMMENDATION_SAFETY_GUIDANCE}
-${sectionInstructions[section]} Верни только объект с полем ${section}. Описания должны быть короткими.`;
-  const started = Date.now();
-  let lastIssue = '';
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const result = await requestGemini(`${prompt}${lastIssue ? `\nИсправь ошибку структуры: ${lastIssue}` : ''}`,
-      45_000, { responseSchema: tripPlanSectionSchema(section), maxOutputTokens: 4_096 });
-    if (!result.ok) return result;
-    const parsed = parseTripPlanSectionText(result.text, section);
-    if ('value' in parsed) return { ok: true, value: parsed.value, elapsedMs: Date.now() - started };
-    lastIssue = parsed.error;
-  }
-  return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: `Не удалось собрать вкладку ${section}: ${lastIssue}`, status: 502 };
-}
-
 export async function generatePlanCore(request: PlannerRequest, rates: CurrencyRates): Promise<PartResult<TripPlanCore>> {
   const groupRule = (request.travelers ?? 1) >= 8
     ? 'Это большая группа: давай варианты для группы целиком. Не создавай отдельные рекомендации на каждого человека; жильё описывай как практичную комбинацию номеров или апартаментов, транспорт — с учётом общей вместимости.'
@@ -102,8 +82,18 @@ ${RECOMMENDATION_SAFETY_GUIDANCE}
 export async function generatePlanDays(request: PlannerRequest, rates: CurrencyRates, core: TripPlanCore, startDay: number, endDay: number, previousDay?: TripDay): Promise<PartResult<TripDay[]>> {
   const count = endDay - startDay + 1;
   const restDays = Array.from({ length: count }, (_, index) => startDay + index).filter((day) => day % 7 === 0);
+  const destination = destinationOf(core);
+  const grounding = await loadPlaceGrounding(destination.city, destination.country, 'activities', (startDay - 1) * 8);
+  if (grounding.names.size < 6) return {
+    ok: false, code: 'TRAVEL_DATA_UNAVAILABLE', status: 503,
+    message: localizedPlannerText(request,
+      'Не удалось загрузить реальные места для маршрута. Попробуйте продолжить генерацию немного позже.',
+      'Real places could not be loaded for the itinerary. Please continue generation again shortly.',
+      'Маршрут үшін нақты орындар жүктелмеді. Генерацияны сәл кейінірек қайталап көріңіз.'),
+  };
   const prompt = `${requestContext(request, rates)}
 Каркас поездки: ${JSON.stringify({ title: core.title, destination: core.destination, transport: core.transport, rationale: core.rationale, realism: core.realism })}
+${grounding.prompt}
 ${previousDay ? `Предыдущий готовый день: ${JSON.stringify(previousDay)}` : 'Это первый блок маршрута.'}
 Сформируй только дни ${startDay}–${endDay} включительно. Номера должны начинаться с ${startDay}. ${request.dates ? 'Даты обязаны точно соответствовать общему периоду.' : 'В date используй «День N».'}
 ${restDays.length ? `Дни ${restDays.join(', ')} обязательно сделай pace rest и не больше двух лёгких активностей.` : ''}
@@ -114,7 +104,13 @@ ${restDays.length ? `Дни ${restDays.join(', ')} обязательно сде
     const result = await requestGemini(`${prompt}${lastIssue ? `\nИсправь ошибку предыдущего блока: ${lastIssue}` : ''}`, partTimeout(count, request.travelers ?? 1, false), { responseSchema: TRIP_DAYS_SCHEMA, maxOutputTokens: 8_192 });
     if (!result.ok) return result;
     const parsed = parseTripDaysText(result.text, core, startDay, endDay);
-    if ('value' in parsed) return { ok: true, value: parsed.value, elapsedMs: Date.now() - started };
+    if ('value' in parsed) {
+      if (!hasGroundedDayPlaces(parsed.value, grounding.names)) {
+        lastIssue = 'Каждое activity.place должно точно совпадать с name из списка API; не добавляй выдуманные места.';
+        continue;
+      }
+      return { ok: true, value: parsed.value, elapsedMs: Date.now() - started };
+    }
     lastIssue = parsed.error;
   }
   return { ok: false, code: 'INCOMPLETE_AI_PLAN', message: `Не удалось собрать дни ${startDay}–${endDay}: ${lastIssue}`, status: 502 };

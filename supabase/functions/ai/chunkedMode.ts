@@ -1,6 +1,7 @@
 import { finalizeGeneratedPlan } from './aiResult.ts';
 import { applyBudgetWarning, assessBudget } from './budgetPolicy.ts';
-import { generatePlanCore, generatePlanDays, generatePlanExtraSection, generatePlanOverview } from './chunkedGeneration.ts';
+import { generatePlanCore, generatePlanDays, generatePlanOverview } from './chunkedGeneration.ts';
+import { generatePlanExtraSection } from './sectionGeneration.ts';
 import { loadExchangeRates } from './exchangeRates.ts';
 import { parsePlannerRequest } from './plannerRequest.ts';
 import { localizedPlannerText } from './responseLanguage.ts';
