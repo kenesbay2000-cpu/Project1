@@ -6,6 +6,7 @@ import './PlannerInitialForm.css';
 import { useI18n } from '../i18n/I18nProvider';
 import { budgetSettings, currencyName, supportedCurrencies, type CurrencyCode } from '../lib/currencies';
 import { languageLocale } from '../i18n/locale';
+import { PlannerDetailsDisclosure } from './PlannerDetailsDisclosure';
 
 type Props = {
   preferences: string[];
@@ -111,7 +112,8 @@ export function PlannerInitialForm({ preferences, defaultUsePreferences, onConti
         </label>
       </section>
 
-      {preferences.length > 0 && <PlannerPreferenceChoice preferences={preferences} usePreferences={usePreferences} onChange={setUsePreferences} />}
+      <PlannerDetailsDisclosure>
+        {preferences.length > 0 && <PlannerPreferenceChoice preferences={preferences} usePreferences={usePreferences} onChange={setUsePreferences} />}
 
       <section className="planner-form__section">
         <header><span aria-hidden="true">⌖</span><div><small>{t('planner.routeEyebrow')}</small><h2>{t('planner.whenFrom')}</h2></div></header>
@@ -139,6 +141,7 @@ export function PlannerInitialForm({ preferences, defaultUsePreferences, onConti
           {(minPrice || maxPrice) && <button className="planner-budget__reset" type="button" onClick={() => { setMinPrice(''); setMaxPrice(''); }}>{t('planner.noBudget')}</button>}
         </div>
       </section>
+      </PlannerDetailsDisclosure>
 
       {error && <div className="planner-form__error" role="alert">{error}</div>}
       <footer className="planner-form__footer"><button className="planner-form__submit" type="submit" disabled={isStarting}>{isStarting ? t('planner.savingChoice') : t('planner.continueAI')} <span>→</span></button><p>{t('planner.formFooter')}</p></footer>
