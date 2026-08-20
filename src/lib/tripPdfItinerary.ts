@@ -8,7 +8,7 @@ export function itineraryPdfContent(trip: GeneratedTrip, language: Language, t: 
     stack: [
       {
         columns: [
-          { text: `${t('trip.day')} ${day.day} · ${day.title}`, style: 'dayTitle' },
+          { text: `${t('trip.day', { day: day.day })} · ${day.title}`, style: 'dayTitle' },
           { text: formatTripDayDate(day.date, language), style: 'dayDate', alignment: 'right' },
         ],
         columnGap: 12,
@@ -52,7 +52,7 @@ export function routePointsPdfContent(trip: GeneratedTrip, t: ExportTranslator):
   }));
   if (!points.length) return [{ text: t('export.noRoutePoints'), italics: true, color: '#718086' }];
   return points.map((point) => ({
-    text: [{ text: `${t('trip.day')} ${point.day}: `, bold: true }, `${point.place}${point.area ? ` · ${point.area}` : ''}`],
+    text: [{ text: `${t('trip.day', { day: point.day })}: `, bold: true }, `${point.place}${point.area ? ` · ${point.area}` : ''}`],
     margin: [0, 0, 0, 6],
   }));
 }

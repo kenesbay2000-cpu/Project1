@@ -4,6 +4,7 @@ export const exportKk = {
   'export.downloadingPdf': 'PDF жасалып жатыр…',
   'export.print': 'Басып шығару',
   'export.error': 'PDF жасау мүмкін болмады. Қайталап көріңіз.',
+  'export.timeoutError': 'PDF 25 секунд ішінде жасалмады. Қайталап көріңіз.',
   'export.documentLabel': 'Жеке саяхат жоспары',
   'export.routePoints': 'Маршрут нүктелері',
   'export.routePointsNote': 'Интерактивті картаның орнына берілген орындардың тұрақты тізімі',

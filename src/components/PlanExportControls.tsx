@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { GeneratedTrip } from '../lib/aiPlanner';
 import { useI18n } from '../i18n/I18nProvider';
-import { downloadTripPdf } from '../lib/tripPdf';
+import { downloadTripPdf, isTripPdfTimeout } from '../lib/tripPdf';
 
 export function PlanExportControls({ trip }: { trip: GeneratedTrip }) {
   const { t, language } = useI18n();
@@ -13,7 +13,7 @@ export function PlanExportControls({ trip }: { trip: GeneratedTrip }) {
     setError('');
     setIsDownloading(true);
     try { await downloadTripPdf(trip, language, t); }
-    catch { setError(t('export.error')); }
+    catch (error) { setError(t(isTripPdfTimeout(error) ? 'export.timeoutError' : 'export.error')); }
     finally { setIsDownloading(false); }
   }
 

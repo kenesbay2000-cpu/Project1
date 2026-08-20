@@ -50,13 +50,60 @@ export function buildTripPdfDefinition(trip: GeneratedTrip, language: Language, 
 }
 
 export async function downloadTripPdf(trip: GeneratedTrip, language: Language, t: ExportTranslator) {
-  const [pdfMake, pdfFonts] = await Promise.all([
+  const deadline = Date.now() + 25_000;
+  const [pdfMake, pdfFonts] = await withPdfTimeout(Promise.all([
     import('pdfmake/build/pdfmake'), import('pdfmake/build/vfs_fonts'),
-  ]);
-  pdfMake.vfs = pdfFonts.default as unknown as Record<string, string>;
-  await new Promise<void>((resolve) => {
-    pdfMake.createPdf(buildTripPdfDefinition(trip, language, t)).download(tripPdfFileName(trip.plan.title), resolve);
+  ]), 25_000);
+  const remaining = Math.max(1, deadline - Date.now());
+  const document = pdfMake.createPdf(
+    buildTripPdfDefinition(trip, language, t), undefined, undefined,
+    pdfFonts.default as unknown as Record<string, string>,
+  );
+  const blob = await createPdfBlob(document, remaining);
+  savePdfBlob(blob, tripPdfFileName(trip.plan.title));
+}
+
+export function isTripPdfTimeout(error: unknown) {
+  return error instanceof Error && error.message === 'PDF_GENERATION_TIMEOUT';
+}
+
+type PdfDocument = { getBlob: (callback: (blob: Blob) => void) => void };
+
+function createPdfBlob(document: PdfDocument, timeoutMs: number) {
+  return new Promise<Blob>((resolve, reject) => {
+    let settled = false;
+    const finish = (action: () => void) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      action();
+    };
+    const timeout = window.setTimeout(() => finish(() => reject(new Error('PDF_GENERATION_TIMEOUT'))), timeoutMs);
+    try { document.getBlob((blob) => finish(() => resolve(blob))); }
+    catch (error) { finish(() => reject(error)); }
   });
+}
+
+function withPdfTimeout<T>(operation: Promise<T>, timeoutMs: number) {
+  return new Promise<T>((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new Error('PDF_GENERATION_TIMEOUT')), timeoutMs);
+    operation.then(
+      (value) => { window.clearTimeout(timeout); resolve(value); },
+      (error: unknown) => { window.clearTimeout(timeout); reject(error); },
+    );
+  });
+}
+
+function savePdfBlob(blob: Blob, fileName: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.rel = 'noopener';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
 function metaCell(label: string, value: string): Content {

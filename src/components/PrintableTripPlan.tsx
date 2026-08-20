@@ -24,14 +24,14 @@ export function PrintableTripPlan({ trip }: { trip: GeneratedTrip }) {
     </PrintSection>
     <PrintSection title={t('workspace.itinerary')}><div className="plan-print-days">{plan.days.map((day) =>
       <section className="plan-print-day" key={day.day}>
-        <header><div><small>{t('trip.day')} {day.day}</small><h3>{day.title}</h3></div><time>{formatTripDayDate(day.date, language)}</time></header>
+        <header><div><small>{t('trip.day', { day: day.day })}</small><h3>{day.title}</h3></div><time>{formatTripDayDate(day.date, language)}</time></header>
         {day.activities.map((activity, index) => <div className="plan-print-stop" key={`${activity.time}-${activity.title}-${index}`}>
           <b>{activity.time}</b><div><h4>{activity.title}</h4><small>{[activity.place, activity.area].filter(Boolean).join(' · ')}</small>
             <p>{activity.description}</p><em>{activity.durationMinutes} min · {formatTripMoney(activity.estimatedCost, plan.budget.currency, language)}</em></div>
         </div>)}
       </section>)}</div></PrintSection>
     <PrintSection title={t('export.routePoints')}><p className="plan-print-note">{t('export.routePointsNote')}</p>
-      {routePoints.length ? <ol className="plan-print-route">{routePoints.map((point) => <li key={point.key}><b>{t('trip.day')} {point.day}</b> — {point.place}{point.area && ` · ${point.area}`}</li>)}</ol> : <p>{t('export.noRoutePoints')}</p>}
+      {routePoints.length ? <ol className="plan-print-route">{routePoints.map((point) => <li key={point.key}><b>{t('trip.day', { day: point.day })}</b> — {point.place}{point.area && ` · ${point.area}`}</li>)}</ol> : <p>{t('export.noRoutePoints')}</p>}
     </PrintSection>
     <PrintableTripCollections trip={trip} language={language} t={t} />
   </article>;
