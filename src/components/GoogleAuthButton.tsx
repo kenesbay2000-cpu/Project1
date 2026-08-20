@@ -25,7 +25,7 @@ export function GoogleAuthButton() {
     try {
       await signInWithGoogle(hasPendingTrip() ? '/planner' : '/');
     } catch (oauthError) {
-      setError(getLoginError(oauthError));
+      setError(getLoginError(oauthError, t));
       setBusy(false);
     }
   }

@@ -1,6 +1,8 @@
+export type PlannerLanguage = 'ru' | 'en' | 'kk';
+
 export type PlannerRequest = {
   prompt: string;
-  responseLanguage?: 'ru' | 'en';
+  responseLanguage?: PlannerLanguage;
   originCity?: string;
   dates?: { start: string; end: string };
   travelers?: number;

@@ -1,6 +1,9 @@
 import type { AuthError, User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import { getSafeDisplayName, normalizeUsername, validateUsername } from './username';
+import { getSafeDisplayName, normalizeUsername, usernameIssueKey, validateUsername, type UsernameIssue } from './username';
+import type { TranslationKey } from '../i18n/translations';
+
+type Translate = (key: TranslationKey, values?: Record<string, string | number>) => string;
 
 export type RegistrationResult =
   | { status: 'signed-in'; email: string }
@@ -43,13 +46,13 @@ export async function signInWithGoogle(redirectPath = '/') {
   if (error) throw error;
 }
 
-export async function ensureGoogleDisplayName(user: User) {
+export async function ensureGoogleDisplayName(user: User, fallbackName: string) {
   const usesGoogle = user.app_metadata.provider === 'google'
     || user.identities?.some((identity) => identity.provider === 'google');
   if (!usesGoogle || user.user_metadata.display_name) return user;
 
   const googleName = user.user_metadata.full_name ?? user.user_metadata.name;
-  const displayName = getSafeDisplayName(googleName, 'Путешественник');
+  const displayName = getSafeDisplayName(googleName, fallbackName);
   const { data, error } = await supabase.auth.updateUser({ data: { display_name: displayName } });
   if (error) throw error;
   return data.user;
@@ -84,76 +87,76 @@ export async function addPasswordToAccount(newPassword: string) {
   return data.user;
 }
 
-export function getPasswordError(error: unknown, isSettingPassword: boolean) {
+export function getPasswordError(error: unknown, isSettingPassword: boolean, t: Translate) {
   const authError = error as Partial<AuthError>;
   const message = authError.message?.toLowerCase() ?? '';
   if (authError.code === 'invalid_credentials' || message.includes('current password') || message.includes('invalid login')) {
-    return 'Текущий пароль указан неверно.';
+    return t('error.currentPassword');
   }
   if (authError.code === 'weak_password' || message.includes('weak password')) {
-    return 'Новый пароль не соответствует требованиям безопасности. Сделайте его длиннее и сложнее.';
+    return t('error.weakPassword');
   }
-  if (authError.code === 'same_password' || message.includes('same password')) return 'Новый пароль должен отличаться от текущего.';
+  if (authError.code === 'same_password' || message.includes('same password')) return t('error.samePassword');
   if (authError.code === 'reauthentication_needed') {
     return isSettingPassword
-      ? 'Для установки пароля заново войдите через Google и повторите попытку.'
-      : 'Supabase запросил повторную авторизацию. Проверьте текущий пароль и попробуйте снова.';
+      ? t('error.reauthGoogle')
+      : t('error.reauthPassword');
   }
-  if (authError.code === 'over_request_rate_limit') return 'Слишком много попыток. Подождите несколько минут и попробуйте снова.';
-  if (authError.code === 'session_not_found' || authError.code === 'refresh_token_not_found') return 'Сессия завершилась. Войдите в аккаунт снова.';
-  if (authError.status === 0 || message.includes('fetch')) return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте снова.';
-  return isSettingPassword ? 'Не удалось установить пароль. Попробуйте ещё раз.' : 'Не удалось изменить пароль. Попробуйте ещё раз.';
+  if (authError.code === 'over_request_rate_limit') return t('error.tooManyAttempts');
+  if (authError.code === 'session_not_found' || authError.code === 'refresh_token_not_found') return t('error.sessionExpired');
+  if (authError.status === 0 || message.includes('fetch')) return t('error.network');
+  return t(isSettingPassword ? 'error.setPassword' : 'error.changePassword');
 }
 
-export function getProfileError(error: unknown) {
-  if (error instanceof Error && error.message.startsWith('USERNAME:')) return error.message.slice('USERNAME:'.length);
+export function getProfileError(error: unknown, t: Translate) {
+  if (error instanceof Error && error.message.startsWith('USERNAME:')) return t(usernameIssueKey(error.message.slice('USERNAME:'.length) as UsernameIssue), { min: 2, max: 18 });
   const authError = error as Partial<AuthError>;
   if (authError.code === 'session_not_found' || authError.code === 'refresh_token_not_found') {
-    return 'Сессия завершилась. Войдите снова, чтобы изменить профиль.';
+    return t('error.profileSession');
   }
   if (authError.status === 0 || authError.message?.toLowerCase().includes('fetch')) {
-    return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте снова.';
+    return t('error.network');
   }
-  return 'Не удалось сохранить имя. Попробуйте ещё раз.';
+  return t('error.profileSave');
 }
 
-export function getLoginError(error: unknown) {
+export function getLoginError(error: unknown, t: Translate) {
   const authError = error as Partial<AuthError>;
-  if (authError.code === 'invalid_credentials') return 'Неверный email или пароль. Проверьте данные и попробуйте снова.';
-  if (authError.code === 'user_not_found') return 'Пользователь с таким email не найден. Проверьте адрес или зарегистрируйтесь.';
-  if (authError.code === 'email_not_confirmed') return 'Email ещё не подтверждён. Откройте письмо от Supabase и перейдите по ссылке.';
-  if (authError.code === 'email_address_invalid') return 'Email выглядит некорректно. Проверьте адрес и попробуйте снова.';
-  if (authError.status === 0 || authError.message?.toLowerCase().includes('fetch')) return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте снова.';
-  return 'Не удалось войти. Проверьте данные и попробуйте ещё раз.';
+  if (authError.code === 'invalid_credentials') return t('error.loginInvalid');
+  if (authError.code === 'user_not_found') return t('error.userNotFound');
+  if (authError.code === 'email_not_confirmed') return t('error.emailNotConfirmed');
+  if (authError.code === 'email_address_invalid') return t('error.emailInvalid');
+  if (authError.status === 0 || authError.message?.toLowerCase().includes('fetch')) return t('error.network');
+  return t('error.login');
 }
 
-export function getRegistrationError(error: unknown) {
-  if (error instanceof Error && error.message.startsWith('USERNAME:')) return error.message.slice('USERNAME:'.length);
+export function getRegistrationError(error: unknown, t: Translate) {
+  if (error instanceof Error && error.message.startsWith('USERNAME:')) return t(usernameIssueKey(error.message.slice('USERNAME:'.length) as UsernameIssue), { min: 2, max: 18 });
   if (error instanceof Error && error.message === 'EMAIL_ALREADY_REGISTERED') {
-    return 'Этот email уже зарегистрирован. Попробуйте войти или используйте другой адрес.';
+    return t('error.emailExists');
   }
 
   const authError = error as Partial<AuthError>;
   if (authError.code === 'email_exists' || authError.code === 'user_already_exists') {
-    return 'Этот email уже зарегистрирован. Попробуйте войти или используйте другой адрес.';
+    return t('error.emailExists');
   }
   if (authError.code === 'email_address_invalid') {
-    return 'Email выглядит некорректно. Проверьте адрес и попробуйте снова.';
+    return t('error.emailInvalid');
   }
   if (authError.code === 'email_provider_disabled') {
-    return 'Регистрация по email временно недоступна. Попробуйте позже.';
+    return t('error.emailSignupDisabled');
   }
   if (authError.code === 'weak_password') {
-    return 'Пароль слишком простой. Добавьте буквы разного регистра, цифры или символы.';
+    return t('error.weakPassword');
   }
   if (authError.code === 'over_email_send_rate_limit') {
-    return 'Слишком много попыток. Подождите несколько минут и попробуйте снова.';
+    return t('error.tooManyAttempts');
   }
   if (authError.code === 'signup_disabled') {
-    return 'Регистрация временно недоступна. Попробуйте позже.';
+    return t('error.signupDisabled');
   }
   if (authError.status === 0 || authError.message?.toLowerCase().includes('fetch')) {
-    return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте снова.';
+    return t('error.network');
   }
-  return 'Не удалось создать аккаунт. Проверьте данные и попробуйте ещё раз.';
+  return t('error.signup');
 }

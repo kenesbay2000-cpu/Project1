@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { GeneratedTrip } from '../lib/aiPlanner';
 import { loadTripWeather, type TripWeatherResult } from '../lib/tripWeather';
 import { useI18n } from '../i18n/I18nProvider';
+import { languageLocale } from '../i18n/locale';
 
 const EMPTY_WEATHER: TripWeatherResult = { climate: null, forecast: [], kind: 'unavailable', location: null };
 
@@ -14,7 +15,7 @@ function tripDates(trip: GeneratedTrip) {
 
 export function SavedPlanWeather({ trip }: { trip: GeneratedTrip }) {
   const { t, language } = useI18n();
-  const locale = language === 'ru' ? 'ru-RU' : 'en-US';
+  const locale = languageLocale(language);
   const dates = useMemo(() => tripDates(trip), [trip]);
   const [weather, setWeather] = useState<TripWeatherResult>(EMPTY_WEATHER);
   const [isLoading, setIsLoading] = useState(true);

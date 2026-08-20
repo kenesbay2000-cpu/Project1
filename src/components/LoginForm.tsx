@@ -33,7 +33,7 @@ export function LoginForm() {
       await signInUser(normalizedEmail, password);
       navigate(hasPendingTrip() ? '/planner' : '/');
     } catch (error) {
-      setFormError(getLoginError(error));
+      setFormError(getLoginError(error, t));
     } finally {
       setBusy(false);
     }

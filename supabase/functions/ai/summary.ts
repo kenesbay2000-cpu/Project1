@@ -124,7 +124,7 @@ export async function createTripSummary(
   try { raw = JSON.parse(result.text); } catch { raw = null; }
   const summary = parseTripSummary(raw);
   if (!summary) {
-    return { ok: false, code: 'AI_UNAVAILABLE', message: localizedPlannerText(request, 'ИИ не смог подготовить сводку поездки. Попробуйте ещё раз.', 'AI could not prepare the trip summary. Please try again.'), status: 502 };
+    return { ok: false, code: 'AI_UNAVAILABLE', message: localizedPlannerText(request, 'ИИ не смог подготовить сводку поездки. Попробуйте ещё раз.', 'AI could not prepare the trip summary. Please try again.', 'AI сапар қорытындысын дайындай алмады. Қайталап көріңіз.'), status: 502 };
   }
   return { ok: true, summary };
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { RecommendationTier, TripPlan } from '../lib/aiPlanner';
 import { useI18n } from '../i18n/I18nProvider';
+import { languageLocale } from '../i18n/locale';
 import { filterByRecommendationTier, recommendationTier, type RecommendationTierFilterValue } from '../lib/recommendationTiers';
 import { useRecommendationPhotos } from '../lib/useRecommendationPhotos';
 import { RecommendationPhoto } from './RecommendationPhoto';
@@ -17,7 +18,7 @@ export function SavedAccommodations({ plan }: { plan: TripPlan }) {
   const [tier, setTier] = useState<RecommendationTierFilterValue>('all');
   const photoFor = useRecommendationPhotos(plan, 'accommodation', plan.accommodations);
   const items = filterByRecommendationTier(plan.accommodations, tier);
-  return <><RecommendationTierFilter value={tier} onChange={setTier} /><div className="saved-card-grid saved-card-grid--large">{items.map((item, index) => <article key={`${item.name}-${index}`}><RecommendationPhoto name={item.name} state={photoFor(item.name)} /><TierBadge tier={item.tier} /><small>{item.type} · {item.area}</small><h3>{item.name}</h3><strong>{item.pricePerNight.toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US')} {plan.budget.currency} {t('extras.perNight')}</strong><p>{item.description}</p></article>)}</div></>;
+  return <><RecommendationTierFilter value={tier} onChange={setTier} /><div className="saved-card-grid saved-card-grid--large">{items.map((item, index) => <article key={`${item.name}-${index}`}><RecommendationPhoto name={item.name} state={photoFor(item.name)} /><TierBadge tier={item.tier} /><small>{item.type} · {item.area}</small><h3>{item.name}</h3><strong>{item.pricePerNight.toLocaleString(languageLocale(language))} {plan.budget.currency} {t('extras.perNight')}</strong><p>{item.description}</p></article>)}</div></>;
 }
 
 export function SavedFood({ plan }: { plan: TripPlan }) {

@@ -40,7 +40,7 @@ export function PasswordSettings() {
       setCurrentPassword(''); setNewPassword(''); setConfirmation('');
       setSuccess(hasPassword ? t('password.success') : t('password.addSuccess'));
     } catch (passwordError) {
-      setError(getPasswordError(passwordError, !hasPassword));
+      setError(getPasswordError(passwordError, !hasPassword, t));
     } finally {
       setBusy(false);
     }

@@ -3,17 +3,17 @@ import { Link, useLocation } from 'wouter';
 import { getRegistrationError, registerUser, type RegistrationResult } from '../lib/auth';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { SupabaseSetupMessage } from './SupabaseSetupMessage';
-import { MAX_USERNAME_LENGTH, validateUsername } from '../lib/username';
+import { MAX_USERNAME_LENGTH, MIN_USERNAME_LENGTH, usernameIssueKey, validateUsername } from '../lib/username';
 import { GoogleAuthButton } from './GoogleAuthButton';
 import { hasPendingTrip } from '../lib/savedPlans';
 import { useI18n } from '../i18n/I18nProvider';
 
 type FieldErrors = Partial<Record<'name' | 'email' | 'password', string>>;
 
-function validate(name: string, email: string, password: string, emailError: string, passwordError: string): FieldErrors {
+function validate(name: string, email: string, password: string, emailError: string, passwordError: string, usernameMessage: (name: string) => string): FieldErrors {
   const errors: FieldErrors = {};
   const usernameError = validateUsername(name);
-  if (usernameError) errors.name = usernameError;
+  if (usernameError) errors.name = usernameMessage(name);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = emailError;
   if (password.length < 8) errors.password = passwordError;
   return errors;
@@ -35,7 +35,10 @@ export function RegistrationForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const fieldErrors = validate(name, email, password, t('auth.emailInvalid'), t('auth.passwordMin'));
+    const fieldErrors = validate(name, email, password, t('auth.emailInvalid'), t('auth.passwordMin'), (value) => {
+      const issue = validateUsername(value);
+      return issue ? t(usernameIssueKey(issue), { min: MIN_USERNAME_LENGTH, max: MAX_USERNAME_LENGTH }) : '';
+    });
     setErrors(fieldErrors);
     setFormError('');
     if (Object.keys(fieldErrors).length > 0) return;
@@ -47,7 +50,7 @@ export function RegistrationForm() {
       if (registration.status === 'signed-in' && hasPendingPlan) { navigate('/planner'); return; }
       setResult(registration);
     } catch (error) {
-      setFormError(getRegistrationError(error));
+      setFormError(getRegistrationError(error, t));
     } finally {
       setBusy(false);
     }

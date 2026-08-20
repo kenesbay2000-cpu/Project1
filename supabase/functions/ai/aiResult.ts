@@ -45,7 +45,7 @@ export function parsePlannerAIResult(text: string, request: PlannerRequest): Par
   if (value.status === 'budget_too_low' && value.plan === null && typeof value.message === 'string') {
     return { value: { status: 'budget_too_low', message: value.message, plan: null } };
   }
-  const language = request.responseLanguage === 'en' ? 'en' : 'ru';
+  const language = request.responseLanguage === 'en' || request.responseLanguage === 'kk' ? request.responseLanguage : 'ru';
   const normalizedPlan = limitAdjustedActivities(value.plan, language);
   const schemaIssue = getTripPlanValidationIssue(normalizedPlan, true);
   if (value.status === 'success' && typeof value.message === 'string' && !schemaIssue && isTripPlan(normalizedPlan)) {

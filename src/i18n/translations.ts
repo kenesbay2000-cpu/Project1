@@ -4,8 +4,9 @@ import { plannerTranslations } from './plannerTranslations';
 import { plansTranslations } from './plansTranslations';
 import { accountTranslations } from './accountTranslations';
 import { commonTranslations } from './commonTranslations';
+import { kazakhTranslations } from './kk';
 
-export const supportedLanguages = ['ru', 'en'] as const;
+export const supportedLanguages = ['ru', 'en', 'kk'] as const;
 export type Language = typeof supportedLanguages[number];
 
 const coreRu = {
@@ -22,6 +23,8 @@ const coreRu = {
   'header.mainNavigation': 'Основная навигация',
   'header.authLoading': 'Проверяем авторизацию',
   'header.brandHome': 'Roamly — на главную',
+  'header.tagline': 'умные путешествия',
+  'header.travelerFallback': 'Путешественник',
   'planner.eyebrow': 'Roamly · AI Planner',
   'planner.title': 'Расскажите о поездке.',
   'planner.titleAccent': 'Мы соберём остальное.',
@@ -55,11 +58,36 @@ const coreEn = {
   'header.mainNavigation': 'Main navigation',
   'header.authLoading': 'Checking authentication',
   'header.brandHome': 'Roamly — home',
+  'header.tagline': 'smart travel',
+  'header.travelerFallback': 'Traveller',
   'planner.eyebrow': 'Roamly · AI Planner',
   'planner.title': 'Tell us about your trip.',
   'planner.titleAccent': 'We’ll take care of the rest.',
   'planner.intro': 'Write naturally, as if you were talking to someone who knows you well. AI will turn your ideas into a realistic itinerary and ask only what truly matters.',
   'planner.sessionLoading': 'Checking your session…',
+} satisfies Record<keyof typeof coreRu, string>;
+
+const coreKk = {
+  'language.name': 'Қазақша',
+  'language.switcherLabel': 'Сайт тілі',
+  'header.home': 'Басты бет',
+  'header.planner': 'AI Planner',
+  'header.blog': 'Блог',
+  'header.profile': 'Профиль',
+  'header.myPlans': 'Менің жоспарларым',
+  'header.login': 'Кіру',
+  'header.signup': 'Тіркелу',
+  'header.startPlanning': 'Жоспарлауды бастау',
+  'header.mainNavigation': 'Негізгі навигация',
+  'header.authLoading': 'Авторизация тексерілуде',
+  'header.brandHome': 'Roamly — басты бетке',
+  'header.tagline': 'ақылды саяхат',
+  'header.travelerFallback': 'Саяхатшы',
+  'planner.eyebrow': 'Roamly · AI Planner',
+  'planner.title': 'Сапарыңызды сипаттаңыз.',
+  'planner.titleAccent': 'Қалғанын біз жоспарлаймыз.',
+  'planner.intro': 'Жақын адамыңызға айтқандай еркін жазыңыз. AI идеяларыңызды шынайы маршрутқа айналдырып, тек маңызды мәліметтерді нақтылайды.',
+  'planner.sessionLoading': 'Сессия тексерілуде…',
 } satisfies Record<keyof typeof coreRu, string>;
 
 const en: Record<TranslationKey, string> = {
@@ -72,9 +100,15 @@ const en: Record<TranslationKey, string> = {
   ...commonTranslations.en,
 };
 
-export const translations: Record<Language, Record<TranslationKey, string>> = { ru, en };
+const kk: Record<TranslationKey, string> = {
+  ...coreKk,
+  ...kazakhTranslations,
+};
+
+export const translations: Record<Language, Record<TranslationKey, string>> = { ru, en, kk };
 
 export const languageOptions: Array<{ value: Language; shortLabel: string; label: string }> = [
   { value: 'ru', shortLabel: 'RU', label: ru['language.name'] },
   { value: 'en', shortLabel: 'EN', label: en['language.name'] },
+  { value: 'kk', shortLabel: 'KK', label: kk['language.name'] },
 ];

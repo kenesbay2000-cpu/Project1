@@ -1,5 +1,6 @@
 import type { TripPlan } from '../lib/aiPlanner';
 import { useI18n } from '../i18n/I18nProvider';
+import { languageLocale } from '../i18n/locale';
 
 type BudgetBreakdownProps = {
   budget: TripPlan['budget'];
@@ -17,7 +18,7 @@ function describeEstimate(note: string, typical: string, rough: string, fallback
 
 export function BudgetBreakdown({ budget }: BudgetBreakdownProps) {
   const { t, language } = useI18n();
-  const formatMoney = (value: number) => `${value.toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US')} ${budget.currency}`;
+  const formatMoney = (value: number) => `${value.toLocaleString(languageLocale(language))} ${budget.currency}`;
 
   return (
     <section className="trip-budget">

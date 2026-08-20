@@ -23,10 +23,10 @@ export function SavedPlanPage() {
     setIsLoading(true); setError('');
     void loadSavedPlan(params.id, user.id)
       .then((savedTrip) => { if (isActive) { setTrip(savedTrip); if (!savedTrip) setError(t('savedPlan.notFound')); } })
-      .catch((loadError) => { if (isActive) setError(getPlansError('load', loadError)); })
+      .catch((loadError) => { if (isActive) setError(getPlansError('load', loadError, t)); })
       .finally(() => { if (isActive) setIsLoading(false); });
     return () => { isActive = false; };
-  }, [user, params?.id]);
+  }, [user, params?.id, t]);
 
   return (
     <ProtectedPage label={t('savedPlan.label')} guestDescription={t('savedPlan.guest')}>

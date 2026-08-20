@@ -85,15 +85,15 @@ function parseResult(text: string, request: PlannerRequest): ClarificationResult
 
   const mustAskOrigin = !originCity && !askedIds.has('origin_city');
   if (mustAskOrigin && !questions.some((question) => question.id === 'origin_city')) {
-    questions.unshift({ id: 'origin_city', text: localizedPlannerText(request, 'Из какого города вы планируете отправляться?', 'Which city will you be departing from?') });
+    questions.unshift({ id: 'origin_city', text: localizedPlannerText(request, 'Из какого города вы планируете отправляться?', 'Which city will you be departing from?', 'Қай қаладан жолға шығуды жоспарлап отырсыз?') });
   }
   const reachedLimit = askedIds.size >= 6 || (request.clarifications?.length ?? 0) >= 3;
   const limitedQuestions = reachedLimit && !mustAskOrigin ? [] : questions.slice(0, 3);
   return {
     status: limitedQuestions.length > 0 ? 'questions' : 'ready',
     message: limitedQuestions.length > 0
-      ? (typeof record.message === 'string' && record.message.trim() ? record.message.trim() : localizedPlannerText(request, 'Уточню несколько деталей, которые заметно улучшат план.', 'I’ll clarify a few details that will make your itinerary more precise.'))
-      : localizedPlannerText(request, 'Данных достаточно — начинаю собирать маршрут.', 'I have everything I need to begin shaping your itinerary.'),
+      ? (typeof record.message === 'string' && record.message.trim() ? record.message.trim() : localizedPlannerText(request, 'Уточню несколько деталей, которые заметно улучшат план.', 'I’ll clarify a few details that will make your itinerary more precise.', 'Жоспарды жақсартатын бірнеше мәліметті нақтылаймын.'))
+      : localizedPlannerText(request, 'Данных достаточно — начинаю собирать маршрут.', 'I have everything I need to begin shaping your itinerary.', 'Мәлімет жеткілікті — маршрутты құра бастаймын.'),
     originCity,
     questions: limitedQuestions,
   };

@@ -26,7 +26,7 @@ export function ForgotPasswordPage() {
       await requestPasswordReset(normalizedEmail);
       setSent(true);
     } catch (error) {
-      const message = getPasswordResetRequestError(error);
+      const message = getPasswordResetRequestError(error, t);
       if (!message) setSent(true);
       else setFormError(message);
     } finally {

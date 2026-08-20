@@ -8,7 +8,7 @@ export function SignupPage() {
     <main className="signup-page">
       <aside className="signup-story">
         <div>
-          <p>Roamly account</p>
+          <p>{t('auth.accountLabel')}</p>
           <h2>{t('signup.storyTitle')}</h2>
         </div>
         <blockquote>{t('signup.quote')}</blockquote>

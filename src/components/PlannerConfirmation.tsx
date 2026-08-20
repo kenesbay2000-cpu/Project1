@@ -2,6 +2,7 @@ import type { FormEvent } from 'react';
 import type { TripSummary } from '../lib/aiPlanner';
 import { PlannerGenerationProgress } from './PlannerGenerationProgress';
 import { useI18n } from '../i18n/I18nProvider';
+import { languageLocale } from '../i18n/locale';
 
 type Props = {
   summary: TripSummary;
@@ -24,7 +25,7 @@ export function PlannerConfirmation(props: Props) {
     ? `${summary.travelers.count}; ${summary.travelers.ages.length ? `${t('confirm.age')}: ${summary.travelers.ages.join(', ')}` : show(summary.travelers.description)}`
     : show(summary.travelers.description);
   const budget = summary.budget.max
-    ? `${summary.budget.min.toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US')}–${summary.budget.max.toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US')} ${summary.budget.currency}`
+    ? `${summary.budget.min.toLocaleString(languageLocale(language))}–${summary.budget.max.toLocaleString(languageLocale(language))} ${summary.budget.currency}`
     : t('confirm.budgetUnspecified');
   return (
     <section className="planner-confirmation" aria-labelledby="planner-confirmation-title">

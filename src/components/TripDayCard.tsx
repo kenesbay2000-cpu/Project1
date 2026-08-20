@@ -1,5 +1,6 @@
 import type { TripPlan } from '../lib/aiPlanner';
 import { useI18n } from '../i18n/I18nProvider';
+import { languageLocale } from '../i18n/locale';
 
 type TripDayCardProps = {
   day: TripPlan['days'][number];
@@ -13,7 +14,7 @@ function formatDate(value: string | undefined, locale: string) {
 
 export function TripDayCard({ day, currency }: TripDayCardProps) {
   const { t, language } = useI18n();
-  const locale = language === 'ru' ? 'ru-RU' : 'en-US';
+  const locale = languageLocale(language);
   const formatMoney = (value: number) => value === 0 ? t('trip.noCost') : `${value.toLocaleString(locale)} ${currency}`;
   const paceLabels = { active: t('trip.activePace'), balanced: t('trip.balancedPace'), rest: t('trip.restPace') };
   return (

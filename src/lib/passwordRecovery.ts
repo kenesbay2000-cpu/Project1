@@ -1,5 +1,8 @@
 import type { AuthError } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import type { TranslationKey } from '../i18n/translations';
+
+type Translate = (key: TranslationKey) => string;
 
 export async function requestPasswordReset(email: string) {
   const redirectTo = new URL('/reset-password', window.location.origin).toString();
@@ -13,32 +16,32 @@ export async function resetPassword(newPassword: string) {
   return data.user;
 }
 
-export function getPasswordResetRequestError(error: unknown) {
+export function getPasswordResetRequestError(error: unknown, t: Translate) {
   const authError = error as Partial<AuthError>;
   if (authError.code === 'user_not_found') return '';
   if (authError.code === 'email_address_invalid') {
-    return 'Email выглядит некорректно. Проверьте адрес и попробуйте снова.';
+    return t('error.emailInvalid');
   }
   if (authError.code === 'over_email_send_rate_limit' || authError.code === 'over_request_rate_limit') {
-    return 'Слишком много запросов. Подождите несколько минут и попробуйте снова.';
+    return t('error.tooManyAttempts');
   }
   if (authError.status === 0 || authError.message?.toLowerCase().includes('fetch')) {
-    return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте снова.';
+    return t('error.network');
   }
-  return 'Не удалось отправить письмо. Попробуйте ещё раз чуть позже.';
+  return t('error.sendEmail');
 }
 
-export function getPasswordRecoveryError(error: unknown) {
+export function getPasswordRecoveryError(error: unknown, t: Translate) {
   const authError = error as Partial<AuthError>;
   if (authError.code === 'weak_password') {
-    return 'Пароль слишком простой. Используйте минимум 8 символов и добавьте разные типы знаков.';
+    return t('error.recoveryWeak');
   }
-  if (authError.code === 'same_password') return 'Новый пароль должен отличаться от прежнего.';
+  if (authError.code === 'same_password') return t('error.samePassword');
   if (authError.code === 'session_not_found' || authError.code === 'refresh_token_not_found') {
-    return 'Ссылка для восстановления недействительна или уже истекла. Запросите новое письмо.';
+    return t('error.recoveryInvalid');
   }
   if (authError.status === 0 || authError.message?.toLowerCase().includes('fetch')) {
-    return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте снова.';
+    return t('error.network');
   }
-  return 'Не удалось изменить пароль. Запросите новую ссылку и попробуйте ещё раз.';
+  return t('error.recovery');
 }

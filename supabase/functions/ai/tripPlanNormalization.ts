@@ -1,10 +1,10 @@
-import type { TripPlan } from './types.ts';
+import type { PlannerLanguage, TripPlan } from './types.ts';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-export function limitAdjustedActivities(value: unknown, language: 'ru' | 'en' = 'ru') {
+export function limitAdjustedActivities(value: unknown, language: PlannerLanguage = 'ru') {
   if (!isRecord(value) || !isRecord(value.realism) || value.realism.status !== 'adjusted'
     || !Array.isArray(value.days)) return value;
   let wasTrimmed = false;
@@ -19,7 +19,7 @@ export function limitAdjustedActivities(value: unknown, language: 'ru' | 'en' = 
   });
   if (!wasTrimmed) return value;
   const adjustments = Array.isArray(value.realism.adjustments) ? value.realism.adjustments : [];
-  const serverAdjustment = language === 'en' ? 'Overloaded days were reduced to a physically achievable number of activities.' : 'Количество активностей в перегруженных днях сокращено до физически выполнимого уровня.';
+  const serverAdjustment = language === 'en' ? 'Overloaded days were reduced to a physically achievable number of activities.' : language === 'kk' ? 'Шамадан тыс жүктелген күндердегі іс-шара саны орындалатын деңгейге дейін қысқартылды.' : 'Количество активностей в перегруженных днях сокращено до физически выполнимого уровня.';
   return {
     ...value,
     days,
@@ -42,7 +42,7 @@ function formatMinutes(value: number) {
   return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
 }
 
-export function normalizePlanSchedule(plan: TripPlan, language: 'ru' | 'en' = 'ru') {
+export function normalizePlanSchedule(plan: TripPlan, language: PlannerLanguage = 'ru') {
   let wasAdjusted = false;
   const days = plan.days.map((day) => {
     const hasLongTransfer = day.activities.some((activity) => activity.travelMinutesFromPrevious > 180);
@@ -66,8 +66,8 @@ export function normalizePlanSchedule(plan: TripPlan, language: 'ru' | 'en' = 'r
     return { ...day, activities };
   });
   if (!wasAdjusted) return plan;
-  const warning = language === 'en' ? 'The schedule was adjusted slightly to allow realistic transfer time and keep each day comfortable.' : 'Расписание немного скорректировано, чтобы сохранить реальное время на переезды и не перегружать дни.';
-  const adjustment = language === 'en' ? 'Start times and activity counts were aligned with transfer durations.' : 'Время начала и количество отдельных активностей согласованы с длительностью переездов.';
+  const warning = language === 'en' ? 'The schedule was adjusted slightly to allow realistic transfer time and keep each day comfortable.' : language === 'kk' ? 'Жолға шынайы уақыт қалдырып, күндерді шамадан тыс жүктемеу үшін кесте сәл түзетілді.' : 'Расписание немного скорректировано, чтобы сохранить реальное время на переезды и не перегружать дни.';
+  const adjustment = language === 'en' ? 'Start times and activity counts were aligned with transfer durations.' : language === 'kk' ? 'Басталу уақыты мен іс-шара саны жол ұзақтығына сәйкестендірілді.' : 'Время начала и количество отдельных активностей согласованы с длительностью переездов.';
   return {
     ...plan,
     days,

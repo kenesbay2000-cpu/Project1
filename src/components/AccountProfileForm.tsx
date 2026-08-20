@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { getProfileError, updateDisplayName } from '../lib/auth';
 import { useAuth } from './AuthProvider';
-import { MAX_USERNAME_LENGTH, normalizeUsername, validateUsername } from '../lib/username';
+import { MAX_USERNAME_LENGTH, MIN_USERNAME_LENGTH, normalizeUsername, usernameIssueKey, validateUsername } from '../lib/username';
 import { useI18n } from '../i18n/I18nProvider';
 
 export function AccountProfileForm() {
@@ -19,13 +19,13 @@ export function AccountProfileForm() {
     setError(''); setSaved(false);
     const normalizedName = normalizeUsername(name);
     const usernameError = validateUsername(normalizedName);
-    if (usernameError) { setError(usernameError); return; }
+    if (usernameError) { setError(t(usernameIssueKey(usernameError), { min: MIN_USERNAME_LENGTH, max: MAX_USERNAME_LENGTH })); return; }
     setBusy(true);
     try {
       await updateDisplayName(normalizedName);
       setSaved(true);
     } catch (profileError) {
-      setError(getProfileError(profileError));
+      setError(getProfileError(profileError, t));
     } finally {
       setBusy(false);
     }

@@ -35,7 +35,7 @@ export function SavedPlanSidebar({ active, onSelect }: Props) {
 
   return (
     <aside className="saved-workspace__sidebar">
-      <div className="saved-workspace__sidebar-title"><span>{t('workspace.sections')}</span><strong>Workspace</strong></div>
+      <div className="saved-workspace__sidebar-title"><span>{t('workspace.sections')}</span><strong>{t('workspace.workspaceLabel')}</strong></div>
       <nav aria-label={t('workspace.sectionsAria')}>
         {savedPlanSections.map((section, index) => (
           <button

@@ -2,6 +2,7 @@ import { useState, type FormEvent, type KeyboardEvent, type MouseEvent } from 'r
 import { useLocation } from 'wouter';
 import type { SavedPlanSummary } from '../lib/savedPlanQueries';
 import { useI18n } from '../i18n/I18nProvider';
+import { languageLocale } from '../i18n/locale';
 
 type SavedPlanCardProps = {
   plan: SavedPlanSummary;
@@ -16,7 +17,7 @@ function formatDate(value: string, locale: string) {
 
 export function SavedPlanCard({ plan, onRename, onDelete }: SavedPlanCardProps) {
   const { t, language } = useI18n();
-  const locale = language === 'ru' ? 'ru-RU' : 'en-US';
+  const locale = languageLocale(language);
   const [, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mode, setMode] = useState<'menu' | 'rename' | 'delete'>('menu');

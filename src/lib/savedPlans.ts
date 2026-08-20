@@ -1,5 +1,8 @@
 import { supabase } from './supabase';
 import type { GeneratedTrip } from './aiPlanner';
+import type { TranslationKey } from '../i18n/translations';
+
+type Translate = (key: TranslationKey, values?: Record<string, string | number>) => string;
 
 const PENDING_PLAN_KEY = 'roamly.pending-plan';
 const PENDING_PLAN_LIFETIME = 24 * 60 * 60 * 1000;
@@ -101,19 +104,19 @@ export async function saveTripPlan(trip: GeneratedTrip) {
   return saved.id;
 }
 
-export function getSavePlanError(error: unknown) {
+export function getSavePlanError(error: unknown, t: Translate) {
   const details = error as { code?: string; message?: string; details?: string };
   const message = details.message?.toLowerCase() ?? '';
   if (details.message === 'SAVE_AUTH_REQUIRED' || message.includes('jwt') || message.includes('session')) {
-    return 'Сессия завершилась. Войдите снова — готовый маршрут останется на экране.';
+    return t('save.sessionError');
   }
-  if (details.message === 'SAVE_INVALID_PLAN') return 'Маршрут содержит неполные данные и не может быть сохранён. Создайте план ещё раз.';
-  if (details.message === 'SAVE_NOT_CONFIRMED') return 'Сервер не подтвердил сохранение. Нажмите «Сохранить план» ещё раз.';
-  if (details.code === '42501' || details.code === 'PGRST301') return 'Supabase отклонил запись из-за доступа. Выйдите из аккаунта, войдите снова и повторите сохранение.';
-  if (details.code === '23514' || details.code === '22003' || details.code === '22001') return 'Некоторые значения маршрута не подходят формату базы. Измените параметры поездки и создайте план заново.';
-  if (details.code === 'PGRST204' || details.code === '42703') return 'Структура базы не совпадает с приложением. Обновите страницу и попробуйте снова.';
-  if (message.includes('fetch') || message.includes('network')) return 'Не удалось связаться с сервером. Проверьте интернет и попробуйте ещё раз.';
+  if (details.message === 'SAVE_INVALID_PLAN') return t('save.invalidError');
+  if (details.message === 'SAVE_NOT_CONFIRMED') return t('save.unconfirmedError');
+  if (details.code === '42501' || details.code === 'PGRST301') return t('save.accessError');
+  if (details.code === '23514' || details.code === '22003' || details.code === '22001') return t('save.formatError');
+  if (details.code === 'PGRST204' || details.code === '42703') return t('save.schemaError');
+  if (message.includes('fetch') || message.includes('network')) return t('save.networkError');
   return details.code
-    ? `Не удалось сохранить план (код ${details.code}). Попробуйте ещё раз или сообщите этот код разработчику.`
-    : 'Не удалось сохранить план по неизвестной причине. Попробуйте ещё раз через несколько секунд.';
+    ? t('save.codeError', { code: details.code })
+    : t('save.unknownError');
 }

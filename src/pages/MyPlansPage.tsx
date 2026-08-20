@@ -22,23 +22,23 @@ export function MyPlansPage() {
     setIsLoading(true); setError('');
     void loadSavedPlans(user.id)
       .then((items) => { if (isActive) setPlans(items); })
-      .catch((loadError) => { if (isActive) setError(getPlansError('load', loadError)); })
+      .catch((loadError) => { if (isActive) setError(getPlansError('load', loadError, t)); })
       .finally(() => { if (isActive) setIsLoading(false); });
     return () => { isActive = false; };
-  }, [user, reloadKey]);
+  }, [user, reloadKey, t]);
 
   async function rename(id: string, title: string) {
     if (!user) throw new Error(t('plans.sessionExpired'));
     try {
       await renameSavedPlan(id, user.id, title);
       setPlans((items) => items.map((plan) => plan.id === id ? { ...plan, title: title.trim() } : plan));
-    } catch (renameError) { throw new Error(getPlansError('rename', renameError)); }
+    } catch (renameError) { throw new Error(getPlansError('rename', renameError, t)); }
   }
 
   async function remove(id: string) {
     if (!user) throw new Error(t('plans.sessionExpired'));
     try { await deleteSavedPlan(id, user.id); setPlans((items) => items.filter((plan) => plan.id !== id)); }
-    catch (deleteError) { throw new Error(getPlansError('delete', deleteError)); }
+    catch (deleteError) { throw new Error(getPlansError('delete', deleteError, t)); }
   }
 
   return (

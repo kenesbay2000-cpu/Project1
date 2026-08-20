@@ -98,14 +98,14 @@ Deno.serve(async (request) => {
   const exchangeRates = await loadExchangeRates();
   if (!exchangeRates.ok) return failure(
     'EXCHANGE_RATES_UNAVAILABLE',
-    localizedPlannerText(parsedRequest.value, 'Не удалось загрузить сохранённые курсы валют. Попробуйте ещё раз немного позже.', 'Saved exchange rates could not be loaded. Please try again shortly.'),
+    localizedPlannerText(parsedRequest.value, 'Не удалось загрузить сохранённые курсы валют. Попробуйте ещё раз немного позже.', 'Saved exchange rates could not be loaded. Please try again shortly.', 'Сақталған валюта бағамдарын жүктей алмадық. Сәл кейінірек қайталап көріңіз.'),
     503,
   );
   const budgetAssessment = assessBudget(parsedRequest.value, exchangeRates.rates);
   if (budgetAssessment.level === 'absurdly_low') {
     return failure(
       'BUDGET_TOO_LOW',
-      localizedPlannerText(parsedRequest.value, 'Даже верхняя граница бюджета выглядит слишком низкой для указанной длительности и числа путешественников. Увеличьте бюджет или сократите поездку.', 'Even the upper budget limit appears too low for this duration and number of travellers. Increase the budget or shorten the trip.'),
+      localizedPlannerText(parsedRequest.value, 'Даже верхняя граница бюджета выглядит слишком низкой для указанной длительности и числа путешественников. Увеличьте бюджет или сократите поездку.', 'Even the upper budget limit appears too low for this duration and number of travellers. Increase the budget or shorten the trip.', 'Бюджеттің жоғарғы шегі де мұндай ұзақтық пен саяхатшылар санына тым аз. Бюджетті көбейтіңіз немесе сапарды қысқартыңыз.'),
       422,
     );
   }
@@ -137,7 +137,7 @@ Deno.serve(async (request) => {
     const reason = lastParseError.slice(realismPrefix.length);
     return failure(
       'UNREALISTIC_AI_PLAN',
-      `${localizedPlannerText(parsedRequest.value, 'ИИ не смог собрать физически выполнимое расписание даже после повторной проверки.', 'AI could not create a physically achievable schedule after a second check.')} ${reason} ${localizedPlannerText(parsedRequest.value, 'Измените сроки или сократите число мест.', 'Adjust the dates or reduce the number of places.')}`,
+      `${localizedPlannerText(parsedRequest.value, 'ИИ не смог собрать физически выполнимое расписание даже после повторной проверки.', 'AI could not create a physically achievable schedule after a second check.', 'AI қайталап тексергеннен кейін де орындалатын кесте құра алмады.')} ${reason} ${localizedPlannerText(parsedRequest.value, 'Измените сроки или сократите число мест.', 'Adjust the dates or reduce the number of places.', 'Күндерді өзгертіңіз немесе орындар санын азайтыңыз.')}`,
       502,
     );
   }
@@ -145,14 +145,14 @@ Deno.serve(async (request) => {
   if (lastParseError.startsWith(schemaPrefix)) {
     return failure(
       'INCOMPLETE_AI_PLAN',
-      `${localizedPlannerText(parsedRequest.value, 'ИИ дважды вернул неполный план.', 'AI returned an incomplete itinerary twice.')} ${lastParseError.slice(schemaPrefix.length)} ${localizedPlannerText(parsedRequest.value, 'Попробуйте ещё раз или немного упростите запрос.', 'Try again or simplify the request slightly.')}`,
+      `${localizedPlannerText(parsedRequest.value, 'ИИ дважды вернул неполный план.', 'AI returned an incomplete itinerary twice.', 'AI екі рет толық емес жоспар қайтарды.')} ${lastParseError.slice(schemaPrefix.length)} ${localizedPlannerText(parsedRequest.value, 'Попробуйте ещё раз или немного упростите запрос.', 'Try again or simplify the request slightly.', 'Қайталап көріңіз немесе сұрауды сәл жеңілдетіңіз.')}`,
       502,
     );
   }
 
   return failure(
     'INVALID_AI_RESPONSE',
-    localizedPlannerText(parsedRequest.value, 'Ответ ИИ дважды пришёл неполным или повреждённым. Попробуйте уточнить запрос и запустить генерацию ещё раз.', 'The AI response was incomplete or invalid twice. Refine the request and try generating again.'),
+    localizedPlannerText(parsedRequest.value, 'Ответ ИИ дважды пришёл неполным или повреждённым. Попробуйте уточнить запрос и запустить генерацию ещё раз.', 'The AI response was incomplete or invalid twice. Refine the request and try generating again.', 'AI жауабы екі рет толық емес немесе жарамсыз болды. Сұрауды нақтылап, қайта құрып көріңіз.'),
     502,
   );
 });

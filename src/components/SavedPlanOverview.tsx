@@ -3,6 +3,7 @@ import { SavePlanButton } from './SavePlanButton';
 import { TripPlanEditor } from './TripPlanEditor';
 import { TripRealismNotice } from './TripRealismNotice';
 import { useI18n } from '../i18n/I18nProvider';
+import { languageLocale } from '../i18n/locale';
 
 type SavedPlanOverviewProps = {
   trip: GeneratedTrip;
@@ -20,7 +21,7 @@ function formatDates(trip: GeneratedTrip, locale: string, fallback: string) {
 
 export function SavedPlanOverview({ trip, onEdit, onTripUpdated }: SavedPlanOverviewProps) {
   const { t, language } = useI18n();
-  const locale = language === 'ru' ? 'ru-RU' : 'en-US';
+  const locale = languageLocale(language);
   const { plan, request } = trip;
   return (
     <div className="saved-overview">

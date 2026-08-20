@@ -1,5 +1,8 @@
+import type { TranslationKey } from '../i18n/translations';
+
 export const MIN_USERNAME_LENGTH = 2;
 export const MAX_USERNAME_LENGTH = 18;
+export type UsernameIssue = 'too_short' | 'too_long' | 'invalid_characters' | 'blocked';
 
 const RU_BLOCKED = [
   /ху[йеяиюё]/u, /п[ие]зд/u, /бл[яе]д/u, /[её]б(?:а|у|л|н|т|уч|ыр)/u,
@@ -29,22 +32,29 @@ export function getUsernameLength(value: string) {
   return Array.from(value.trim()).length;
 }
 
-export function validateUsername(value: string): string | null {
+export function validateUsername(value: string): UsernameIssue | null {
   const name = value.trim().replace(/\s+/g, ' ');
   const length = getUsernameLength(name);
-  if (length < MIN_USERNAME_LENGTH) return `Имя должно содержать минимум ${MIN_USERNAME_LENGTH} символа.`;
-  if (length > MAX_USERNAME_LENGTH) return `Имя должно быть не длиннее ${MAX_USERNAME_LENGTH} символов.`;
+  if (length < MIN_USERNAME_LENGTH) return 'too_short';
+  if (length > MAX_USERNAME_LENGTH) return 'too_long';
   if (!/^[\p{L}\p{N}][\p{L}\p{M}\p{N} .'-]*$/u.test(name)) {
-    return 'Используйте только буквы, цифры, пробел, точку, дефис или апостроф.';
+    return 'invalid_characters';
   }
 
   const normalized = normalizeForModeration(name);
   const compact = normalized.replace(/[^\p{L}\p{N}]/gu, '');
   const moderationForms = [compact, toCyrillicLookalikes(compact), toLatinLookalikes(compact)];
   if (moderationForms.some((form) => [...RU_BLOCKED, ...EN_BLOCKED].some((pattern) => pattern.test(form)))) {
-    return 'Это имя содержит неприемлемые слова. Пожалуйста, выберите другое имя.';
+    return 'blocked';
   }
   return null;
+}
+
+export function usernameIssueKey(issue: UsernameIssue): TranslationKey {
+  if (issue === 'too_short') return 'error.usernameShort';
+  if (issue === 'too_long') return 'error.usernameLong';
+  if (issue === 'invalid_characters') return 'error.usernameCharacters';
+  return 'error.usernameBlocked';
 }
 
 export function normalizeUsername(value: string) {

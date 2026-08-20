@@ -1,4 +1,4 @@
-import type { AccommodationOption, TripPlan } from './types.ts';
+import type { AccommodationOption, PlannerLanguage, TripPlan } from './types.ts';
 
 export const RECOMMENDATION_SAFETY_GUIDANCE =
   'Безопасность рекомендаций: не предлагай малоизвестные или непроверяемые площадки бронирования. Если цена жилья, транспорта или активности выглядит подозрительно низкой и это не объяснено форматом, сезоном или условиями, добавь к соответствующей рекомендации одну короткую нейтральную просьбу перепроверить условия, отзывы и возврат перед оплатой. Не называй компанию, сайт или продавца мошенниками без подтверждённых оснований.';
@@ -29,7 +29,7 @@ function addAccommodationCaution(
   option: AccommodationOption,
   typicalPrice: number,
   currency: string,
-  language: 'ru' | 'en',
+  language: PlannerLanguage,
 ): AccommodationOption {
   if (ALREADY_CAUTIOUS.test(option.description)) return option;
   const text = `${option.name} ${option.type} ${option.description}`;
@@ -42,11 +42,12 @@ function addAccommodationCaution(
 
   const warning = language === 'en'
     ? hasExternalSite ? 'Before paying, verify the platform, booking terms, reviews, and refund policy through independent sources.' : 'This price is notably lower than the alternatives — verify the terms, address, reviews, and refund policy before paying.'
+    : language === 'kk' ? hasExternalSite ? 'Төлем жасамас бұрын платформаны, брондау шарттарын, пікірлер мен қайтару ережесін тәуелсіз дереккөздерден тексеріңіз.' : 'Бұл баға басқа нұсқалардан айтарлықтай төмен — төлем алдында шарттарын, мекенжайын, пікірлер мен қайтару ережесін тексеріңіз.'
     : hasExternalSite ? 'Перед оплатой перепроверьте площадку, условия бронирования, отзывы и правила возврата через независимые источники.' : 'Цена заметно ниже других вариантов — перед оплатой перепроверьте условия, адрес, отзывы и правила возврата.';
   return { ...option, description: `${option.description} ${warning}` };
 }
 
-export function applyRecommendationCautions(plan: TripPlan, language: 'ru' | 'en' = 'ru'): TripPlan {
+export function applyRecommendationCautions(plan: TripPlan, language: PlannerLanguage = 'ru'): TripPlan {
   const allPrices = plan.accommodations.map((item) => item.pricePerNight).filter((price) => price > 0);
   const currency = plan.budget.currency.toUpperCase();
   const accommodations = plan.accommodations.map((item) => {

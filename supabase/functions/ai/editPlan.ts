@@ -151,8 +151,8 @@ export async function editExistingPlan(
     ok: false,
     code: lastError.startsWith('Plan realism check failed:') ? 'UNREALISTIC_AI_PLAN' : 'INVALID_AI_RESPONSE',
     message: lastError.startsWith('Plan realism check failed:')
-      ? `${localizedPlannerText(request, 'ИИ не смог согласовать изменение с реальным расписанием.', 'AI could not reconcile this change with a realistic schedule.')} ${realism}`
-      : localizedPlannerText(request, 'ИИ дважды вернул неполный обновлённый план. Попробуйте сформулировать изменение немного точнее.', 'AI returned an incomplete updated itinerary twice. Try phrasing the change a little more precisely.'),
+      ? `${localizedPlannerText(request, 'ИИ не смог согласовать изменение с реальным расписанием.', 'AI could not reconcile this change with a realistic schedule.', 'AI өзгерісті шынайы кестемен үйлестіре алмады.')} ${realism}`
+      : localizedPlannerText(request, 'ИИ дважды вернул неполный обновлённый план. Попробуйте сформулировать изменение немного точнее.', 'AI returned an incomplete updated itinerary twice. Try phrasing the change a little more precisely.', 'AI жаңартылған жоспарды екі рет толық бермеді. Өзгерісті сәл нақтырақ жазыңыз.'),
     status: 502,
   };
 }

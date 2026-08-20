@@ -28,7 +28,7 @@ export function SavePlanButton({ trip }: SavePlanButtonProps) {
       setStatus('saved');
     } catch (saveError) {
       setStatus('idle');
-      setError(getSavePlanError(saveError));
+      setError(getSavePlanError(saveError, t));
     }
   }
 

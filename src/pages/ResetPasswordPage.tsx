@@ -46,7 +46,7 @@ export function ResetPasswordPage() {
     if (password !== confirmation) { setError(t('auth.passwordMismatch')); return; }
     setBusy(true);
     try { await resetPassword(password); setStatus('success'); setPassword(''); setConfirmation(''); }
-    catch (resetError) { setError(getPasswordRecoveryError(resetError)); }
+    catch (resetError) { setError(getPasswordRecoveryError(resetError, t)); }
     finally { setBusy(false); }
   }
 

@@ -1,6 +1,9 @@
 import type { GeneratedTrip } from './aiPlanner';
 import { isGeneratedTrip } from './savedPlans';
 import { supabase } from './supabase';
+import type { TranslationKey } from '../i18n/translations';
+
+type Translate = (key: TranslationKey) => string;
 
 export type SavedPlanSummary = {
   id: string;
@@ -88,11 +91,11 @@ export async function deleteSavedPlan(id: string, userId: string) {
   if (!data) throw new Error('PLAN_NOT_FOUND');
 }
 
-export function getPlansError(action: 'load' | 'rename' | 'delete', error: unknown) {
-  if (error instanceof Error && error.message === 'INVALID_TITLE') return 'Название должно содержать от 1 до 100 символов.';
-  if (error instanceof Error && error.message === 'INVALID_SAVED_PLAN') return 'Сохранённый маршрут повреждён и не может быть открыт.';
-  if (error instanceof Error && error.message === 'PLAN_NOT_FOUND') return 'Поездка не найдена или у вас больше нет к ней доступа.';
-  if (action === 'rename') return 'Не удалось переименовать поездку. Попробуйте ещё раз.';
-  if (action === 'delete') return 'Не удалось удалить поездку. Попробуйте ещё раз.';
-  return 'Не удалось загрузить сохранённые поездки. Проверьте интернет и повторите попытку.';
+export function getPlansError(action: 'load' | 'rename' | 'delete', error: unknown, t: Translate) {
+  if (error instanceof Error && error.message === 'INVALID_TITLE') return t('plans.invalidTitle');
+  if (error instanceof Error && error.message === 'INVALID_SAVED_PLAN') return t('plans.invalidPlan');
+  if (error instanceof Error && error.message === 'PLAN_NOT_FOUND') return t('plans.notFoundError');
+  if (action === 'rename') return t('card.renameError');
+  if (action === 'delete') return t('card.deleteError');
+  return t('plans.loadError');
 }

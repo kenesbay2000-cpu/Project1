@@ -17,11 +17,12 @@ export const budgetSettings: Record<CurrencyCode, { min: number; max: number; li
   VND: { min: 26_000_000, max: 105_000_000, limit: 800_000_000, step: 5_000_000 },
 };
 
-const currencyNames: Record<'ru' | 'en', Record<CurrencyCode, string>> = {
+const currencyNames: Record<'ru' | 'en' | 'kk', Record<CurrencyCode, string>> = {
   ru: { KZT: 'Казахстанский тенге', USD: 'Доллар США', EUR: 'Евро', RUB: 'Российский рубль', CNY: 'Китайский юань', GBP: 'Фунт стерлингов', TRY: 'Турецкая лира', THB: 'Тайский бат', KRW: 'Южнокорейская вона', VND: 'Вьетнамский донг' },
   en: { KZT: 'Kazakhstani tenge', USD: 'US dollar', EUR: 'Euro', RUB: 'Russian ruble', CNY: 'Chinese yuan', GBP: 'Pound sterling', TRY: 'Turkish lira', THB: 'Thai baht', KRW: 'South Korean won', VND: 'Vietnamese dong' },
+  kk: { KZT: 'Қазақстан теңгесі', USD: 'АҚШ доллары', EUR: 'Еуро', RUB: 'Ресей рублі', CNY: 'Қытай юані', GBP: 'Фунт стерлинг', TRY: 'Түрік лирасы', THB: 'Тай баты', KRW: 'Оңтүстік Корея вонасы', VND: 'Вьетнам донгы' },
 };
 
-export function currencyName(code: CurrencyCode, language: 'ru' | 'en') {
+export function currencyName(code: CurrencyCode, language: 'ru' | 'en' | 'kk') {
   return currencyNames[language][code];
 }

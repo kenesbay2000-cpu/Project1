@@ -27,7 +27,7 @@ function isIsoDate(value: unknown): value is string {
 export function parsePlannerRequest(value: unknown): ParseResult {
   if (!isRecord(value)) return invalid('Передайте параметры планирования в формате JSON.');
   const prompt = typeof value.prompt === 'string' ? value.prompt.trim() : '';
-  const responseLanguage = value.responseLanguage === 'en' ? 'en' : 'ru';
+  const responseLanguage = value.responseLanguage === 'en' || value.responseLanguage === 'kk' ? value.responseLanguage : 'ru';
   if (!prompt) return invalid('Опишите желаемую поездку.');
   if (prompt.length > 4_000) return invalid('Описание поездки не должно превышать 4000 символов.');
 

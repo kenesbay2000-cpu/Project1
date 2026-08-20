@@ -3,6 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { getSafeDisplayName } from '../lib/username';
 import { ensureGoogleDisplayName } from '../lib/auth';
+import { useI18n } from '../i18n/I18nProvider';
 
 type AuthContextValue = {
   user: User | null;
@@ -13,13 +14,14 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function getDisplayName(user: User | null) {
+function getDisplayName(user: User | null, fallback: string) {
   if (!user) return '';
   const metadataName = user.user_metadata.display_name ?? user.user_metadata.full_name;
-  return getSafeDisplayName(metadataName, 'Путешественник');
+  return getSafeDisplayName(metadataName, fallback);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { t } = useI18n();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -37,18 +39,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user || user.user_metadata.display_name) return;
-    void ensureGoogleDisplayName(user).then(setUser).catch(() => undefined);
-  }, [user]);
+    void ensureGoogleDisplayName(user, t('header.travelerFallback')).then(setUser).catch(() => undefined);
+  }, [t, user]);
 
   const value = useMemo<AuthContextValue>(() => ({
     user,
     isLoading,
-    displayName: getDisplayName(user),
+    displayName: getDisplayName(user, t('header.travelerFallback')),
     signOut: async () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     },
-  }), [user, isLoading]);
+  }), [user, isLoading, t]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,9 +1,12 @@
 import { isSupabaseConfigured, supabase } from './supabase';
 import type { PreferenceCandidate, TravelPreference } from './travelPreferences';
+import { plannerConfigError, readPlannerFunctionError } from './aiPlannerErrors';
+
+export type PlannerLanguage = 'ru' | 'en' | 'kk';
 
 export type PlannerRequest = {
   prompt: string;
-  responseLanguage?: 'ru' | 'en';
+  responseLanguage?: PlannerLanguage;
   originCity?: string;
   dates?: { start: string; end: string };
   travelers?: number;
@@ -100,22 +103,10 @@ type SummaryResponse = { summary?: TripSummary; error?: { message?: string } };
 type EditResponse = { plan?: TripPlan; request?: PlannerRequest; error?: { message?: string } };
 type PreferenceResponse = { candidates?: PreferenceCandidate[]; error?: { message?: string } };
 
-const fallbackError = 'Не удалось определить причину сбоя. Проверьте данные и попробуйте создать маршрут ещё раз.';
-
-async function readFunctionError(error: unknown) {
-  if (typeof error === 'object' && error !== null && 'context' in error) {
-    const context = error.context;
-    if (context instanceof Response) {
-      const body = await context.clone().json().catch(() => null) as PlannerResponse | null;
-      if (body?.error?.message) return body.error.message;
-    }
-  }
-  return fallbackError;
-}
-
 export async function generateTripPlan(request: PlannerRequest) {
+  const language = request.responseLanguage ?? 'ru';
   if (!isSupabaseConfigured) {
-    throw new Error('AI Planner пока не настроен. Проверьте настройки Supabase.');
+    throw new Error(plannerConfigError(language));
   }
 
   const { data, error } = await supabase.functions.invoke<PlannerResponse>('ai', {
@@ -123,36 +114,39 @@ export async function generateTripPlan(request: PlannerRequest) {
     timeout: 155_000,
   });
 
-  if (error) throw new Error(await readFunctionError(error));
-  if (!data?.plan) throw new Error(data?.error?.message ?? fallbackError);
+  if (error) throw new Error(await readPlannerFunctionError(error, language));
+  if (!data?.plan) throw new Error(data?.error?.message ?? await readPlannerFunctionError(null, language));
   return data.plan;
 }
 
 export async function analyzeTripRequest(request: PlannerRequest) {
-  if (!isSupabaseConfigured) throw new Error('AI Planner пока не настроен. Проверьте настройки Supabase.');
+  const language = request.responseLanguage ?? 'ru';
+  if (!isSupabaseConfigured) throw new Error(plannerConfigError(language));
 
   const { data, error } = await supabase.functions.invoke<ClarificationResponse>('ai', {
     body: { mode: 'clarify', request },
     timeout: 45_000,
   });
-  if (error) throw new Error(await readFunctionError(error));
-  if (!data?.clarification) throw new Error(data?.error?.message ?? fallbackError);
+  if (error) throw new Error(await readPlannerFunctionError(error, language));
+  if (!data?.clarification) throw new Error(data?.error?.message ?? await readPlannerFunctionError(null, language));
   return data.clarification;
 }
 
 export async function summarizeTripRequest(request: PlannerRequest, currentSummary?: TripSummary, correction?: string) {
-  if (!isSupabaseConfigured) throw new Error('AI Planner пока не настроен. Проверьте настройки Supabase.');
+  const language = request.responseLanguage ?? 'ru';
+  if (!isSupabaseConfigured) throw new Error(plannerConfigError(language));
 
   const { data, error } = await supabase.functions.invoke<SummaryResponse>('ai', {
     body: { mode: 'summarize', request, currentSummary, correction },
     timeout: 45_000,
   });
-  if (error) throw new Error(await readFunctionError(error));
-  if (!data?.summary) throw new Error(data?.error?.message ?? fallbackError);
+  if (error) throw new Error(await readPlannerFunctionError(error, language));
+  if (!data?.summary) throw new Error(data?.error?.message ?? await readPlannerFunctionError(null, language));
   return data.summary;
 }
 
 export async function extractTravelPreferences(request: PlannerRequest, known: TravelPreference[]) {
+  const language = request.responseLanguage ?? 'ru';
   const { data, error } = await supabase.functions.invoke<PreferenceResponse>('ai', {
     body: {
       mode: 'learn_preferences',
@@ -161,17 +155,17 @@ export async function extractTravelPreferences(request: PlannerRequest, known: T
     },
     timeout: 30_000,
   });
-  if (error) throw new Error(await readFunctionError(error));
+  if (error) throw new Error(await readPlannerFunctionError(error, language));
   return data?.candidates ?? [];
 }
 
-export async function editTripPlan(trip: GeneratedTrip, command: string, responseLanguage: 'ru' | 'en'): Promise<GeneratedTrip> {
-  if (!isSupabaseConfigured) throw new Error('AI Planner пока не настроен. Проверьте настройки Supabase.');
+export async function editTripPlan(trip: GeneratedTrip, command: string, responseLanguage: PlannerLanguage): Promise<GeneratedTrip> {
+  if (!isSupabaseConfigured) throw new Error(plannerConfigError(responseLanguage));
   const { data, error } = await supabase.functions.invoke<EditResponse>('ai', {
     body: { mode: 'edit', request: { ...trip.request, responseLanguage }, plan: trip.plan, command },
     timeout: 155_000,
   });
-  if (error) throw new Error(await readFunctionError(error));
-  if (!data?.plan || !data.request) throw new Error(data?.error?.message ?? fallbackError);
+  if (error) throw new Error(await readPlannerFunctionError(error, responseLanguage));
+  if (!data?.plan || !data.request) throw new Error(data?.error?.message ?? await readPlannerFunctionError(null, responseLanguage));
   return { ...trip, request: data.request, plan: data.plan };
 }

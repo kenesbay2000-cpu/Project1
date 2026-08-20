@@ -14,7 +14,7 @@ export function RecoveryPageLayout({ children, storyTitle, storyText }: Recovery
   return (
     <main className="signup-page recovery-page">
       <aside className="signup-story recovery-story">
-        <div><p>Roamly account</p><h2>{storyTitle}</h2></div>
+        <div><p>{t('auth.accountLabel')}</p><h2>{storyTitle}</h2></div>
         <blockquote>«{storyText}»</blockquote>
         <div className="signup-story__facts"><span><b>1</b> {t('recovery.secureAccount')}</span><span><b>∞</b> {t('recovery.newRoutes')}</span></div>
       </aside>

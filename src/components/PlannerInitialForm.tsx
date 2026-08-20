@@ -5,6 +5,7 @@ import { applyPreferenceSelection } from '../lib/preferenceSelection';
 import './PlannerInitialForm.css';
 import { useI18n } from '../i18n/I18nProvider';
 import { budgetSettings, currencyName, supportedCurrencies, type CurrencyCode } from '../lib/currencies';
+import { languageLocale } from '../i18n/locale';
 
 type Props = {
   preferences: string[];
@@ -22,7 +23,7 @@ function parseAges(value: string, errorMessage: string) {
 export function PlannerInitialForm({ preferences, defaultUsePreferences, onContinue }: Props) {
   const { t, language } = useI18n();
   const translatedExamples = [t('planner.example1'), t('planner.example2'), t('planner.example3'), t('planner.example4')];
-  const locale = language === 'ru' ? 'ru-RU' : 'en-US';
+  const locale = languageLocale(language);
   const [prompt, setPrompt] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [originCity, setOriginCity] = useState('');

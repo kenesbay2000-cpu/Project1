@@ -69,7 +69,7 @@ export function SiteHeader() {
     <header ref={headerRef} className={`site-header site-header--${theme}${isAtTop ? ' site-header--top' : ' site-header--scrolled'}`}>
       <Link className="brand" href="/" aria-label={t('header.brandHome')}>
         <span className="brand__mark">R</span>
-        <span>Roamly<small>smart travel</small></span>
+        <span>Roamly<small>{t('header.tagline')}</small></span>
       </Link>
       <nav aria-label={t('header.mainNavigation')}>
         {navigation.map((item) => {
