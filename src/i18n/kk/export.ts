@@ -1,0 +1,17 @@
+export const exportKk = {
+  'export.actions': 'Жоспарды экспорттау',
+  'export.downloadPdf': 'PDF жүктеп алу',
+  'export.downloadingPdf': 'PDF жасалып жатыр…',
+  'export.print': 'Басып шығару',
+  'export.error': 'PDF жасау мүмкін болмады. Қайталап көріңіз.',
+  'export.documentLabel': 'Жеке саяхат жоспары',
+  'export.routePoints': 'Маршрут нүктелері',
+  'export.routePointsNote': 'Интерактивті картаның орнына берілген орындардың тұрақты тізімі',
+  'export.period': 'Сапар күндері',
+  'export.travelers': 'Саяхатшылар',
+  'export.totalBudget': 'Болжамды бюджет',
+  'export.planningLogic': 'Маршрут логикасы',
+  'export.realism': 'Жоспардың шынайылығы',
+  'export.noRoutePoints': 'Маршрутта атауы көрсетілген орындар жоқ.',
+  'export.page': '{current} / {total} бет',
+} as const;

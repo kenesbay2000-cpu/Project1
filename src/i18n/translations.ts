@@ -4,6 +4,7 @@ import { plannerTranslations } from './plannerTranslations';
 import { plansTranslations } from './plansTranslations';
 import { accountTranslations } from './accountTranslations';
 import { commonTranslations } from './commonTranslations';
+import { exportTranslations } from './exportTranslations';
 import { kazakhTranslations } from './kk';
 
 export const supportedLanguages = ['ru', 'en', 'kk'] as const;
@@ -40,6 +41,7 @@ const ru = {
   ...plansTranslations.ru,
   ...accountTranslations.ru,
   ...commonTranslations.ru,
+  ...exportTranslations.ru,
 } as const;
 
 export type TranslationKey = keyof typeof ru;
@@ -98,6 +100,7 @@ const en: Record<TranslationKey, string> = {
   ...plansTranslations.en,
   ...accountTranslations.en,
   ...commonTranslations.en,
+  ...exportTranslations.en,
 };
 
 const kk: Record<TranslationKey, string> = {

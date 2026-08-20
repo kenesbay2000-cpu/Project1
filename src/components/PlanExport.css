@@ -1,0 +1,44 @@
+.plan-export { grid-column: 1 / -1; position: sticky; top: 12px; z-index: 12; min-height: 58px; padding: 9px 10px 9px 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #526d73; background: rgba(248,245,239,.86); border: 1px solid rgba(221,216,207,.92); border-radius: 19px; box-shadow: 0 12px 34px rgba(20,45,53,.1); backdrop-filter: blur(18px); }
+.plan-export > span { color: #9a7465; font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.plan-export > div { display: flex; gap: 8px; }
+.plan-export button { min-height: 40px; padding: 0 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; border-radius: 13px; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; transition: transform .2s, box-shadow .2s, background .2s; }
+.plan-export button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.plan-export__pdf { color: #fff; background: #c75f3d; box-shadow: 0 8px 20px rgba(199,95,61,.27); }
+.plan-export__pdf:hover:not(:disabled) { transform: translateY(-2px); background: #b85337; box-shadow: 0 11px 26px rgba(199,95,61,.34); }
+.plan-export__pdf:disabled { cursor: wait; opacity: .72; }
+.plan-export__print { color: #294852; background: rgba(255,255,255,.78); border-color: #d9d5cd !important; }
+.plan-export__print:hover { transform: translateY(-2px); background: #fff; box-shadow: 0 8px 18px rgba(20,45,53,.1); }
+.plan-export button:focus-visible { outline: 3px solid rgba(199,95,61,.24); outline-offset: 2px; }
+.plan-export > p { position: absolute; top: calc(100% + 6px); right: 0; max-width: 340px; padding: 8px 12px; color: #7c3828; background: #fff4ef; border: 1px solid #efd0c5; border-radius: 10px; font-size: 11px; box-shadow: 0 8px 22px rgba(20,45,53,.08); }
+.plan-print-document { display: none; }
+
+@media (max-width: 620px) {
+  .plan-export { position: static; padding: 10px; align-items: stretch; flex-direction: column; gap: 7px; }
+  .plan-export > span { padding: 0 3px; }.plan-export > div { display: grid; grid-template-columns: 1fr 1fr; }
+  .plan-export button { padding: 0 10px; }.plan-export > p { position: static; max-width: none; margin: 0; }
+}
+
+@media print {
+  @page { size: A4; margin: 14mm 13mm 16mm; }
+  html, body, #root { width: 100%; min-height: 0; background: #fff !important; }
+  body { color: #253f48 !important; font-family: Arial, sans-serif; font-size: 9.5pt; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .site-header, .saved-plan-page__back, .plan-export, .saved-workspace__content, .saved-workspace__sidebar { display: none !important; }
+  .saved-plan-page, .page-shell, main { width: 100% !important; max-width: none !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  .saved-workspace { display: block !important; width: 100% !important; margin: 0 !important; }
+  .plan-print-document { display: block !important; color: #253f48; }
+  .plan-print-cover { min-height: 225mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+  .plan-print-cover > strong { color: #b85337; font-size: 10pt; letter-spacing: .22em; }.plan-print-cover > span { margin-top: 9mm; color: #9a7465; font-size: 8pt; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+  .plan-print-cover h1 { max-width: 165mm; margin: 4mm 0 2mm; color: #17333e; font-family: Georgia, serif; font-size: 31pt; font-weight: 400; line-height: 1.08; }
+  .plan-print-cover > p { margin: 0; color: #66777c; font-size: 13pt; }.plan-print-cover dl { margin-top: 18mm; padding: 6mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; background: #f4eee8; border-radius: 4mm; }
+  .plan-print-cover dl div { min-width: 0; }.plan-print-cover dt { color: #9a7465; font-size: 7pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }.plan-print-cover dd { margin: 2mm 0 0; color: #17333e; font-weight: 700; }
+  .plan-print-section { margin: 0 0 8mm; }.plan-print-section > h2 { margin: 8mm 0 4mm; padding-bottom: 2.5mm; color: #17333e; border-bottom: .5pt solid #d9d5cd; font-family: Georgia, serif; font-size: 18pt; font-weight: 400; }
+  .plan-print-section:nth-of-type(n+3) { break-before: page; }.plan-print-section p { line-height: 1.5; }
+  .plan-print-realism { margin-top: 5mm; padding: 4mm; background: #f4eee8; border-left: 2.5pt solid #c75f3d; break-inside: avoid-page; }.plan-print-realism p { margin: 1.5mm 0; }.plan-print-realism ul { margin-bottom: 0; }
+  .plan-print-days { display: grid; gap: 5mm; }.plan-print-day { padding: 5mm; border: .6pt solid #d9d5cd; border-radius: 3mm; break-inside: avoid-page; }.plan-print-day > header { display: flex; justify-content: space-between; gap: 5mm; padding-bottom: 3mm; border-bottom: .5pt solid #e4e0d9; }
+  .plan-print-day header small, .plan-print-card small, .plan-print-checklist small { color: #a14d34; font-size: 7pt; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }.plan-print-day h3 { margin: 1mm 0 0; color: #17333e; font-family: Georgia, serif; font-size: 14pt; }.plan-print-day time { color: #718086; font-size: 7.5pt; }
+  .plan-print-stop { padding-top: 3mm; display: grid; grid-template-columns: 14mm 1fr; gap: 3mm; break-inside: avoid; }.plan-print-stop > b { color: #b85337; }.plan-print-stop h4 { margin: 0; color: #17333e; font-size: 10pt; }.plan-print-stop small { color: #718086; }.plan-print-stop p { margin: 1.5mm 0; }.plan-print-stop em { color: #718086; font-size: 7.5pt; font-style: normal; }
+  .plan-print-note { color: #718086; font-style: italic; }.plan-print-route { columns: 2; column-gap: 9mm; padding-left: 5mm; }.plan-print-route li { margin-bottom: 2mm; break-inside: avoid; }
+  .plan-print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }.plan-print-card { padding: 4mm; border: .6pt solid #d9d5cd; border-radius: 3mm; break-inside: avoid-page; }.plan-print-card h3 { margin: 1.5mm 0; color: #17333e; font-size: 11pt; }.plan-print-card p { margin: 0; }.plan-print-card b { display: block; margin-top: 2mm; color: #b85337; }
+  .plan-print-budget > div { padding: 3mm 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 5mm; border-bottom: .5pt solid #e2ded7; break-inside: avoid; }.plan-print-budget span { display: grid; gap: 1mm; }.plan-print-budget small { color: #718086; }.plan-print-budget b { color: #17333e; white-space: nowrap; }
+  .plan-print-checklist { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }.plan-print-checklist article { padding: 4mm; display: grid; grid-template-columns: 7mm 1fr; gap: 2mm; background: #f6f2ed; border-radius: 3mm; break-inside: avoid-page; }.plan-print-checklist article > span { color: #b85337; font-weight: 700; }.plan-print-checklist h3 { margin: 1mm 0; color: #17333e; }.plan-print-checklist p { margin: 0; }
+}

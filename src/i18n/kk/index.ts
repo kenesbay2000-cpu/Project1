@@ -4,6 +4,7 @@ import { commonKk } from './common';
 import { homeKk } from './home';
 import { plannerKk } from './planner';
 import { plansKk } from './plans';
+import { exportKk } from './export';
 
 export const kazakhTranslations = {
   ...homeKk,
@@ -12,4 +13,5 @@ export const kazakhTranslations = {
   ...plansKk,
   ...accountKk,
   ...commonKk,
+  ...exportKk,
 } as const;

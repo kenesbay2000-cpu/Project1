@@ -11,6 +11,9 @@ import './TripPlanResult.css';
 import './SavedPlanWorkspace.css';
 import './SavedPlanSections.css';
 import { useI18n } from '../i18n/I18nProvider';
+import { PlanExportControls } from './PlanExportControls';
+import { PrintableTripPlan } from './PrintableTripPlan';
+import './PlanExport.css';
 
 type SavedPlanWorkspaceProps = {
   trip: GeneratedTrip;
@@ -54,11 +57,13 @@ export function SavedPlanWorkspace({ trip, onEdit, onTripUpdated }: SavedPlanWor
 
   return (
     <div className="saved-workspace">
+      <PlanExportControls trip={trip} />
       <div className="saved-workspace__content" ref={content}>
         {active !== 'overview' && <header className="saved-workspace__heading"><span>{sectionCopy[active].eyebrow}</span><div><h1>{t(currentSection.labelKey)}</h1><p>{sectionCopy[active].description}</p></div></header>}
         <div className="saved-workspace__view" key={active}>{renderContent()}</div>
       </div>
       <SavedPlanSidebar active={active} onSelect={selectSection} />
+      <PrintableTripPlan trip={trip} />
     </div>
   );
 }
