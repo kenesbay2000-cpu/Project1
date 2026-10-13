@@ -46,6 +46,16 @@ Deno.serve(async (request) => {
     return failure('PROTECTED_INFORMATION', PROTECTED_INFORMATION_MESSAGE, 400);
   }
 
+  if (isRecord(requestBody) && requestBody.mode === 'healthcheck') {
+    const started = Date.now();
+    const result = await requestGemini('Return exactly this JSON: {"status":"ok"}', 12_000, {
+      maxOutputTokens: 64,
+      responseSchema: { type: 'object', properties: { status: { type: 'string', enum: ['ok'] } }, required: ['status'] },
+    });
+    if (!result.ok) return failure(result.code, result.message, result.status);
+    return json({ ok: true, model: result.model, durationMs: Date.now() - started });
+  }
+
   if (isRecord(requestBody)) {
     const chunked = await handleChunkedMode(requestBody);
     if (chunked) return json(chunked.body, chunked.status);

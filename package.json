@@ -18,6 +18,7 @@
     "db:push": "supabase db push",
     "keep-awake:setup": "node scripts/setup-keep-awake.mjs",
     "ai:secret": "node scripts/setup-ai-secret.mjs",
+    "ai:check": "node scripts/check-ai.mjs",
     "ai:deploy": "supabase functions deploy ai"
   },
   "dependencies": {
